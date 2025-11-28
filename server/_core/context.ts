@@ -42,10 +42,7 @@ export async function createContext(
       }
     }
     
-    // Fallback to OAuth if local auth didn't work
-    if (!user) {
-      user = await sdk.authenticateRequest(opts.req);
-    }
+    // OAuth disabled - using local authentication only
   } catch (error) {
     // Authentication is optional for public procedures.
     user = null;

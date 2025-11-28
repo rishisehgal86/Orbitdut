@@ -104,7 +104,7 @@ export const appRouter = router({
 
         // Verify password
         if (!user.passwordHash) {
-          throw new Error("This account uses OAuth login");
+          throw new Error("Invalid account - no password set");
         }
 
         const isValid = await verifyPassword(input.password, user.passwordHash);

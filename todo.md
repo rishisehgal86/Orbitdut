@@ -135,3 +135,9 @@
 - [x] Add /auth/supplier-signup route to App.tsx
 - [x] Verify all auth routes are properly registered
 - [x] Test supplier signup page access
+
+## Phase 19: Remove Manus OAuth
+- [x] Remove OAuth callback route from server
+- [x] Disable OAuth fallback in context.ts
+- [x] Update error messages to remove OAuth references
+- [x] Test complete authentication flow without OAuth
