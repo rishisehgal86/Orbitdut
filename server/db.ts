@@ -1,6 +1,17 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import {
+  InsertUser,
+  users,
+  suppliers,
+  InsertSupplier,
+  supplierUsers,
+  InsertSupplierUser,
+  supplierRates,
+  InsertSupplierRate,
+  supplierCoverage,
+  InsertSupplierCoverage,
+} from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +100,106 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+/**
+ * Supplier Management Functions
+ */
+
+export async function createSupplier(supplier: InsertSupplier): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const [result] = await db.insert(suppliers).values(supplier);
+  return Number(result.insertId);
+}
+
+export async function getSupplierById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db.select().from(suppliers).where(eq(suppliers.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getSupplierByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db
+    .select({
+      supplier: suppliers,
+      supplierUser: supplierUsers,
+    })
+    .from(supplierUsers)
+    .innerJoin(suppliers, eq(supplierUsers.supplierId, suppliers.id))
+    .where(eq(supplierUsers.userId, userId))
+    .limit(1);
+  
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateSupplier(id: number, data: Partial<InsertSupplier>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(suppliers).set(data).where(eq(suppliers.id, id));
+}
+
+export async function linkUserToSupplier(userId: number, supplierId: number, role: "supplier_admin" | "supplier_tech") {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.insert(supplierUsers).values({
+    userId,
+    supplierId,
+    role,
+  });
+}
+
+/**
+ * Supplier Rates Functions
+ */
+
+export async function getSupplierRates(supplierId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(supplierRates).where(eq(supplierRates.supplierId, supplierId));
+}
+
+export async function upsertSupplierRate(rate: InsertSupplierRate) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.insert(supplierRates).values(rate).onDuplicateKeyUpdate({
+    set: {
+      hourlyRate: rate.hourlyRate,
+      updatedAt: new Date(),
+    },
+  });
+}
+
+/**
+ * Supplier Coverage Functions
+ */
+
+export async function getSupplierCoverage(supplierId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(supplierCoverage).where(eq(supplierCoverage.supplierId, supplierId));
+}
+
+export async function createSupplierCoverage(coverage: InsertSupplierCoverage) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(supplierCoverage).values(coverage);
+  return result;
+}
+
+export async function deleteSupplierCoverage(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(supplierCoverage).where(eq(supplierCoverage.id, id));
+}
