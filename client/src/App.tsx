@@ -27,6 +27,9 @@ function Router() {
     <Switch>
       <Route path={"/"} component={Home} />
       <Route path="/login" component={Login} />
+      <Route path="/auth/customer-signup" component={CustomerSignup} />
+      <Route path="/auth/supplier-signup" component={SupplierSignup} />
+      {/* Legacy routes for backward compatibility */}
       <Route path="/signup" component={CustomerSignup} />
       <Route path="/supplier/signup" component={SupplierSignup} />
       <Route path={"/request-service"} component={RequestService} />

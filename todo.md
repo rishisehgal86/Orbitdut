@@ -130,3 +130,8 @@
 - [x] Update supplier signup to redirect to supplier portal after registration
 - [x] Ensure supplier account type is set correctly during signup
 - [x] Test complete supplier signup and portal access flow
+
+## Phase 18: Fix Supplier Signup Route
+- [x] Add /auth/supplier-signup route to App.tsx
+- [x] Verify all auth routes are properly registered
+- [x] Test supplier signup page access
