@@ -227,3 +227,6 @@
 ## Preview Tab Enhancements
 - [x] Show detailed country lists under each response time tier (like Coverage by Region)
 - [x] Show detailed city lists under each response time tier for Priority Cities
+
+## Bug Fixes
+- [x] Fix × button functionality in custom country selection (Selected countries list)
