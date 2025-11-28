@@ -26,8 +26,8 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { title: "Dashboard", href: "/customer/dashboard", icon: Home },
-  { title: "My Jobs", href: "/customer/jobs", icon: Briefcase },
-  { title: "Reviews", href: "/customer/reviews", icon: MessageSquare },
+  { title: "Request Service", href: "/customer/request-service", icon: Briefcase },
+  { title: "My Jobs", href: "/customer/jobs", icon: MessageSquare },
   { title: "Profile", href: "/customer/profile", icon: User },
   { title: "Settings", href: "/customer/settings", icon: Settings },
 ];

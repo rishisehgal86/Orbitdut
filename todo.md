@@ -72,3 +72,17 @@
 - [ ] Build automatic payment capture from authorization (Stripe integration pending)
 - [ ] Create supplier payout processing (Stripe integration pending)
 - [ ] Add review/rating system post-completion
+
+## Phase 10: Customer Portal & Authentication Flow
+- [x] Create customer portal layout with left sidebar navigation
+- [x] Build customer dashboard with job history and status
+- [x] Move request service form to authenticated customer portal
+- [x] Update homepage to show service preview with login prompts
+- [ ] Add customer job tracking and management interface
+- [ ] Create customer profile settings page
+
+## Phase 11: Service Types and Time Zone Updates
+- [x] Update service types to three engineer services only (L1 EUC, L1 Network, Smart Hands)
+- [x] Implement dual time UTC system (local time selection based on site location)
+- [x] Display both local time and UTC time on job details
+- [ ] Store scheduled time as UTC timestamp in database

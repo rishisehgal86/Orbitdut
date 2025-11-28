@@ -376,6 +376,26 @@ export const appRouter = router({
 
         return { success: true };
       }),
+
+    // Get customer's jobs
+    getCustomerJobs: protectedProcedure
+      .query(async ({ ctx }) => {
+        const { getDb } = await import("./db");
+        const { jobs } = await import("../drizzle/schema");
+        const { eq, desc } = await import("drizzle-orm");
+
+        const db = await getDb();
+        if (!db) return [];
+
+        // Get jobs for this customer (by user ID)
+        const customerJobs = await db
+          .select()
+          .from(jobs)
+          .where(eq(jobs.customerId, ctx.user.id))
+          .orderBy(desc(jobs.createdAt));
+
+        return customerJobs;
+      }),
   }),
 });
 

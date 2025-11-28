@@ -1,10 +1,13 @@
+import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowRight, Building2, Clock, DollarSign, MapPin, Shield, Users } from "lucide-react";
+import { ArrowRight, Building2, CheckCircle, Clock, DollarSign, MapPin, Shield, Users } from "lucide-react";
 import { Link } from "wouter";
 
 export default function Home() {
+  const { isAuthenticated } = useAuth();
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
@@ -17,15 +20,28 @@ export default function Home() {
             <span className="text-lg font-semibold">Orbidut</span>
           </div>
           <nav className="flex items-center gap-4">
-            <Link href="/request-service">
-              <Button variant="ghost">Request Service</Button>
-            </Link>
-            <Link href="/become-supplier">
-              <Button variant="ghost">Become a Supplier</Button>
-            </Link>
-            <a href={getLoginUrl()}>
-              <Button>Sign In</Button>
-            </a>
+            {isAuthenticated ? (
+              <>
+                <Link href="/customer/dashboard">
+                  <Button variant="ghost">Dashboard</Button>
+                </Link>
+                <Link href="/customer/request-service">
+                  <Button>Request Service</Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <a href="#how-it-works">
+                  <Button variant="ghost">How It Works</Button>
+                </a>
+                <Link href="/supplier/dashboard">
+                  <Button variant="ghost">Become a Supplier</Button>
+                </Link>
+                <a href={getLoginUrl()}>
+                  <Button>Sign In</Button>
+                </a>
+              </>
+            )}
           </nav>
         </div>
       </header>
@@ -43,17 +59,28 @@ export default function Home() {
               through dynamic pricing, geographic matching, and instant job distribution.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/request-service">
-                <Button size="lg" className="gap-2">
-                  Request a Service
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Link href="/become-supplier">
-                <Button size="lg" variant="outline">
-                  Join as a Supplier
-                </Button>
-              </Link>
+              {isAuthenticated ? (
+                <Link href="/customer/request-service">
+                  <Button size="lg" className="gap-2">
+                    Request a Service
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              ) : (
+                <>
+                  <a href={getLoginUrl()}>
+                    <Button size="lg" className="gap-2">
+                      Get Started
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </a>
+                  <a href="#how-it-works">
+                    <Button size="lg" variant="outline">
+                      Learn More
+                    </Button>
+                  </a>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -61,7 +88,7 @@ export default function Home() {
         {/* Features Section */}
         <div className="container py-16 bg-muted/30">
           <div className="mx-auto max-w-5xl">
-            <div className="text-center space-y-4 mb-12">
+            <div id="how-it-works" className="text-center space-y-4 mb-12">
               <h2 className="text-3xl font-bold tracking-tight">How Orbidut Works</h2>
               <p className="text-muted-foreground">
                 Our platform makes it easy to find and hire service providers in your area
@@ -144,20 +171,30 @@ export default function Home() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/request-service">
-                  <Button size="lg" variant="secondary" className="w-full sm:w-auto">
-                    Request a Service
-                  </Button>
-                </Link>
-                <Link href="/become-supplier">
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="w-full sm:w-auto bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground/10"
-                  >
-                    Become a Supplier
-                  </Button>
-                </Link>
+                {isAuthenticated ? (
+                  <Link href="/customer/request-service">
+                    <Button size="lg" variant="secondary" className="w-full sm:w-auto">
+                      Request a Service
+                    </Button>
+                  </Link>
+                ) : (
+                  <>
+                    <a href={getLoginUrl()}>
+                      <Button size="lg" variant="secondary" className="w-full sm:w-auto">
+                        Sign In
+                      </Button>
+                    </a>
+                    <Link href="/supplier/dashboard">
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        className="w-full sm:w-auto bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground/10"
+                      >
+                        Become a Supplier
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>
