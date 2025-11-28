@@ -213,14 +213,17 @@ export default function Coverage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2 mb-4">
-                    {existingCountries.map(({ countryCode }) => {
-                      const country = COUNTRIES.find(c => c.code === countryCode);
-                      return (
-                        <Badge key={countryCode} variant="secondary">
-                          {country?.name || countryCode}
+                    {existingCountries
+                      .map(({ countryCode }) => ({
+                        code: countryCode,
+                        name: COUNTRIES.find(c => c.code === countryCode)?.name || countryCode
+                      }))
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map(({ code, name }) => (
+                        <Badge key={code} variant="secondary">
+                          {name}
                         </Badge>
-                      );
-                    })}
+                      ))}
                   </div>
                   <Button variant="outline" size="sm" onClick={handleCustomSelection}>
                     Edit Coverage
