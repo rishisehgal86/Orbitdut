@@ -16,7 +16,6 @@ import { toast } from "sonner";
 import { COUNTRIES, REGIONS_WITH_COUNTRIES } from "@shared/countries";
 import { RESPONSE_TIME_OPTIONS, getResponseTimeLabel } from "@shared/responseTimes";
 
-
 type CoverageMode = "quick" | "regional" | "custom";
 
 export default function Coverage() {
@@ -1376,8 +1375,6 @@ export default function Coverage() {
                   </CardContent>
                 </Card>
               )}
-
-
 
               {/* Empty State */}
               {(!existingCountries || existingCountries.length === 0) && (

@@ -175,18 +175,17 @@ export async function getSupplierRates(supplierId: number) {
   return await db.select().from(supplierRates).where(eq(supplierRates.supplierId, supplierId));
 }
 
-// TODO: Update to use new rate schema
-// export async function upsertSupplierRate(rate: InsertSupplierRate) {
-//   const db = await getDb();
-//   if (!db) throw new Error("Database not available");
-//   
-//   await db.insert(supplierRates).values(rate).onDuplicateKeyUpdate({
-//     set: {
-//       rateUsdCents: rate.rateUsdCents,
-//       updatedAt: new Date(),
-//     },
-//   });
-// }
+export async function upsertSupplierRate(rate: InsertSupplierRate) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.insert(supplierRates).values(rate).onDuplicateKeyUpdate({
+    set: {
+      hourlyRate: rate.hourlyRate,
+      updatedAt: new Date(),
+    },
+  });
+}
 
 /**
  * Supplier Coverage Functions
