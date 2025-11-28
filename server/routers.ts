@@ -218,20 +218,50 @@ export const appRouter = router({
         return await getSupplierRates(input.supplierId);
       }),
 
-    // Upsert supplier rate
+    // Rate Management (New Schema)
     upsertRate: protectedProcedure
       .input(
         z.object({
           supplierId: z.number(),
-          country: z.string().length(2),
-          hourlyRate: z.number().min(0),
-          currency: z.string().length(3),
+          countryCode: z.string().length(2).nullable(),
+          cityId: z.number().nullable(),
+          serviceType: z.enum(["L1_EUC", "L1_NETWORK", "SMART_HANDS"]),
+          responseTimeHours: z.number(),
+          rateUsdCents: z.number().nullable(),
         })
       )
       .mutation(async ({ input }) => {
-        const { upsertSupplierRate } = await import("./db");
-        await upsertSupplierRate(input);
+        const { upsertRate } = await import("./rates");
+        await upsertRate(input);
         return { success: true };
+      }),
+
+    bulkUpsertRates: protectedProcedure
+      .input(
+        z.object({
+          rates: z.array(
+            z.object({
+              supplierId: z.number(),
+              countryCode: z.string().length(2).nullable(),
+              cityId: z.number().nullable(),
+              serviceType: z.enum(["L1_EUC", "L1_NETWORK", "SMART_HANDS"]),
+              responseTimeHours: z.number(),
+              rateUsdCents: z.number().nullable(),
+            })
+          ),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { bulkUpsertRates } = await import("./rates");
+        await bulkUpsertRates(input.rates);
+        return { success: true };
+      }),
+
+    getRateCompletionStats: protectedProcedure
+      .input(z.object({ supplierId: z.number() }))
+      .query(async ({ input }) => {
+        const { getRateCompletionStats } = await import("./rates");
+        return await getRateCompletionStats(input.supplierId);
       }),
 
     // Tier 1: Country Coverage
