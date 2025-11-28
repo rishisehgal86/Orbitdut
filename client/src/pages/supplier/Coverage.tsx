@@ -29,6 +29,8 @@ export default function Coverage() {
   const [citySearchInput, setCitySearchInput] = useState("");
   const [countrySearchQuery, setCountrySearchQuery] = useState("");
   const [selectedCountryCodes, setSelectedCountryCodes] = useState<string[]>([]);
+  const [citySearchQuery, setCitySearchQuery] = useState("");
+  const [selectedCityIds, setSelectedCityIds] = useState<number[]>([]);
 
   // Get supplier profile
   const { data: profile } = trpc.supplier.getProfile.useQuery(
@@ -295,6 +297,45 @@ export default function Coverage() {
     
     toast.success(`Response time set for ${selectedCountryCodes.length} countries`);
     setSelectedCountryCodes([]);
+  };
+
+  const handleToggleCitySelection = (cityId: number) => {
+    setSelectedCityIds(prev => 
+      prev.includes(cityId)
+        ? prev.filter(id => id !== cityId)
+        : [...prev, cityId]
+    );
+  };
+
+  const handleToggleAllCities = () => {
+    if (!priorityCities) return;
+    const filteredCities = priorityCities.filter(city =>
+      !citySearchQuery || city.cityName.toLowerCase().includes(citySearchQuery.toLowerCase())
+    );
+    
+    if (selectedCityIds.length === filteredCities.length) {
+      setSelectedCityIds([]);
+    } else {
+      setSelectedCityIds(filteredCities.map(c => c.id));
+    }
+  };
+
+  const handleBulkSetSelectedCities = (hours: number) => {
+    if (!profile?.supplier.id || selectedCityIds.length === 0 || !priorityCities) return;
+    
+    // Update each selected city
+    const selectedCities = priorityCities.filter(c => selectedCityIds.includes(c.id));
+    selectedCities.forEach(city => {
+      updateResponseTime.mutate({
+        supplierId: profile.supplier.id,
+        countryCode: city.countryCode,
+        cityName: city.cityName,
+        responseTimeHours: hours,
+      });
+    });
+    
+    toast.success(`Response time set for ${selectedCityIds.length} ${selectedCityIds.length === 1 ? 'city' : 'cities'}`);
+    setSelectedCityIds([]);
   };
 
   const handleBulkSetCountries = (hours: number) => {
@@ -871,55 +912,127 @@ export default function Coverage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-2">
-                      {priorityCities.map((city) => {
-                        const cityResponseTime = responseTimes?.find(
-                          rt => rt.countryCode === city.countryCode && rt.cityName === city.cityName
-                        );
-                        const countryResponseTime = responseTimes?.find(
-                          rt => rt.countryCode === city.countryCode && !rt.cityName
-                        );
-                        const fallbackTime = countryResponseTime?.responseTimeHours || defaultResponseTime;
-                        
-                        return (
-                          <div
-                            key={city.id}
-                            className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-                          >
-                            <div className="flex items-center gap-3 flex-1">
-                              <MapPin className="w-4 h-4 text-primary" />
-                              <div>
-                                <p className="font-medium">{city.cityName}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {COUNTRIES.find(c => c.code === city.countryCode)?.name || city.countryCode}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <Select
-                                value={cityResponseTime?.responseTimeHours?.toString() || "default"}
-                                onValueChange={(value) => 
-                                  handleSetCityResponseTime(city.countryCode, city.cityName, value === "default" ? null : parseInt(value))
-                                }
-                              >
-                                <SelectTrigger className="w-[200px]">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="default">
-                                    Country default ({fallbackTime ? getResponseTimeLabel(fallbackTime) : "Not set"})
+                    <div className="space-y-4">
+                      {/* Search Bar */}
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          type="text"
+                          placeholder="Search cities..."
+                          value={citySearchQuery}
+                          onChange={(e) => setCitySearchQuery(e.target.value)}
+                          className="pl-10"
+                        />
+                      </div>
+
+                      {/* Bulk Actions */}
+                      <div className="space-y-3">
+                        {/* Selection info and actions */}
+                        {selectedCityIds.length > 0 && (
+                          <div className="flex items-center gap-4 p-4 bg-primary/10 rounded-lg border border-primary/20">
+                            <p className="text-sm font-medium">
+                              {selectedCityIds.length} {selectedCityIds.length === 1 ? 'city' : 'cities'} selected
+                            </p>
+                            <Select onValueChange={(value) => handleBulkSetSelectedCities(parseInt(value))}>
+                              <SelectTrigger className="w-[250px]">
+                                <SelectValue placeholder="Set response time for selected" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {RESPONSE_TIME_OPTIONS.map((option) => (
+                                  <SelectItem key={option.value} value={option.value.toString()}>
+                                    {option.label}
                                   </SelectItem>
-                                  {RESPONSE_TIME_OPTIONS.map((option) => (
-                                    <SelectItem key={option.value} value={option.value.toString()}>
-                                      {option.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setSelectedCityIds([])}
+                            >
+                              Clear Selection
+                            </Button>
                           </div>
-                        );
-                      })}
+                        )}
+                      </div>
+
+                      {/* City List */}
+                      <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                        <div className="flex items-center justify-between mb-3">
+                          <p className="text-sm text-muted-foreground">
+                            Showing {priorityCities.filter(city =>
+                              !citySearchQuery || city.cityName.toLowerCase().includes(citySearchQuery.toLowerCase())
+                            ).length} priority {priorityCities.filter(city =>
+                              !citySearchQuery || city.cityName.toLowerCase().includes(citySearchQuery.toLowerCase())
+                            ).length === 1 ? 'city' : 'cities'}{citySearchQuery && ` matching "${citySearchQuery}"`}
+                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleToggleAllCities}
+                          >
+                            {selectedCityIds.length === priorityCities.filter(city =>
+                              !citySearchQuery || city.cityName.toLowerCase().includes(citySearchQuery.toLowerCase())
+                            ).length ? 'Deselect All' : 'Select All'}
+                          </Button>
+                        </div>
+                        {priorityCities
+                          .filter(city =>
+                            !citySearchQuery || city.cityName.toLowerCase().includes(citySearchQuery.toLowerCase())
+                          )
+                          .map((city) => {
+                            const cityResponseTime = responseTimes?.find(
+                              rt => rt.countryCode === city.countryCode && rt.cityName === city.cityName
+                            );
+                            const countryResponseTime = responseTimes?.find(
+                              rt => rt.countryCode === city.countryCode && !rt.cityName
+                            );
+                            const fallbackTime = countryResponseTime?.responseTimeHours || defaultResponseTime;
+                            
+                            return (
+                              <div
+                                key={city.id}
+                                className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                              >
+                                <div className="flex items-center gap-3 flex-1">
+                                  <Checkbox
+                                    checked={selectedCityIds.includes(city.id)}
+                                    onCheckedChange={() => handleToggleCitySelection(city.id)}
+                                  />
+                                  <MapPin className="w-4 h-4 text-primary" />
+                                  <div>
+                                    <p className="font-medium">{city.cityName}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {COUNTRIES.find(c => c.code === city.countryCode)?.name || city.countryCode}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <Select
+                                    value={cityResponseTime?.responseTimeHours?.toString() || "default"}
+                                    onValueChange={(value) => 
+                                      handleSetCityResponseTime(city.countryCode, city.cityName, value === "default" ? null : parseInt(value))
+                                    }
+                                  >
+                                    <SelectTrigger className="w-[200px]">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="default">
+                                        Country default ({fallbackTime ? getResponseTimeLabel(fallbackTime) : "Not set"})
+                                      </SelectItem>
+                                      {RESPONSE_TIME_OPTIONS.map((option) => (
+                                        <SelectItem key={option.value} value={option.value.toString()}>
+                                          {option.label}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -1066,6 +1179,94 @@ export default function Coverage() {
                               </div>
                               <span className="text-sm text-muted-foreground">
                                 {countriesUsingDefault.length} {countriesUsingDefault.length === 1 ? 'country' : 'countries'} ({percentage}%)
+                              </span>
+                            </div>
+                            <div className="w-full bg-secondary rounded-full h-2">
+                              <div
+                                className="bg-gray-400 h-2 rounded-full transition-all"
+                                style={{ width: `${percentage}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Priority City Response Time Distribution */}
+              {priorityCities && priorityCities.length > 0 && responseTimes && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Priority City Response Time Distribution</CardTitle>
+                    <CardDescription>
+                      Breakdown of priority cities by response time commitment
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {RESPONSE_TIME_OPTIONS.map(option => {
+                        const citiesWithThisTime = priorityCities.filter((city) => {
+                          const cityRT = responseTimes.find(
+                            rt => rt.countryCode === city.countryCode && rt.cityName === city.cityName
+                          );
+                          const countryRT = responseTimes.find(
+                            rt => rt.countryCode === city.countryCode && !rt.cityName
+                          );
+                          const effectiveTime = cityRT?.responseTimeHours || countryRT?.responseTimeHours || defaultResponseTime;
+                          return effectiveTime === option.value;
+                        });
+                        
+                        const percentage = priorityCities.length > 0
+                          ? Math.round((citiesWithThisTime.length / priorityCities.length) * 100)
+                          : 0;
+                        
+                        if (citiesWithThisTime.length === 0) return null;
+
+                        return (
+                          <div key={option.value} className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center gap-2">
+                                <MapPin className="w-4 h-4 text-primary" />
+                                <Label className="font-medium">{option.label}</Label>
+                              </div>
+                              <span className="text-sm text-muted-foreground">
+                                {citiesWithThisTime.length} {citiesWithThisTime.length === 1 ? 'city' : 'cities'} ({percentage}%)
+                              </span>
+                            </div>
+                            <div className="w-full bg-secondary rounded-full h-2">
+                              <div
+                                className="bg-primary h-2 rounded-full transition-all"
+                                style={{ width: `${percentage}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                      
+                      {/* Cities using country/default */}
+                      {(() => {
+                        const citiesUsingDefault = priorityCities.filter((city) => {
+                          const cityRT = responseTimes.find(
+                            rt => rt.countryCode === city.countryCode && rt.cityName === city.cityName
+                          );
+                          return !cityRT?.responseTimeHours;
+                        });
+                        
+                        if (citiesUsingDefault.length === 0) return null;
+                        
+                        const percentage = Math.round((citiesUsingDefault.length / priorityCities.length) * 100);
+                        
+                        return (
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center gap-2">
+                                <MapPin className="w-4 h-4 text-muted-foreground" />
+                                <Label className="font-medium">Using Country/Default Time</Label>
+                              </div>
+                              <span className="text-sm text-muted-foreground">
+                                {citiesUsingDefault.length} {citiesUsingDefault.length === 1 ? 'city' : 'cities'} ({percentage}%)
                               </span>
                             </div>
                             <div className="w-full bg-secondary rounded-full h-2">

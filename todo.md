@@ -213,3 +213,10 @@
 - [x] Add response time breakdown statistics (count by tier: 4h, 24h, 48h, 72h, 96h)
 - [ ] Integrate world map visualization with color-coded countries by response time
 - [ ] Add legend showing response time colors on map
+
+## Priority City Response Times Enhancements
+- [x] Add search bar to filter priority cities
+- [x] Add checkboxes for multi-select cities
+- [x] Add bulk action to set response time for selected cities
+- [x] Add Select All / Deselect All functionality
+- [x] Add Priority City Response Time Distribution to Preview tab
