@@ -60,17 +60,105 @@ export default function SupplierRates() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">
-                    {stats.configured} / {stats.totalPossible} ({stats.percentage}%)
-                  </span>
+              <div className="space-y-6">
+                {/* Overall Progress */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium">Overall Progress</span>
+                    <span className="text-muted-foreground">
+                      {stats.configured} / {stats.totalPossible} ({stats.percentage}%)
+                    </span>
+                  </div>
+                  <div className="w-full bg-secondary rounded-full h-2.5">
+                    <div
+                      className="bg-primary h-2.5 rounded-full transition-all"
+                      style={{ width: `${stats.percentage}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="w-full bg-secondary rounded-full h-2">
-                  <div
-                    className="bg-primary h-2 rounded-full transition-all"
-                    style={{ width: `${stats.percentage}%` }}
-                  />
+
+                {/* By Location Type */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium">By Location Type</h4>
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">Countries</span>
+                        <span className="text-muted-foreground">
+                          {stats.byLocationType.countries.configured} / {stats.byLocationType.countries.totalPossible} ({stats.byLocationType.countries.percentage}%)
+                        </span>
+                      </div>
+                      <div className="w-full bg-secondary rounded-full h-2">
+                        <div
+                          className="bg-blue-500 h-2 rounded-full transition-all"
+                          style={{ width: `${stats.byLocationType.countries.percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">Cities</span>
+                        <span className="text-muted-foreground">
+                          {stats.byLocationType.cities.configured} / {stats.byLocationType.cities.totalPossible} ({stats.byLocationType.cities.percentage}%)
+                        </span>
+                      </div>
+                      <div className="w-full bg-secondary rounded-full h-2">
+                        <div
+                          className="bg-green-500 h-2 rounded-full transition-all"
+                          style={{ width: `${stats.byLocationType.cities.percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* By Service Type */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium">By Service Type</h4>
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">L1 End User Computing</span>
+                        <span className="text-muted-foreground">
+                          {stats.byServiceType.l1_euc.configured} / {stats.byServiceType.l1_euc.totalPossible} ({stats.byServiceType.l1_euc.percentage}%)
+                        </span>
+                      </div>
+                      <div className="w-full bg-secondary rounded-full h-2">
+                        <div
+                          className="bg-purple-500 h-2 rounded-full transition-all"
+                          style={{ width: `${stats.byServiceType.l1_euc.percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">L1 Network Support</span>
+                        <span className="text-muted-foreground">
+                          {stats.byServiceType.l1_network.configured} / {stats.byServiceType.l1_network.totalPossible} ({stats.byServiceType.l1_network.percentage}%)
+                        </span>
+                      </div>
+                      <div className="w-full bg-secondary rounded-full h-2">
+                        <div
+                          className="bg-orange-500 h-2 rounded-full transition-all"
+                          style={{ width: `${stats.byServiceType.l1_network.percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">Smart Hands</span>
+                        <span className="text-muted-foreground">
+                          {stats.byServiceType.smart_hands.configured} / {stats.byServiceType.smart_hands.totalPossible} ({stats.byServiceType.smart_hands.percentage}%)
+                        </span>
+                      </div>
+                      <div className="w-full bg-secondary rounded-full h-2">
+                        <div
+                          className="bg-cyan-500 h-2 rounded-full transition-all"
+                          style={{ width: `${stats.byServiceType.smart_hands.percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </CardContent>
