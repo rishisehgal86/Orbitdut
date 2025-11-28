@@ -33,11 +33,14 @@ export default function Home() {
                 <a href="#how-it-works">
                   <Button variant="ghost">How It Works</Button>
                 </a>
-                <Link href="/supplier/dashboard">
-                  <Button variant="ghost">Become a Supplier</Button>
+                <Link href="/auth/supplier-signup">
+                  <Button variant="ghost">Supplier Signup</Button>
                 </Link>
                 <Link href="/login">
-                  <Button>Sign In</Button>
+                  <Button variant="ghost">Sign In</Button>
+                </Link>
+                <Link href="/auth/customer-signup">
+                  <Button>Get Started</Button>
                 </Link>
               </>
             )}
@@ -67,9 +70,9 @@ export default function Home() {
                 </Link>
               ) : (
                 <>
-                <Link href="/signup">
+                <Link href="/auth/customer-signup">
                   <Button size="lg" className="gap-2">
-                      Get Started
+                      Request a Service
                       <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
@@ -178,18 +181,18 @@ export default function Home() {
                   </Link>
                 ) : (
                   <>
-                    <Link href="/login">
+                    <Link href="/auth/customer-signup">
                       <Button size="lg" variant="secondary" className="w-full sm:w-auto">
-                        Sign In
+                        Customer Signup
                       </Button>
                     </Link>
-                    <Link href="/supplier/dashboard">
+                    <Link href="/auth/supplier-signup">
                       <Button
                         size="lg"
                         variant="outline"
                         className="w-full sm:w-auto bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground/10"
                       >
-                        Become a Supplier
+                        Supplier Signup
                       </Button>
                     </Link>
                   </>

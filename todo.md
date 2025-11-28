@@ -119,3 +119,9 @@
 - [x] Add job timeline/activity log
 - [x] Implement real-time status updates
 - [x] Add search functionality
+
+## Phase 16: Homepage Signup Links
+- [x] Add prominent customer signup link to homepage
+- [x] Add prominent supplier signup link to homepage
+- [x] Update hero section with clear calls-to-action
+- [x] Add signup section explaining benefits for each user type
