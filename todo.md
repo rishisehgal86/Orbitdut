@@ -240,3 +240,5 @@
 ## Response Time Validation
 - [x] Implement validation logic ensuring Priority Cities have faster response times than parent countries
 - [x] Add visual warnings when city response time is slower than country response time
+
+
