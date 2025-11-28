@@ -1,9 +1,8 @@
 import { useAuth } from "@/_core/hooks/useAuth";
-import { getLoginUrl } from "@/const";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight, Building2, CheckCircle, Clock, DollarSign, MapPin, Shield, Users } from "lucide-react";
-import { Link } from "wouter";
 
 export default function Home() {
   const { isAuthenticated } = useAuth();
@@ -37,9 +36,9 @@ export default function Home() {
                 <Link href="/supplier/dashboard">
                   <Button variant="ghost">Become a Supplier</Button>
                 </Link>
-                <a href={getLoginUrl()}>
+                <Link href="/login">
                   <Button>Sign In</Button>
-                </a>
+                </Link>
               </>
             )}
           </nav>
@@ -68,12 +67,12 @@ export default function Home() {
                 </Link>
               ) : (
                 <>
-                  <a href={getLoginUrl()}>
-                    <Button size="lg" className="gap-2">
+                <Link href="/signup">
+                  <Button size="lg" className="gap-2">
                       Get Started
                       <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </a>
+                  </Button>
+                </Link>
                   <a href="#how-it-works">
                     <Button size="lg" variant="outline">
                       Learn More
@@ -179,11 +178,11 @@ export default function Home() {
                   </Link>
                 ) : (
                   <>
-                    <a href={getLoginUrl()}>
+                    <Link href="/login">
                       <Button size="lg" variant="secondary" className="w-full sm:w-auto">
                         Sign In
                       </Button>
-                    </a>
+                    </Link>
                     <Link href="/supplier/dashboard">
                       <Button
                         size="lg"

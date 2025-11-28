@@ -98,3 +98,15 @@
 - [x] Add validation messages for duration limits
 - [x] Update backend job creation validation
 - [x] Update pricing calculation to respect duration limits
+
+## Phase 14: Local Authentication System
+- [x] Update users table to include password hash and account type fields
+- [x] Create backend signup endpoint with password hashing
+- [x] Create backend login endpoint with JWT token generation
+- [x] Update logout endpoint for local auth
+- [x] Build separate customer signup page
+- [x] Build separate supplier signup page
+- [x] Build login page
+- [x] Update auth context and hooks to use local auth
+- [x] Remove Manus OAuth dependencies from navigation and pages
+- [x] Test complete signup and login flow

@@ -9,6 +9,137 @@ export const appRouter = router({
   system: systemRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
+    
+    signup: publicProcedure
+      .input(
+        z.object({
+          name: z.string().min(1),
+          email: z.string().email(),
+          password: z.string().min(8),
+          accountType: z.enum(["customer", "supplier"]),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const { hashPassword, createToken } = await import("./auth");
+        const { getDb } = await import("./db");
+        const { users } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+
+        const db = await getDb();
+        if (!db) {
+          throw new Error("Database not available");
+        }
+
+        // Check if user already exists
+        const existing = await db.select().from(users).where(eq(users.email, input.email)).limit(1);
+        if (existing.length > 0) {
+          throw new Error("Email already registered");
+        }
+
+        // Hash password
+        const passwordHash = await hashPassword(input.password);
+
+        // Create user
+        const result = await db.insert(users).values({
+          name: input.name,
+          email: input.email,
+          passwordHash,
+          accountType: input.accountType,
+          loginMethod: "local",
+          lastSignedIn: new Date(),
+        });
+
+        const userId = Number((result as any).insertId);
+
+        // Create JWT token
+        const token = await createToken({
+          userId,
+          email: input.email,
+          accountType: input.accountType,
+        });
+
+        // Set cookie
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, token, {
+          ...cookieOptions,
+          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        });
+
+        return {
+          success: true,
+          user: {
+            id: userId,
+            name: input.name,
+            email: input.email,
+            accountType: input.accountType,
+          },
+        };
+      }),
+
+    login: publicProcedure
+      .input(
+        z.object({
+          email: z.string().email(),
+          password: z.string(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const { verifyPassword, createToken } = await import("./auth");
+        const { getDb } = await import("./db");
+        const { users } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+
+        const db = await getDb();
+        if (!db) {
+          throw new Error("Database not available");
+        }
+
+        // Find user by email
+        const result = await db.select().from(users).where(eq(users.email, input.email)).limit(1);
+        if (result.length === 0) {
+          throw new Error("Invalid email or password");
+        }
+
+        const user = result[0];
+
+        // Verify password
+        if (!user.passwordHash) {
+          throw new Error("This account uses OAuth login");
+        }
+
+        const isValid = await verifyPassword(input.password, user.passwordHash);
+        if (!isValid) {
+          throw new Error("Invalid email or password");
+        }
+
+        // Update last signed in
+        await db.update(users).set({ lastSignedIn: new Date() }).where(eq(users.id, user.id));
+
+        // Create JWT token
+        const token = await createToken({
+          userId: user.id,
+          email: user.email,
+          accountType: user.accountType,
+        });
+
+        // Set cookie
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, token, {
+          ...cookieOptions,
+          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        });
+
+        return {
+          success: true,
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            accountType: user.accountType,
+          },
+        };
+      }),
+
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
