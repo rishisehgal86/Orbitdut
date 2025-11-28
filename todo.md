@@ -242,3 +242,23 @@
 - [x] Add visual warnings when city response time is slower than country response time
 
 
+
+## Rate Management System
+- [x] Review and verify supplierRates table schema
+- [x] Create shared constants for service types and response times
+- [x] Build backend tRPC procedures (getRates, upsertRate, bulkUpsertRates, getRateCompletionStats)
+- [x] Fix TypeScript errors from schema migration
+- [x] Create Rates page with tab structure (Quick Setup, By Location, By Service, Bulk Import/Export)
+- [x] Implement Quick Setup tab with base rate inputs for all service types
+- [x] Add "Apply to All Locations" functionality
+- [x] Add completion tracker showing rates configured percentage
+- [x] Fix toast notification errors (use sonner API correctly)
+- [x] Fix getPriorityCities query name (was getCities)
+- [x] Add refetch for stats query after bulk upsert
+- [x] Test Quick Setup tab with all 3 service types (L1 EUC, L1 Network, Smart Hands)
+- [ ] Build By Location tab with searchable location list
+- [ ] Create expandable rate cards for each location
+- [ ] Implement inline rate editing with auto-save
+- [ ] Add validation warnings (e.g., faster response time cheaper than slower)
+- [ ] Test rate CRUD operations thoroughly
+- [ ] Test with multiple locations and service types

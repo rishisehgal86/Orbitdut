@@ -210,29 +210,79 @@ export const appRouter = router({
         return { success: true };
       }),
 
-    // Get supplier rates
+    // ========== NEW RATE MANAGEMENT SYSTEM ==========
+    
+    // Get all rates for a supplier
     getRates: protectedProcedure
       .input(z.object({ supplierId: z.number() }))
       .query(async ({ input }) => {
-        const { getSupplierRates } = await import("./db");
+        const { getSupplierRates } = await import("./rates");
         return await getSupplierRates(input.supplierId);
       }),
 
-    // Upsert supplier rate
+    // Upsert a single rate
     upsertRate: protectedProcedure
       .input(
         z.object({
           supplierId: z.number(),
-          country: z.string().length(2),
-          hourlyRate: z.number().min(0),
-          currency: z.string().length(3),
+          countryCode: z.string().length(2).optional(),
+          cityId: z.number().optional(),
+          serviceType: z.string(),
+          responseTimeHours: z.number(),
+          rateUsdCents: z.number().nullable(),
         })
       )
       .mutation(async ({ input }) => {
-        const { upsertSupplierRate } = await import("./db");
-        await upsertSupplierRate(input);
+        const { upsertRate } = await import("./rates");
+        await upsertRate(input);
         return { success: true };
       }),
+
+    // Bulk upsert rates (for "Apply to All" functionality)
+    bulkUpsertRates: protectedProcedure
+      .input(
+        z.object({
+          rates: z.array(
+            z.object({
+              supplierId: z.number(),
+              countryCode: z.string().length(2).optional(),
+              cityId: z.number().optional(),
+              serviceType: z.string(),
+              responseTimeHours: z.number(),
+              rateUsdCents: z.number().nullable(),
+            })
+          ),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { bulkUpsertRates } = await import("./rates");
+        await bulkUpsertRates(input.rates);
+        return { success: true };
+      }),
+
+    // Get rate completion statistics
+    getRateCompletionStats: protectedProcedure
+      .input(z.object({ supplierId: z.number() }))
+      .query(async ({ input }) => {
+        const { getRateCompletionStats } = await import("./rates");
+        return await getRateCompletionStats(input.supplierId);
+      }),
+
+    // OLD: Upsert supplier rate (deprecated - replaced by new rate management system)
+    // upsertRate: protectedProcedure
+    //   .input(
+    //     z.object({
+    //       supplierId: z.number(),
+    //       country: z.string().length(2),
+    //       hourlyRate: z.number().min(0),
+    //       currency: z.string().length(3),
+    //     })
+    //   )
+    //   .mutation(async ({ input }) => {
+    //     const { upsertSupplierRate } = await import("./db");
+    //     await upsertSupplierRate(input);
+    //     return { success: true };
+    //   }),
 
     // Tier 1: Country Coverage
     getCountries: protectedProcedure
@@ -326,29 +376,30 @@ export const appRouter = router({
 
   jobs: router({
     // Calculate price for a job request
-    calculatePrice: publicProcedure
-      .input(
-        z.object({
-          country: z.string().length(2),
-          latitude: z.string(),
-          longitude: z.string(),
-          scheduledStart: z.string(),
-          estimatedDuration: z.number().min(120, "Duration must be at least 2 hours (120 minutes)").max(960, "Duration must not exceed 16 hours (960 minutes)"),
-        })
-      )
-      .mutation(async ({ input }) => {
-        const { calculateJobPrice } = await import("./pricing");
-        const pricing = await calculateJobPrice({
-          ...input,
-          scheduledStart: new Date(input.scheduledStart),
-        });
+    // OLD: calculatePrice (temporarily disabled - depends on old pricing.ts)
+    // calculatePrice: publicProcedure
+    //   .input(
+    //     z.object({
+    //       country: z.string().length(2),
+    //       latitude: z.string(),
+    //       longitude: z.string(),
+    //       scheduledStart: z.string(),
+    //       estimatedDuration: z.number().min(120, "Duration must be at least 2 hours (120 minutes)").max(960, "Duration must not exceed 16 hours (960 minutes)"),
+    //     })
+    //   )
+    //   .mutation(async ({ input }) => {
+    //     const { calculateJobPrice } = await import("./pricing");
+    //     const pricing = await calculateJobPrice({
+    //       ...input,
+    //       scheduledStart: new Date(input.scheduledStart),
+    //     });
 
-        if (!pricing) {
-          throw new Error("No suppliers available for this location");
-        }
+    //     if (!pricing) {
+    //       throw new Error("No suppliers available for this location");
+    //     }
 
-        return pricing;
-      }),
+    //     return pricing;
+    //   }),
 
     // Create a new job request
     create: publicProcedure

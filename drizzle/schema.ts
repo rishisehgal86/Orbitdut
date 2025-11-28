@@ -66,14 +66,26 @@ export type SupplierUser = typeof supplierUsers.$inferSelect;
 export type InsertSupplierUser = typeof supplierUsers.$inferInsert;
 
 /**
- * Supplier rates table - stores hourly rates per country
+ * Supplier rates table - stores hourly rates per location, service type, and response time
+ * Three-dimensional pricing matrix: Location × Service Type × Response Time
  */
 export const supplierRates = mysqlTable("supplierRates", {
   id: int("id").autoincrement().primaryKey(),
   supplierId: int("supplierId").notNull(),
-  country: varchar("country", { length: 2 }).notNull(), // ISO 3166-1 alpha-2
-  hourlyRate: int("hourlyRate").notNull(), // Stored in cents to avoid decimal issues
-  currency: varchar("currency", { length: 3 }).notNull(), // ISO 4217 (USD, EUR, GBP, etc.)
+  
+  // Location: Country OR Priority City (mutually exclusive)
+  countryCode: varchar("countryCode", { length: 2 }), // ISO 3166-1 alpha-2 (null if cityId is set)
+  cityId: int("cityId"), // References supplierPriorityCities (null if countryCode is set)
+  
+  // Service Type: L1_EUC, L1_NETWORK, SMART_HANDS
+  serviceType: varchar("serviceType", { length: 50 }).notNull(),
+  
+  // Response Time: 4, 24, 48, 72, 96 (hours)
+  responseTimeHours: int("responseTimeHours").notNull(),
+  
+  // Rate in USD cents (nullable - allows opt-out)
+  rateUsdCents: int("rateUsdCents"),
+  
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

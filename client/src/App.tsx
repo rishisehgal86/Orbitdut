@@ -15,7 +15,7 @@ import SupplierJobs from "./pages/supplier/Jobs";
 import SupplierJobDetail from "./pages/supplier/JobDetail";
 import SupplierCoverage from "./pages/supplier/Coverage";
 import RequestService from "./pages/RequestService";
-import RequestServicePricing from "./pages/RequestServicePricing";
+// RequestServicePricing import removed - rebuilding
 import JobConfirmation from "./pages/JobConfirmation";
 import CustomerDashboard from "./pages/customer/Dashboard";
 import CustomerRequestService from "./pages/customer/RequestService";
@@ -35,7 +35,7 @@ function Router() {
       <Route path="/supplier/signup" component={SupplierSignup} />
       <Route path={"/request-service"} component={RequestService} />
       <Route path={"/404"} component={NotFound} />
-      <Route path={"/request-service/pricing"} component={RequestServicePricing} />
+      {/* <Route path={"/request-service/pricing"} component={RequestServicePricing} /> */}
       <Route path={"/job-confirmation/:id"} component={JobConfirmation} />
       <Route path={"/customer/dashboard"} component={CustomerDashboard} />
       <Route path={"/customer/request-service"} component={CustomerRequestService} />
