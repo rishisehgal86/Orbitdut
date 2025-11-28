@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { MapView } from "@/components/Map";
 import CustomerLayout from "@/components/CustomerLayout";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { trpc } from "@/lib/trpc";
 import { Calendar, Clock, Info, MapPin } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
@@ -49,6 +50,7 @@ export default function RequestService() {
   const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
   const [localTimeDisplay, setLocalTimeDisplay] = useState("");
   const [utcTimeDisplay, setUtcTimeDisplay] = useState("");
+  const [fetchingTimezone, setFetchingTimezone] = useState(false);
 
   // Update time displays when date, time, or timezone changes
   useEffect(() => {
@@ -115,10 +117,7 @@ export default function RequestService() {
           }
         });
 
-        // Get timezone for the location using Google Maps Timezone API
-        // For now, we'll use a simple mapping based on coordinates
-        const timezone = getTimezoneFromCoordinates(lat, lng);
-
+        // Update form data first
         setFormData((prev) => ({
           ...prev,
           address: place.formatted_address || "",
@@ -127,8 +126,10 @@ export default function RequestService() {
           postalCode,
           latitude: lat.toString(),
           longitude: lng.toString(),
-          timezone,
         }));
+
+        // Fetch timezone from Google Maps API
+        fetchTimezoneForLocation(lat, lng);
 
         // Center map on selected location
         map.setCenter(place.geometry.location);
@@ -145,20 +146,40 @@ export default function RequestService() {
     }
   };
 
-  // Simple timezone estimation based on coordinates
-  // In production, use Google Maps Timezone API or a timezone database
-  const getTimezoneFromCoordinates = (lat: number, lng: number): string => {
-    // US timezones (simplified)
-    if (lat >= 24 && lat <= 50 && lng >= -125 && lng <= -66) {
-      if (lng >= -125 && lng < -120) return "America/Los_Angeles";
-      if (lng >= -120 && lng < -105) return "America/Denver";
-      if (lng >= -105 && lng < -90) return "America/Chicago";
-      if (lng >= -90 && lng <= -66) return "America/New_York";
+  // Fetch timezone from Google Maps Timezone API
+  const fetchTimezoneForLocation = async (lat: number, lng: number) => {
+    setFetchingTimezone(true);
+    try {
+      // Use fetch to call the tRPC endpoint directly
+      const response = await fetch(
+        `/api/trpc/jobs.getTimezone?input=${encodeURIComponent(
+          JSON.stringify({ latitude: lat, longitude: lng })
+        )}`
+      );
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch timezone");
+      }
+      
+      const data = await response.json();
+      const result = data.result.data;
+
+      setFormData((prev) => ({
+        ...prev,
+        timezone: result.timeZoneId,
+      }));
+
+      toast.success(`Timezone detected: ${result.timeZoneName}`);
+    } catch (error) {
+      console.error("Error fetching timezone:", error);
+      toast.error("Failed to detect timezone. Defaulting to UTC.");
+      setFormData((prev) => ({
+        ...prev,
+        timezone: "UTC",
+      }));
+    } finally {
+      setFetchingTimezone(false);
     }
-    // UK
-    if (lat >= 50 && lat <= 60 && lng >= -8 && lng <= 2) return "Europe/London";
-    // Default to UTC
-    return "UTC";
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

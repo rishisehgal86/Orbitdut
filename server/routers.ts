@@ -377,9 +377,53 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    // Get timezone from coordinates using Google Maps API
+    getTimezone: publicProcedure
+      .input(z.object({
+        latitude: z.number(),
+        longitude: z.number(),
+        timestamp: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        const { makeRequest } = await import("./_core/map");
+        
+        // Use current timestamp if not provided
+        const timestamp = input.timestamp || Math.floor(Date.now() / 1000);
+        
+        try {
+          // Call Google Maps Timezone API
+          const response: any = await makeRequest(
+            "/maps/api/timezone/json",
+            {
+              location: `${input.latitude},${input.longitude}`,
+              timestamp: timestamp.toString(),
+            }
+          );
+
+          if (response.status === "OK") {
+            return {
+              timeZoneId: response.timeZoneId as string,
+              timeZoneName: response.timeZoneName as string,
+              rawOffset: response.rawOffset as number,
+              dstOffset: response.dstOffset as number,
+            };
+          } else {
+            throw new Error(`Timezone API error: ${response.status}`);
+          }
+        } catch (error) {
+          console.error("Error fetching timezone:", error);
+          // Fallback to UTC if API fails
+          return {
+            timeZoneId: "UTC",
+            timeZoneName: "Coordinated Universal Time",
+            rawOffset: 0,
+            dstOffset: 0,
+          };
+        }
+      }),
+
     // Get customer's jobs
-    getCustomerJobs: protectedProcedure
-      .query(async ({ ctx }) => {
+    getCustomerJobs: protectedProcedure      .query(async ({ ctx }) => {
         const { getDb } = await import("./db");
         const { jobs } = await import("../drizzle/schema");
         const { eq, desc } = await import("drizzle-orm");

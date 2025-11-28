@@ -86,3 +86,9 @@
 - [x] Implement dual time UTC system (local time selection based on site location)
 - [x] Display both local time and UTC time on job details
 - [ ] Store scheduled time as UTC timestamp in database
+
+## Phase 12: Google Maps Timezone API Integration
+- [x] Create backend endpoint to fetch timezone from Google Maps API
+- [x] Update frontend RequestService to call timezone API
+- [x] Replace coordinate-based timezone estimation with API call
+- [ ] Test timezone accuracy for various global locations
