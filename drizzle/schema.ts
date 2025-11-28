@@ -66,14 +66,29 @@ export type SupplierUser = typeof supplierUsers.$inferSelect;
 export type InsertSupplierUser = typeof supplierUsers.$inferInsert;
 
 /**
- * Supplier rates table - stores hourly rates per country
+ * Supplier rates table - stores hourly rates with three dimensions:
+ * 1. Location (country OR city)
+ * 2. Service type (L1_EUC, L1_NETWORK, SMART_HANDS)
+ * 3. Response time (4, 24, 48, 72, 96 hours)
+ * Rate is nullable to allow opt-out (supplier doesn't offer that combination)
  */
 export const supplierRates = mysqlTable("supplierRates", {
   id: int("id").autoincrement().primaryKey(),
   supplierId: int("supplierId").notNull(),
-  country: varchar("country", { length: 2 }).notNull(), // ISO 3166-1 alpha-2
-  hourlyRate: int("hourlyRate").notNull(), // Stored in cents to avoid decimal issues
-  currency: varchar("currency", { length: 3 }).notNull(), // ISO 4217 (USD, EUR, GBP, etc.)
+  
+  // Location dimension (either country OR city, not both)
+  countryCode: varchar("countryCode", { length: 2 }), // ISO 3166-1 alpha-2, null if cityId is set
+  cityId: int("cityId"), // References supplierPriorityCities.id, null if countryCode is set
+  
+  // Service type dimension
+  serviceType: mysqlEnum("serviceType", ["L1_EUC", "L1_NETWORK", "SMART_HANDS"]).notNull(),
+  
+  // Response time dimension (in hours)
+  responseTimeHours: int("responseTimeHours").notNull(), // 4, 24, 48, 72, or 96
+  
+  // Rate in USD cents (nullable = opt-out / not offered)
+  rateUsdCents: int("rateUsdCents"), // null means supplier doesn't offer this combination
+  
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

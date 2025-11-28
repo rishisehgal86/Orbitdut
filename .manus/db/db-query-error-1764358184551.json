@@ -1,0 +1,8 @@
+{
+  "query": "SELECT * FROM supplier_rates WHERE countryCode = 'DZ' AND serviceType = 'L1_EUC' AND responseTimeHours = 4 ORDER BY updatedAt DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT * FROM supplier_rates WHERE countryCode = 'DZ' AND serviceType = 'L1_EUC' AND responseTimeHours = 4 ORDER BY updatedAt DESC LIMIT 5;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1146 (42S02) at line 1: Table '2cukucnz2s5thqplsdbdyn.supplier_rates' doesn't exist"
+  ]
+}
