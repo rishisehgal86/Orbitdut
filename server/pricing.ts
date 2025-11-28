@@ -38,11 +38,7 @@ function isOutOfBusinessHours(scheduledStart: Date): boolean {
 /**
  * Find the lowest rate from suppliers who cover the given location
  */
-// TODO: Update pricing logic to use new rate schema (service type + response time)
 export async function calculateJobPrice(input: PricingInput): Promise<PricingResult | null> {
-  // Temporarily disabled - will be updated after new rate management system is built
-  return null;
-  /*
   const { country, scheduledStart, estimatedDuration } = input;
 
   // Get all supplier rates for this country
@@ -83,7 +79,6 @@ export async function calculateJobPrice(input: PricingInput): Promise<PricingRes
     totalPrice,
     isOutOfHours,
   };
-  */
 }
 
 /**
