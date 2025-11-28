@@ -110,3 +110,12 @@
 - [x] Update auth context and hooks to use local auth
 - [x] Remove Manus OAuth dependencies from navigation and pages
 - [x] Test complete signup and login flow
+
+## Phase 15: Customer Job Tracking Page
+- [x] Create customer jobs list page with filtering
+- [x] Add status filter (all, pending, assigned, in progress, completed)
+- [x] Display job cards with key information
+- [x] Create detailed job view page with timeline
+- [x] Add job timeline/activity log
+- [x] Implement real-time status updates
+- [x] Add search functionality
