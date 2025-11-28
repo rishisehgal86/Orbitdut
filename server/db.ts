@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   InsertUser,
@@ -9,8 +9,12 @@ import {
   InsertSupplierUser,
   supplierRates,
   InsertSupplierRate,
-  supplierCoverage,
-  InsertSupplierCoverage,
+  supplierCoverageCountries,
+  InsertSupplierCoverageCountry,
+  supplierPriorityCities,
+  InsertSupplierPriorityCity,
+  supplierResponseTimes,
+  InsertSupplierResponseTime,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -187,24 +191,85 @@ export async function upsertSupplierRate(rate: InsertSupplierRate) {
  * Supplier Coverage Functions
  */
 
-export async function getSupplierCoverage(supplierId: number) {
+// Tier 1: Country Coverage
+export async function getSupplierCountries(supplierId: number) {
   const db = await getDb();
   if (!db) return [];
-  
-  return await db.select().from(supplierCoverage).where(eq(supplierCoverage.supplierId, supplierId));
+  return await db.select().from(supplierCoverageCountries).where(eq(supplierCoverageCountries.supplierId, supplierId));
 }
 
-export async function createSupplierCoverage(coverage: InsertSupplierCoverage) {
+export async function upsertSupplierCountries(supplierId: number, countryCodes: string[], isExcluded: boolean = false) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const result = await db.insert(supplierCoverage).values(coverage);
-  return result;
+  // Delete existing countries
+  await db.delete(supplierCoverageCountries).where(eq(supplierCoverageCountries.supplierId, supplierId));
+  
+  // Insert new countries
+  if (countryCodes.length > 0) {
+    await db.insert(supplierCoverageCountries).values(
+      countryCodes.map(code => ({
+        supplierId,
+        countryCode: code,
+        isExcluded: isExcluded ? 1 : 0,
+      }))
+    );
+  }
 }
 
-export async function deleteSupplierCoverage(id: number) {
+// Tier 2: Priority Cities
+export async function getSupplierPriorityCities(supplierId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(supplierPriorityCities).where(eq(supplierPriorityCities.supplierId, supplierId));
+}
+
+export async function addSupplierPriorityCity(city: InsertSupplierPriorityCity) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(supplierPriorityCities).values(city);
+}
+
+export async function deleteSupplierPriorityCity(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(supplierPriorityCities).where(eq(supplierPriorityCities.id, id));
+}
+
+// Tier 4: Response Times
+export async function getSupplierResponseTimes(supplierId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(supplierResponseTimes).where(eq(supplierResponseTimes.supplierId, supplierId));
+}
+
+export async function upsertSupplierResponseTime(responseTime: InsertSupplierResponseTime) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  await db.delete(supplierCoverage).where(eq(supplierCoverage.id, id));
+  // Check if exists
+  const existing = await db.select().from(supplierResponseTimes)
+    .where(
+      and(
+        eq(supplierResponseTimes.supplierId, responseTime.supplierId),
+        eq(supplierResponseTimes.countryCode, responseTime.countryCode),
+        responseTime.cityName ? eq(supplierResponseTimes.cityName, responseTime.cityName) : sql`${supplierResponseTimes.cityName} IS NULL`
+      )
+    );
+  
+  if (existing.length > 0) {
+    // Update
+    await db.update(supplierResponseTimes)
+      .set({ responseTimeHours: responseTime.responseTimeHours })
+      .where(eq(supplierResponseTimes.id, existing[0]!.id));
+  } else {
+    // Insert
+    await db.insert(supplierResponseTimes).values(responseTime);
+  }
+}
+
+export async function deleteSupplierResponseTime(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(supplierResponseTimes).where(eq(supplierResponseTimes.id, id));
 }

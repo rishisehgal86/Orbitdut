@@ -82,31 +82,50 @@ export type SupplierRate = typeof supplierRates.$inferSelect;
 export type InsertSupplierRate = typeof supplierRates.$inferInsert;
 
 /**
- * Supplier coverage table - defines geographic service areas
+ * Supplier coverage table - Tier 1: Country-level coverage
  */
-export const supplierCoverage = mysqlTable("supplierCoverage", {
+export const supplierCoverageCountries = mysqlTable("supplierCoverageCountries", {
   id: int("id").autoincrement().primaryKey(),
   supplierId: int("supplierId").notNull(),
-  coverageType: mysqlEnum("coverageType", ["postal_codes", "city_radius", "polygon"]).notNull(),
-  country: varchar("country", { length: 2 }).notNull(),
-  // For postal_codes: comma-separated list
-  // For city_radius: city name
-  // For polygon: not used (see geoJson)
-  coverageData: text("coverageData"),
-  // For city_radius: radius in kilometers
-  radiusKm: int("radiusKm"),
-  // For city_radius: latitude of city center
-  centerLat: varchar("centerLat", { length: 20 }),
-  // For city_radius: longitude of city center
-  centerLng: varchar("centerLng", { length: 20 }),
-  // For polygon: GeoJSON string
-  geoJson: text("geoJson"),
+  countryCode: varchar("countryCode", { length: 2 }).notNull(), // ISO 3166-1 alpha-2
+  isExcluded: int("isExcluded", { unsigned: true }).default(0).notNull(), // 0 = included, 1 = excluded (Tier 3)
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SupplierCoverageCountry = typeof supplierCoverageCountries.$inferSelect;
+export type InsertSupplierCoverageCountry = typeof supplierCoverageCountries.$inferInsert;
+
+/**
+ * Supplier priority cities - Tier 2: City/metro area refinement
+ */
+export const supplierPriorityCities = mysqlTable("supplierPriorityCities", {
+  id: int("id").autoincrement().primaryKey(),
+  supplierId: int("supplierId").notNull(),
+  countryCode: varchar("countryCode", { length: 2 }).notNull(),
+  cityName: varchar("cityName", { length: 255 }).notNull(),
+  latitude: varchar("latitude", { length: 20 }),
+  longitude: varchar("longitude", { length: 20 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SupplierPriorityCity = typeof supplierPriorityCities.$inferSelect;
+export type InsertSupplierPriorityCity = typeof supplierPriorityCities.$inferInsert;
+
+/**
+ * Supplier response times - Tier 4: Response time zones by region
+ */
+export const supplierResponseTimes = mysqlTable("supplierResponseTimes", {
+  id: int("id").autoincrement().primaryKey(),
+  supplierId: int("supplierId").notNull(),
+  countryCode: varchar("countryCode", { length: 2 }).notNull(),
+  cityName: varchar("cityName", { length: 255 }), // Null means applies to entire country
+  responseTimeHours: int("responseTimeHours").notNull(), // Hours to be on-site
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
-export type SupplierCoverage = typeof supplierCoverage.$inferSelect;
-export type InsertSupplierCoverage = typeof supplierCoverage.$inferInsert;
+export type SupplierResponseTime = typeof supplierResponseTimes.$inferSelect;
+export type InsertSupplierResponseTime = typeof supplierResponseTimes.$inferInsert;
 
 /**
  * Jobs table - stores customer service requests

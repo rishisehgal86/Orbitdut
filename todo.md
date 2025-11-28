@@ -148,3 +148,15 @@
 - [x] Make "Supplier Signup" more prominent with different styling
 - [x] Update bottom CTA section with clearer messaging
 - [x] Test both signup flows from homepage
+
+## Phase 21: Geographic Coverage Management System
+- [x] Update database schema to store coverage data (countries, cities, exclusions, response times)
+- [x] Create ISO 3166-1 country list with codes
+- [x] Build backend API for coverage CRUD operations
+- [ ] Create Tier 1: Country selection UI with search and select all
+- [ ] Create Tier 2: Priority cities/metro areas UI
+- [ ] Create Tier 3: Exclusion zones UI
+- [ ] Create Tier 4: Response time zones UI
+- [ ] Add coverage visualization/summary
+- [ ] Update job matching algorithm to use coverage data
+- [ ] Test coverage setup and job matching

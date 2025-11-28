@@ -1,4 +1,4 @@
-import { getSupplierRates, getSupplierCoverage } from "./db";
+import { getSupplierRates } from "./db";
 
 interface PricingInput {
   country: string;

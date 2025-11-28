@@ -234,40 +234,88 @@ export const appRouter = router({
         return { success: true };
       }),
 
-    // Get supplier coverage areas
-    getCoverage: protectedProcedure
+    // Tier 1: Country Coverage
+    getCountries: protectedProcedure
       .input(z.object({ supplierId: z.number() }))
       .query(async ({ input }) => {
-        const { getSupplierCoverage } = await import("./db");
-        return await getSupplierCoverage(input.supplierId);
+        const { getSupplierCountries } = await import("./db");
+        return await getSupplierCountries(input.supplierId);
       }),
 
-    // Create coverage area
-    createCoverage: protectedProcedure
+    updateCountries: protectedProcedure
       .input(
         z.object({
           supplierId: z.number(),
-          coverageType: z.enum(["postal_codes", "city_radius", "polygon"]),
-          country: z.string().length(2),
-          coverageData: z.string().optional(),
-          radiusKm: z.number().optional(),
-          centerLat: z.string().optional(),
-          centerLng: z.string().optional(),
-          geoJson: z.string().optional(),
+          countryCodes: z.array(z.string()),
+          isExcluded: z.boolean().optional(),
         })
       )
       .mutation(async ({ input }) => {
-        const { createSupplierCoverage } = await import("./db");
-        await createSupplierCoverage(input);
+        const { upsertSupplierCountries } = await import("./db");
+        await upsertSupplierCountries(input.supplierId, input.countryCodes, input.isExcluded);
         return { success: true };
       }),
 
-    // Delete coverage area
-    deleteCoverage: protectedProcedure
+    // Tier 2: Priority Cities
+    getPriorityCities: protectedProcedure
+      .input(z.object({ supplierId: z.number() }))
+      .query(async ({ input }) => {
+        const { getSupplierPriorityCities } = await import("./db");
+        return await getSupplierPriorityCities(input.supplierId);
+      }),
+
+    addPriorityCity: protectedProcedure
+      .input(
+        z.object({
+          supplierId: z.number(),
+          countryCode: z.string(),
+          cityName: z.string(),
+          latitude: z.string().optional(),
+          longitude: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { addSupplierPriorityCity } = await import("./db");
+        await addSupplierPriorityCity(input);
+        return { success: true };
+      }),
+
+    deletePriorityCity: protectedProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
-        const { deleteSupplierCoverage } = await import("./db");
-        await deleteSupplierCoverage(input.id);
+        const { deleteSupplierPriorityCity } = await import("./db");
+        await deleteSupplierPriorityCity(input.id);
+        return { success: true };
+      }),
+
+    // Tier 4: Response Times
+    getResponseTimes: protectedProcedure
+      .input(z.object({ supplierId: z.number() }))
+      .query(async ({ input }) => {
+        const { getSupplierResponseTimes } = await import("./db");
+        return await getSupplierResponseTimes(input.supplierId);
+      }),
+
+    updateResponseTime: protectedProcedure
+      .input(
+        z.object({
+          supplierId: z.number(),
+          countryCode: z.string(),
+          cityName: z.string().optional(),
+          responseTimeHours: z.number(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { upsertSupplierResponseTime } = await import("./db");
+        await upsertSupplierResponseTime(input);
+        return { success: true };
+      }),
+
+    deleteResponseTime: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const { deleteSupplierResponseTime } = await import("./db");
+        await deleteSupplierResponseTime(input.id);
         return { success: true };
       }),
   }),
