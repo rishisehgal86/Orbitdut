@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Globe, MapPin, Clock, Eye, Search, X } from "lucide-react";
+import { PlacesAutocomplete } from "@/components/PlacesAutocomplete";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { toast } from "sonner";
@@ -26,6 +27,8 @@ export default function Coverage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isExclusionMode, setIsExclusionMode] = useState(false);
   const [citySearchInput, setCitySearchInput] = useState("");
+  const [countrySearchQuery, setCountrySearchQuery] = useState("");
+  const [selectedCountryCodes, setSelectedCountryCodes] = useState<string[]>([]);
 
   // Get supplier profile
   const { data: profile } = trpc.supplier.getProfile.useQuery(
@@ -174,18 +177,27 @@ export default function Coverage() {
   const addCityMutation = addCity;
   const removeCityMutation = deleteCity;
 
-  const handleAddCity = () => {
-    if (!citySearchInput.trim() || !profile?.supplier.id) return;
+  const handlePlaceSelect = (place: {
+    placeId: string;
+    cityName: string;
+    stateProvince?: string;
+    countryCode: string;
+    formattedAddress: string;
+    latitude: number;
+    longitude: number;
+  }) => {
+    if (!profile?.supplier.id) return;
     
     addCity.mutate({
       supplierId: profile.supplier.id,
-      cityName: citySearchInput.trim(),
-      countryCode: "US", // Default to US, will be enhanced with geocoding later
-      latitude: undefined,
-      longitude: undefined,
+      cityName: place.cityName,
+      stateProvince: place.stateProvince,
+      countryCode: place.countryCode,
+      placeId: place.placeId,
+      formattedAddress: place.formattedAddress,
+      latitude: place.latitude,
+      longitude: place.longitude,
     });
-    
-    setCitySearchInput("");
   };
 
   const handleRemoveCity = (cityId: number) => {
@@ -245,6 +257,44 @@ export default function Coverage() {
         isDefault: 0,
       });
     }
+  };
+
+  const handleToggleCountrySelection = (countryCode: string) => {
+    setSelectedCountryCodes(prev => 
+      prev.includes(countryCode)
+        ? prev.filter(c => c !== countryCode)
+        : [...prev, countryCode]
+    );
+  };
+
+  const handleToggleAllCountries = () => {
+    if (!existingCountries) return;
+    const filteredCountries = existingCountries.filter(country => {
+      const countryInfo = COUNTRIES.find(c => c.code === country.countryCode);
+      return !countrySearchQuery || countryInfo?.name.toLowerCase().includes(countrySearchQuery.toLowerCase());
+    });
+    
+    if (selectedCountryCodes.length === filteredCountries.length) {
+      setSelectedCountryCodes([]);
+    } else {
+      setSelectedCountryCodes(filteredCountries.map(c => c.countryCode));
+    }
+  };
+
+  const handleBulkSetSelectedCountries = (hours: number) => {
+    if (!profile?.supplier.id || selectedCountryCodes.length === 0) return;
+    
+    // Update each selected country
+    selectedCountryCodes.forEach(countryCode => {
+      updateResponseTime.mutate({
+        supplierId: profile.supplier.id,
+        countryCode,
+        responseTimeHours: hours,
+      });
+    });
+    
+    toast.success(`Response time set for ${selectedCountryCodes.length} countries`);
+    setSelectedCountryCodes([]);
   };
 
   const handleBulkSetCountries = (hours: number) => {
@@ -550,30 +600,19 @@ export default function Coverage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {/* City Search Input */}
+                  {/* City Search Input with Google Places */}
                   <div>
                     <Label htmlFor="city-search">Search for a city</Label>
-                    <div className="flex gap-2 mt-2">
-                      <Input
-                        id="city-search"
-                        placeholder="Start typing a city name..."
+                    <div className="mt-2">
+                      <PlacesAutocomplete
                         value={citySearchInput}
-                        onChange={(e) => setCitySearchInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && citySearchInput.trim()) {
-                            handleAddCity();
-                          }
-                        }}
+                        onChange={setCitySearchInput}
+                        onPlaceSelect={handlePlaceSelect}
+                        placeholder="Start typing a city name (e.g., London, New York, Tokyo)..."
                       />
-                      <Button
-                        onClick={handleAddCity}
-                        disabled={!citySearchInput.trim() || addCityMutation.isPending}
-                      >
-                        {addCityMutation.isPending ? 'Adding...' : 'Add City'}
-                      </Button>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Enter city name (e.g., "New York", "London", "Tokyo")
+                      Select a city from the dropdown to add it with accurate location details
                     </p>
                   </div>
 
@@ -591,11 +630,9 @@ export default function Coverage() {
                               <MapPin className="w-4 h-4 text-primary" />
                               <div>
                                 <p className="font-medium">{city.cityName}</p>
-                                {city.countryCode && (
-                                  <p className="text-xs text-muted-foreground">
-                                    {COUNTRIES.find(c => c.code === city.countryCode)?.name || city.countryCode}
-                                  </p>
-                                )}
+                                <p className="text-xs text-muted-foreground">
+                                  {[city.stateProvince, COUNTRIES.find(c => c.code === city.countryCode)?.name].filter(Boolean).join(", ") || city.countryCode}
+                                </p>
                               </div>
                             </div>
                             <Button
@@ -677,33 +714,96 @@ export default function Coverage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
+                    {/* Search Bar */}
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        type="text"
+                        placeholder="Search countries..."
+                        value={countrySearchQuery}
+                        onChange={(e) => setCountrySearchQuery(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+
                     {/* Bulk Actions */}
-                    <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
-                      <Label className="min-w-[150px]">Bulk set all countries to:</Label>
-                      <Select onValueChange={(value) => handleBulkSetCountries(parseInt(value))}>
-                        <SelectTrigger className="w-[250px]">
-                          <SelectValue placeholder="Select time for all" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {RESPONSE_TIME_OPTIONS.map((option) => (
-                            <SelectItem key={option.value} value={option.value.toString()}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <p className="text-xs text-muted-foreground">
-                        This will override all existing country settings
-                      </p>
+                    <div className="space-y-3">
+                      {/* Selection info and actions */}
+                      {selectedCountryCodes.length > 0 && (
+                        <div className="flex items-center gap-4 p-4 bg-primary/10 rounded-lg border border-primary/20">
+                          <p className="text-sm font-medium">
+                            {selectedCountryCodes.length} {selectedCountryCodes.length === 1 ? 'country' : 'countries'} selected
+                          </p>
+                          <Select onValueChange={(value) => handleBulkSetSelectedCountries(parseInt(value))}>
+                            <SelectTrigger className="w-[250px]">
+                              <SelectValue placeholder="Set response time for selected" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {RESPONSE_TIME_OPTIONS.map((option) => (
+                                <SelectItem key={option.value} value={option.value.toString()}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedCountryCodes([])}
+                          >
+                            Clear Selection
+                          </Button>
+                        </div>
+                      )}
+                      
+                      {/* Set all countries */}
+                      <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
+                        <Label className="min-w-[150px]">Bulk set all countries to:</Label>
+                        <Select onValueChange={(value) => handleBulkSetCountries(parseInt(value))}>
+                          <SelectTrigger className="w-[250px]">
+                            <SelectValue placeholder="Select time for all" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {RESPONSE_TIME_OPTIONS.map((option) => (
+                              <SelectItem key={option.value} value={option.value.toString()}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">
+                          This will override all existing country settings
+                        </p>
+                      </div>
                     </div>
 
                     {/* Country List */}
                     {existingCountries && existingCountries.length > 0 ? (
                       <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Showing response times for your {existingCountries.length} covered countries
-                        </p>
-                        {existingCountries.map((country) => {
+                        <div className="flex items-center justify-between mb-3">
+                          <p className="text-sm text-muted-foreground">
+                            Showing response times for your {existingCountries.filter(country => {
+                              const countryInfo = COUNTRIES.find(c => c.code === country.countryCode);
+                              return !countrySearchQuery || countryInfo?.name.toLowerCase().includes(countrySearchQuery.toLowerCase());
+                            }).length} covered countries{countrySearchQuery && ` matching "${countrySearchQuery}"`}
+                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleToggleAllCountries}
+                          >
+                            {selectedCountryCodes.length === existingCountries.filter(country => {
+                              const countryInfo = COUNTRIES.find(c => c.code === country.countryCode);
+                              return !countrySearchQuery || countryInfo?.name.toLowerCase().includes(countrySearchQuery.toLowerCase());
+                            }).length ? 'Deselect All' : 'Select All'}
+                          </Button>
+                        </div>
+                        {existingCountries
+                          .filter(country => {
+                            const countryInfo = COUNTRIES.find(c => c.code === country.countryCode);
+                            return !countrySearchQuery || countryInfo?.name.toLowerCase().includes(countrySearchQuery.toLowerCase());
+                          })
+                          .map((country) => {
                           const countryInfo = COUNTRIES.find(c => c.code === country.countryCode);
                           const countryResponseTime = responseTimes?.find(
                             rt => rt.countryCode === country.countryCode && !rt.cityName
@@ -715,6 +815,10 @@ export default function Coverage() {
                               className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
                             >
                               <div className="flex items-center gap-3 flex-1">
+                                <Checkbox
+                                  checked={selectedCountryCodes.includes(country.countryCode)}
+                                  onCheckedChange={() => handleToggleCountrySelection(country.countryCode)}
+                                />
                                 <Globe className="w-4 h-4 text-muted-foreground" />
                                 <span className="font-medium">{countryInfo?.name || country.countryCode}</span>
                               </div>
@@ -892,6 +996,91 @@ export default function Coverage() {
                   </CardContent>
                 </Card>
               </div>
+
+              {/* Response Time Breakdown */}
+              {existingCountries && existingCountries.length > 0 && responseTimes && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Response Time Distribution</CardTitle>
+                    <CardDescription>
+                      Breakdown of countries by response time commitment
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {RESPONSE_TIME_OPTIONS.map(option => {
+                        const countriesWithThisTime = existingCountries.filter(({ countryCode }) => {
+                          const countryRT = responseTimes.find(
+                            rt => rt.countryCode === countryCode && !rt.cityName
+                          );
+                          const effectiveTime = countryRT?.responseTimeHours || defaultResponseTime;
+                          return effectiveTime === option.value;
+                        });
+                        
+                        const percentage = existingCountries.length > 0
+                          ? Math.round((countriesWithThisTime.length / existingCountries.length) * 100)
+                          : 0;
+                        
+                        if (countriesWithThisTime.length === 0) return null;
+
+                        return (
+                          <div key={option.value} className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center gap-2">
+                                <Clock className="w-4 h-4 text-muted-foreground" />
+                                <Label className="font-medium">{option.label}</Label>
+                              </div>
+                              <span className="text-sm text-muted-foreground">
+                                {countriesWithThisTime.length} {countriesWithThisTime.length === 1 ? 'country' : 'countries'} ({percentage}%)
+                              </span>
+                            </div>
+                            <div className="w-full bg-secondary rounded-full h-2">
+                              <div
+                                className="bg-blue-500 h-2 rounded-full transition-all"
+                                style={{ width: `${percentage}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                      
+                      {/* Countries using default */}
+                      {(() => {
+                        const countriesUsingDefault = existingCountries.filter(({ countryCode }) => {
+                          const countryRT = responseTimes.find(
+                            rt => rt.countryCode === countryCode && !rt.cityName
+                          );
+                          return !countryRT?.responseTimeHours;
+                        });
+                        
+                        if (countriesUsingDefault.length === 0) return null;
+                        
+                        const percentage = Math.round((countriesUsingDefault.length / existingCountries.length) * 100);
+                        
+                        return (
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center gap-2">
+                                <Clock className="w-4 h-4 text-muted-foreground" />
+                                <Label className="font-medium">Using Default ({defaultResponseTime ? getResponseTimeLabel(defaultResponseTime) : "Not set"})</Label>
+                              </div>
+                              <span className="text-sm text-muted-foreground">
+                                {countriesUsingDefault.length} {countriesUsingDefault.length === 1 ? 'country' : 'countries'} ({percentage}%)
+                              </span>
+                            </div>
+                            <div className="w-full bg-secondary rounded-full h-2">
+                              <div
+                                className="bg-gray-400 h-2 rounded-full transition-all"
+                                style={{ width: `${percentage}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Region Breakdown */}
               {existingCountries && existingCountries.length > 0 && (

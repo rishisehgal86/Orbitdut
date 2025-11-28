@@ -195,3 +195,21 @@
 - [x] Add Priority City response time overrides
 - [x] Update Preview tab to show response time statistics
 - [x] Add backend API for CRUD operations on response times
+
+## UI Enhancements
+- [x] Add search bar to Country-Level Response Times for quick country filtering
+
+## Priority Cities - Google Places Integration
+- [x] Integrate Google Places API autocomplete for city search
+- [x] Update database schema to store state/province, latitude, longitude
+- [x] Update backend API to handle geocoded city data
+- [x] Display full location details (City, State, Country) in UI
+
+## Response Time Enhancements
+- [ ] Add checkboxes to Country-Level Response Times for multi-select
+- [ ] Add bulk action to set response time for selected countries
+
+## Preview Tab Enhancements
+- [x] Add response time breakdown statistics (count by tier: 4h, 24h, 48h, 72h, 96h)
+- [ ] Integrate world map visualization with color-coded countries by response time
+- [ ] Add legend showing response time colors on map

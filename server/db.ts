@@ -224,10 +224,18 @@ export async function getSupplierPriorityCities(supplierId: number) {
   return await db.select().from(supplierPriorityCities).where(eq(supplierPriorityCities.supplierId, supplierId));
 }
 
-export async function addSupplierPriorityCity(city: InsertSupplierPriorityCity) {
+export async function addSupplierPriorityCity(city: Omit<InsertSupplierPriorityCity, 'latitude' | 'longitude'> & { latitude?: number; longitude?: number }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.insert(supplierPriorityCities).values(city);
+  
+  // Convert number coordinates to string for database storage
+  const cityData: InsertSupplierPriorityCity = {
+    ...city,
+    latitude: city.latitude !== undefined ? city.latitude.toString() : undefined,
+    longitude: city.longitude !== undefined ? city.longitude.toString() : undefined,
+  };
+  
+  await db.insert(supplierPriorityCities).values(cityData);
 }
 
 export async function deleteSupplierPriorityCity(id: number) {

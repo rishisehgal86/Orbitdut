@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { decimal, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -103,8 +103,11 @@ export const supplierPriorityCities = mysqlTable("supplierPriorityCities", {
   supplierId: int("supplierId").notNull(),
   countryCode: varchar("countryCode", { length: 2 }).notNull(),
   cityName: varchar("cityName", { length: 255 }).notNull(),
-  latitude: varchar("latitude", { length: 20 }),
-  longitude: varchar("longitude", { length: 20 }),
+  stateProvince: varchar("stateProvince", { length: 255 }), // State/Province/Region
+  placeId: varchar("placeId", { length: 255 }), // Google Places ID for uniqueness
+  formattedAddress: text("formattedAddress"), // Full formatted address from Google
+  latitude: decimal("latitude", { precision: 10, scale: 7 }), // Decimal for precise coordinates
+  longitude: decimal("longitude", { precision: 10, scale: 7 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

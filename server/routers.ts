@@ -270,8 +270,11 @@ export const appRouter = router({
           supplierId: z.number(),
           countryCode: z.string(),
           cityName: z.string(),
-          latitude: z.string().optional(),
-          longitude: z.string().optional(),
+          stateProvince: z.string().optional(),
+          placeId: z.string().optional(),
+          formattedAddress: z.string().optional(),
+          latitude: z.number().optional(),
+          longitude: z.number().optional(),
         })
       )
       .mutation(async ({ input }) => {
