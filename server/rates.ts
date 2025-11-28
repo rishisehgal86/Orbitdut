@@ -44,14 +44,19 @@ export async function upsertRate(rate: RateInput): Promise<void> {
     .limit(1);
 
   if (existing) {
-    // Update existing
+    // Update existing (with defensive tenant check)
     await db
       .update(supplierRates)
       .set({
         rateUsdCents: rate.rateUsdCents,
         updatedAt: new Date(),
       })
-      .where(eq(supplierRates.id, existing.id));
+      .where(
+        and(
+          eq(supplierRates.id, existing.id),
+          eq(supplierRates.supplierId, rate.supplierId) // Defense-in-depth: ensure tenant isolation
+        )
+      );
   } else {
     // Insert new
     await db.insert(supplierRates).values({
@@ -93,6 +98,7 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
   totalPossible: number;
   configured: number;
   percentage: number;
+  legacyRates: number;
   byLocationType: {
     countries: { totalPossible: number; configured: number; percentage: number };
     cities: { totalPossible: number; configured: number; percentage: number };
@@ -137,12 +143,20 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
   const l1NetworkRates = configuredRates.filter((r: SupplierRate) => r.serviceType === "l1_network");
   const smartHandsRates = configuredRates.filter((r: SupplierRate) => r.serviceType === "smart_hands");
   
+  // Count legacy rates (rates without proper service type)
+  const legacyRates = configuredRates.filter((r: SupplierRate) => 
+    r.serviceType !== "l1_euc" && 
+    r.serviceType !== "l1_network" && 
+    r.serviceType !== "smart_hands"
+  );
+  
   const serviceTotalPossible = totalLocations * 5; // Each service has 5 response times per location
 
   return {
     totalPossible,
     configured,
     percentage: totalPossible > 0 ? Math.round((configured / totalPossible) * 100) : 0,
+    legacyRates: legacyRates.length,
     byLocationType: {
       countries: {
         totalPossible: countryTotalPossible,

@@ -112,9 +112,37 @@ export default function SupplierRates() {
                   </div>
                 </div>
 
+                {/* Legacy Rates Warning */}
+                {stats.legacyRates > 0 && (
+                  <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="text-amber-600 dark:text-amber-400 mt-0.5">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-sm font-medium text-amber-900 dark:text-amber-100 mb-1">
+                          {stats.legacyRates} Legacy Rates Detected
+                        </h4>
+                        <p className="text-xs text-amber-700 dark:text-amber-300">
+                          You have rates from the old system that need to be reconfigured with service types. Use Quick Setup to set rates for each service type.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* By Service Type */}
                 <div className="space-y-3">
-                  <h4 className="text-sm font-medium">By Service Type</h4>
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-medium">By Service Type</h4>
+                    {stats.legacyRates > 0 && (
+                      <span className="text-xs text-amber-600 dark:text-amber-400">
+                        Configure service-specific rates
+                      </span>
+                    )}
+                  </div>
                   <div className="space-y-3">
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between text-xs">

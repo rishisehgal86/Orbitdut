@@ -309,3 +309,28 @@
 - [x] Keep overall progress bar at the top
 - [x] Use color-coded progress bars (blue for countries, green for cities, purple/orange/cyan for services)
 - [x] Test progress tracking with different completion states
+
+## Rate Management - Progress Tracking Fixes & Enhancements
+- [ ] Fix bug: Service type progress not updating after Quick Setup bulk upsert
+- [ ] Investigate why service types show 0% despite rates being configured
+- [ ] Verify bulk upsert is setting serviceType field correctly
+- [ ] Add hover tooltips to progress bars showing missing rate details
+- [ ] Show which specific locations/services are missing on hover
+- [ ] Consider alternative visualization: interactive breakdown, heatmap, or smart recommendations
+- [ ] Test service type tracking after bulk upsert operations
+
+## Multi-Tenancy Architecture Audit
+- [x] Review all database tables to ensure supplierId tenant differentiator exists
+- [x] Audit all queries to verify supplierId filtering is applied
+- [x] Check supplierRates table for proper tenant isolation
+- [x] Check supplierCoverageCountries table for proper tenant isolation
+- [x] Check supplierPriorityCities table for proper tenant isolation
+- [x] Review any shared/global tables (countries, cities reference data)
+- [x] Add database indexes on supplierId for performance
+- [x] Add foreign key constraints to enforce referential integrity (CASCADE DELETE)
+- [x] Add defensive supplierId check to UPDATE operations
+- [x] Clean up orphaned cityId references
+- [x] Add composite unique indexes to prevent duplicate rates
+- [ ] Verify no cross-tenant data leakage in API endpoints
+- [ ] Document multi-tenancy architecture and patterns
+- [ ] Test tenant isolation with multiple supplier accounts

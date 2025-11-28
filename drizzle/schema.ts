@@ -1,4 +1,4 @@
-import { decimal, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { decimal, index, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -71,11 +71,11 @@ export type InsertSupplierUser = typeof supplierUsers.$inferInsert;
  */
 export const supplierRates = mysqlTable("supplierRates", {
   id: int("id").autoincrement().primaryKey(),
-  supplierId: int("supplierId").notNull(),
+  supplierId: int("supplierId").notNull().references(() => suppliers.id, { onDelete: "cascade" }),
   
   // Location: Country OR Priority City (mutually exclusive)
   countryCode: varchar("countryCode", { length: 2 }), // ISO 3166-1 alpha-2 (null if cityId is set)
-  cityId: int("cityId"), // References supplierPriorityCities (null if countryCode is set)
+  cityId: int("cityId").references(() => supplierPriorityCities.id, { onDelete: "cascade" }), // References supplierPriorityCities (null if countryCode is set)
   
   // Service Type: L1_EUC, L1_NETWORK, SMART_HANDS
   serviceType: varchar("serviceType", { length: 50 }).notNull(),
@@ -88,7 +88,18 @@ export const supplierRates = mysqlTable("supplierRates", {
   
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
+}, (table) => ({
+  // Index for tenant isolation queries
+  supplierIdIdx: index("supplierRates_supplierId_idx").on(table.supplierId),
+  // Composite unique constraint: prevent duplicate rates for same location/service/response time
+  uniqueRate: index("supplierRates_unique").on(
+    table.supplierId,
+    table.countryCode,
+    table.cityId,
+    table.serviceType,
+    table.responseTimeHours
+  ),
+}));
 
 export type SupplierRate = typeof supplierRates.$inferSelect;
 export type InsertSupplierRate = typeof supplierRates.$inferInsert;
@@ -98,11 +109,14 @@ export type InsertSupplierRate = typeof supplierRates.$inferInsert;
  */
 export const supplierCoverageCountries = mysqlTable("supplierCoverageCountries", {
   id: int("id").autoincrement().primaryKey(),
-  supplierId: int("supplierId").notNull(),
+  supplierId: int("supplierId").notNull().references(() => suppliers.id, { onDelete: "cascade" }),
   countryCode: varchar("countryCode", { length: 2 }).notNull(), // ISO 3166-1 alpha-2
   isExcluded: int("isExcluded", { unsigned: true }).default(0).notNull(), // 0 = included, 1 = excluded (Tier 3)
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
+}, (table) => ({
+  supplierIdIdx: index("supplierCoverageCountries_supplierId_idx").on(table.supplierId),
+  uniqueCountry: index("supplierCoverageCountries_unique").on(table.supplierId, table.countryCode),
+}));
 
 export type SupplierCoverageCountry = typeof supplierCoverageCountries.$inferSelect;
 export type InsertSupplierCoverageCountry = typeof supplierCoverageCountries.$inferInsert;
@@ -112,7 +126,7 @@ export type InsertSupplierCoverageCountry = typeof supplierCoverageCountries.$in
  */
 export const supplierPriorityCities = mysqlTable("supplierPriorityCities", {
   id: int("id").autoincrement().primaryKey(),
-  supplierId: int("supplierId").notNull(),
+  supplierId: int("supplierId").notNull().references(() => suppliers.id, { onDelete: "cascade" }),
   countryCode: varchar("countryCode", { length: 2 }).notNull(),
   cityName: varchar("cityName", { length: 255 }).notNull(),
   stateProvince: varchar("stateProvince", { length: 255 }), // State/Province/Region
@@ -121,7 +135,10 @@ export const supplierPriorityCities = mysqlTable("supplierPriorityCities", {
   latitude: decimal("latitude", { precision: 10, scale: 7 }), // Decimal for precise coordinates
   longitude: decimal("longitude", { precision: 10, scale: 7 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
+}, (table) => ({
+  supplierIdIdx: index("supplierPriorityCities_supplierId_idx").on(table.supplierId),
+  uniqueCity: index("supplierPriorityCities_unique").on(table.supplierId, table.placeId),
+}));
 
 export type SupplierPriorityCity = typeof supplierPriorityCities.$inferSelect;
 export type InsertSupplierPriorityCity = typeof supplierPriorityCities.$inferInsert;
