@@ -1149,10 +1149,14 @@ export default function Coverage() {
                             </div>
                             <div className="w-full bg-secondary rounded-full h-2">
                               <div
-                                className="bg-blue-500 h-2 rounded-full transition-all"
+                                className="bg-primary h-2 rounded-full transition-all"
                                 style={{ width: `${percentage}%` }}
                               />
                             </div>
+                            <p className="text-sm text-muted-foreground mt-2">
+                              {countriesWithThisTime.slice(0, 10).map(c => COUNTRIES.find(country => country.code === c.countryCode)?.name || c.countryCode).join(' , ')}
+                              {countriesWithThisTime.length > 10 && ` , +${countriesWithThisTime.length - 10} more`}
+                            </p>
                           </div>
                         );
                       })}
@@ -1241,6 +1245,13 @@ export default function Coverage() {
                                 style={{ width: `${percentage}%` }}
                               />
                             </div>
+                            <p className="text-sm text-muted-foreground mt-2">
+                              {citiesWithThisTime.slice(0, 10).map(city => {
+                                const countryName = COUNTRIES.find(c => c.code === city.countryCode)?.name || city.countryCode;
+                                return city.stateProvince ? `${city.cityName}, ${city.stateProvince}, ${countryName}` : `${city.cityName}, ${countryName}`;
+                              }).join(' , ')}
+                              {citiesWithThisTime.length > 10 && ` , +${citiesWithThisTime.length - 10} more`}
+                            </p>
                           </div>
                         );
                       })}

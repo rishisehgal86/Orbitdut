@@ -223,3 +223,7 @@
 
 ## UI Improvements
 - [x] Reorder sidebar navigation: Coverage should appear above Rates
+
+## Preview Tab Enhancements
+- [x] Show detailed country lists under each response time tier (like Coverage by Region)
+- [x] Show detailed city lists under each response time tier for Priority Cities
