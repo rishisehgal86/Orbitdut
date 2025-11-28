@@ -125,3 +125,8 @@
 - [x] Add prominent supplier signup link to homepage
 - [x] Update hero section with clear calls-to-action
 - [x] Add signup section explaining benefits for each user type
+
+## Phase 17: Supplier Signup Portal Integration
+- [x] Update supplier signup to redirect to supplier portal after registration
+- [x] Ensure supplier account type is set correctly during signup
+- [x] Test complete supplier signup and portal access flow

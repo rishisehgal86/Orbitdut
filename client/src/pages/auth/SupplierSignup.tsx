@@ -131,7 +131,7 @@ export default function SupplierSignup() {
 
           <div className="mt-4 text-center text-sm">
             <span className="text-muted-foreground">Looking for services? </span>
-            <Link href="/signup" className="text-primary hover:underline">
+            <Link href="/auth/customer-signup" className="text-primary hover:underline">
               Sign up as customer
             </Link>
           </div>
