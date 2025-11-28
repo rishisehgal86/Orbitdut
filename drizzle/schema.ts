@@ -56,11 +56,15 @@ export type InsertSupplier = typeof suppliers.$inferInsert;
  */
 export const supplierUsers = mysqlTable("supplierUsers", {
   id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  supplierId: int("supplierId").notNull(),
+  userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  supplierId: int("supplierId").notNull().references(() => suppliers.id, { onDelete: "cascade" }),
   role: mysqlEnum("role", ["supplier_admin", "supplier_tech"]).default("supplier_tech").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
+}, (table) => ({
+  userIdIdx: index("supplierUsers_userId_idx").on(table.userId),
+  supplierIdIdx: index("supplierUsers_supplierId_idx").on(table.supplierId),
+  uniqueUserSupplier: index("supplierUsers_unique").on(table.userId, table.supplierId),
+}));
 
 export type SupplierUser = typeof supplierUsers.$inferSelect;
 export type InsertSupplierUser = typeof supplierUsers.$inferInsert;
@@ -148,14 +152,17 @@ export type InsertSupplierPriorityCity = typeof supplierPriorityCities.$inferIns
  */
 export const supplierResponseTimes = mysqlTable("supplierResponseTimes", {
   id: int("id").autoincrement().primaryKey(),
-  supplierId: int("supplierId").notNull(),
+  supplierId: int("supplierId").notNull().references(() => suppliers.id, { onDelete: "cascade" }),
   countryCode: varchar("countryCode", { length: 2 }), // NULL = global default
   cityName: varchar("cityName", { length: 255 }), // NULL = country-level or global
   responseTimeHours: int("responseTimeHours").notNull(), // 4, 24, 48, 72, 96
   isDefault: int("isDefault", { unsigned: true }).default(0).notNull(), // 1 = global default
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
+}, (table) => ({
+  supplierIdIdx: index("supplierResponseTimes_supplierId_idx").on(table.supplierId),
+  uniqueResponseTime: index("supplierResponseTimes_unique").on(table.supplierId, table.countryCode, table.cityName, table.responseTimeHours),
+}));
 
 export type SupplierResponseTime = typeof supplierResponseTimes.$inferSelect;
 export type InsertSupplierResponseTime = typeof supplierResponseTimes.$inferInsert;
@@ -165,7 +172,7 @@ export type InsertSupplierResponseTime = typeof supplierResponseTimes.$inferInse
  */
 export const jobs = mysqlTable("jobs", {
   id: int("id").autoincrement().primaryKey(),
-  customerId: int("customerId"), // Can be null for guest requests
+  customerId: int("customerId").references(() => users.id, { onDelete: "set null" }), // Can be null for guest requests
   customerName: varchar("customerName", { length: 255 }).notNull(),
   customerEmail: varchar("customerEmail", { length: 320 }).notNull(),
   customerPhone: varchar("customerPhone", { length: 50 }),
@@ -190,12 +197,16 @@ export const jobs = mysqlTable("jobs", {
     "completed",
     "cancelled"
   ]).default("pending_supplier_acceptance").notNull(),
-  assignedSupplierId: int("assignedSupplierId"),
+  assignedSupplierId: int("assignedSupplierId").references(() => suppliers.id, { onDelete: "set null" }),
   acceptedAt: timestamp("acceptedAt"),
   completedAt: timestamp("completedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
+}, (table) => ({
+  customerIdIdx: index("jobs_customerId_idx").on(table.customerId),
+  assignedSupplierIdIdx: index("jobs_assignedSupplierId_idx").on(table.assignedSupplierId),
+  statusIdx: index("jobs_status_idx").on(table.status),
+}));
 
 export type Job = typeof jobs.$inferSelect;
 export type InsertJob = typeof jobs.$inferInsert;
@@ -205,7 +216,7 @@ export type InsertJob = typeof jobs.$inferInsert;
  */
 export const payments = mysqlTable("payments", {
   id: int("id").autoincrement().primaryKey(),
-  jobId: int("jobId").notNull(),
+  jobId: int("jobId").notNull().references(() => jobs.id, { onDelete: "cascade" }),
   paymentType: mysqlEnum("paymentType", ["customer_payment", "supplier_payout"]).notNull(),
   amount: int("amount").notNull(), // In cents
   currency: varchar("currency", { length: 3 }).notNull(),
@@ -215,7 +226,11 @@ export const payments = mysqlTable("payments", {
   processedAt: timestamp("processedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
+}, (table) => ({
+  jobIdIdx: index("payments_jobId_idx").on(table.jobId),
+  paymentTypeIdx: index("payments_paymentType_idx").on(table.paymentType),
+  statusIdx: index("payments_status_idx").on(table.status),
+}));
 
 export type Payment = typeof payments.$inferSelect;
 export type InsertPayment = typeof payments.$inferInsert;
@@ -225,13 +240,17 @@ export type InsertPayment = typeof payments.$inferInsert;
  */
 export const reviews = mysqlTable("reviews", {
   id: int("id").autoincrement().primaryKey(),
-  jobId: int("jobId").notNull(),
-  supplierId: int("supplierId").notNull(),
-  customerId: int("customerId"),
+  jobId: int("jobId").notNull().references(() => jobs.id, { onDelete: "cascade" }),
+  supplierId: int("supplierId").notNull().references(() => suppliers.id, { onDelete: "cascade" }),
+  customerId: int("customerId").references(() => users.id, { onDelete: "set null" }),
   rating: int("rating").notNull(), // 1-5 stars
   comment: text("comment"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
+}, (table) => ({
+  jobIdIdx: index("reviews_jobId_idx").on(table.jobId),
+  supplierIdIdx: index("reviews_supplierId_idx").on(table.supplierId),
+  customerIdIdx: index("reviews_customerId_idx").on(table.customerId),
+}));
 
 export type Review = typeof reviews.$inferSelect;
 export type InsertReview = typeof reviews.$inferInsert;

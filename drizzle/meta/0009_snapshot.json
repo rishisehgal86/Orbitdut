@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "89affe94-cdd1-4f95-9f67-df5d96beb8d5",
-  "prevId": "02268336-1d19-409a-b4ca-8af439cda743",
+  "id": "d413fdf8-c868-4518-8a01-449633c35877",
+  "prevId": "f698c6ee-c4e4-4057-90d6-f8b49d6b4bfd",
   "tables": {
     "jobs": {
       "name": "jobs",
@@ -181,8 +181,57 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
-      "foreignKeys": {},
+      "indexes": {
+        "jobs_customerId_idx": {
+          "name": "jobs_customerId_idx",
+          "columns": [
+            "customerId"
+          ],
+          "isUnique": false
+        },
+        "jobs_assignedSupplierId_idx": {
+          "name": "jobs_assignedSupplierId_idx",
+          "columns": [
+            "assignedSupplierId"
+          ],
+          "isUnique": false
+        },
+        "jobs_status_idx": {
+          "name": "jobs_status_idx",
+          "columns": [
+            "status"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "jobs_customerId_users_id_fk": {
+          "name": "jobs_customerId_users_id_fk",
+          "tableFrom": "jobs",
+          "tableTo": "users",
+          "columnsFrom": [
+            "customerId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "jobs_assignedSupplierId_suppliers_id_fk": {
+          "name": "jobs_assignedSupplierId_suppliers_id_fk",
+          "tableFrom": "jobs",
+          "tableTo": "suppliers",
+          "columnsFrom": [
+            "assignedSupplierId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {
         "jobs_id": {
           "name": "jobs_id",
@@ -279,8 +328,44 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
-      "foreignKeys": {},
+      "indexes": {
+        "payments_jobId_idx": {
+          "name": "payments_jobId_idx",
+          "columns": [
+            "jobId"
+          ],
+          "isUnique": false
+        },
+        "payments_paymentType_idx": {
+          "name": "payments_paymentType_idx",
+          "columns": [
+            "paymentType"
+          ],
+          "isUnique": false
+        },
+        "payments_status_idx": {
+          "name": "payments_status_idx",
+          "columns": [
+            "status"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "payments_jobId_jobs_id_fk": {
+          "name": "payments_jobId_jobs_id_fk",
+          "tableFrom": "payments",
+          "tableTo": "jobs",
+          "columnsFrom": [
+            "jobId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {
         "payments_id": {
           "name": "payments_id",
@@ -346,8 +431,70 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
-      "foreignKeys": {},
+      "indexes": {
+        "reviews_jobId_idx": {
+          "name": "reviews_jobId_idx",
+          "columns": [
+            "jobId"
+          ],
+          "isUnique": false
+        },
+        "reviews_supplierId_idx": {
+          "name": "reviews_supplierId_idx",
+          "columns": [
+            "supplierId"
+          ],
+          "isUnique": false
+        },
+        "reviews_customerId_idx": {
+          "name": "reviews_customerId_idx",
+          "columns": [
+            "customerId"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "reviews_jobId_jobs_id_fk": {
+          "name": "reviews_jobId_jobs_id_fk",
+          "tableFrom": "reviews",
+          "tableTo": "jobs",
+          "columnsFrom": [
+            "jobId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "reviews_supplierId_suppliers_id_fk": {
+          "name": "reviews_supplierId_suppliers_id_fk",
+          "tableFrom": "reviews",
+          "tableTo": "suppliers",
+          "columnsFrom": [
+            "supplierId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "reviews_customerId_users_id_fk": {
+          "name": "reviews_customerId_users_id_fk",
+          "tableFrom": "reviews",
+          "tableTo": "users",
+          "columnsFrom": [
+            "customerId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {
         "reviews_id": {
           "name": "reviews_id",
@@ -664,6 +811,19 @@
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
+        },
+        "supplierRates_cityId_supplierPriorityCities_id_fk": {
+          "name": "supplierRates_cityId_supplierPriorityCities_id_fk",
+          "tableFrom": "supplierRates",
+          "tableTo": "supplierPriorityCities",
+          "columnsFrom": [
+            "cityId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -741,8 +901,40 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
-      "foreignKeys": {},
+      "indexes": {
+        "supplierResponseTimes_supplierId_idx": {
+          "name": "supplierResponseTimes_supplierId_idx",
+          "columns": [
+            "supplierId"
+          ],
+          "isUnique": false
+        },
+        "supplierResponseTimes_unique": {
+          "name": "supplierResponseTimes_unique",
+          "columns": [
+            "supplierId",
+            "countryCode",
+            "cityName",
+            "responseTimeHours"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "supplierResponseTimes_supplierId_suppliers_id_fk": {
+          "name": "supplierResponseTimes_supplierId_suppliers_id_fk",
+          "tableFrom": "supplierResponseTimes",
+          "tableTo": "suppliers",
+          "columnsFrom": [
+            "supplierId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {
         "supplierResponseTimes_id": {
           "name": "supplierResponseTimes_id",
@@ -795,8 +987,58 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
-      "foreignKeys": {},
+      "indexes": {
+        "supplierUsers_userId_idx": {
+          "name": "supplierUsers_userId_idx",
+          "columns": [
+            "userId"
+          ],
+          "isUnique": false
+        },
+        "supplierUsers_supplierId_idx": {
+          "name": "supplierUsers_supplierId_idx",
+          "columns": [
+            "supplierId"
+          ],
+          "isUnique": false
+        },
+        "supplierUsers_unique": {
+          "name": "supplierUsers_unique",
+          "columns": [
+            "userId",
+            "supplierId"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "supplierUsers_userId_users_id_fk": {
+          "name": "supplierUsers_userId_users_id_fk",
+          "tableFrom": "supplierUsers",
+          "tableTo": "users",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "supplierUsers_supplierId_suppliers_id_fk": {
+          "name": "supplierUsers_supplierId_suppliers_id_fk",
+          "tableFrom": "supplierUsers",
+          "tableTo": "suppliers",
+          "columnsFrom": [
+            "supplierId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {
         "supplierUsers_id": {
           "name": "supplierUsers_id",
