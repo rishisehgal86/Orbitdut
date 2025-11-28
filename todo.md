@@ -220,3 +220,6 @@
 - [x] Add bulk action to set response time for selected cities
 - [x] Add Select All / Deselect All functionality
 - [x] Add Priority City Response Time Distribution to Preview tab
+
+## UI Improvements
+- [x] Reorder sidebar navigation: Coverage should appear above Rates

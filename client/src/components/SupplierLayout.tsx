@@ -28,8 +28,8 @@ interface NavItem {
 const navItems: NavItem[] = [
   { title: "Dashboard", href: "/supplier/dashboard", icon: Home },
   { title: "My Jobs", href: "/supplier/jobs", icon: Building2 },
-  { title: "Rates", href: "/supplier/rates", icon: DollarSign },
   { title: "Coverage", href: "/supplier/coverage", icon: MapPin },
+  { title: "Rates", href: "/supplier/rates", icon: DollarSign },
   { title: "Earnings", href: "/supplier/earnings", icon: Wallet },
   { title: "Settings", href: "/supplier/settings", icon: Settings },
 ];
