@@ -262,3 +262,39 @@
 - [ ] Add validation warnings (e.g., faster response time cheaper than slower)
 - [ ] Test rate CRUD operations thoroughly
 - [ ] Test with multiple locations and service types
+
+## Rate Management - Quick Setup Improvements
+- [x] Fix: Reset base rate inputs when switching between service types
+- [x] Clear input fields when user selects a different service type tab
+
+## Rate Management - By Location Tab Implementation
+- [x] Create By Location tab with nested regional tabs
+- [x] Add Africa tab showing countries in Africa region
+- [x] Add Americas tab showing countries in Americas region
+- [x] Add Asia tab showing countries in Asia region
+- [x] Add Europe tab showing countries in Europe region
+- [x] Add Oceania tab showing countries in Oceania region
+- [x] Add Cities tab showing all priority cities
+- [x] Display rates in table format with inline editing
+- [x] Add search functionality for filtering locations
+- [x] Implement save functionality for individual rate changes
+- [x] Update getSupplierCountries to include region and country name
+- [x] Test all regional tabs and inline editing
+- [x] Update getSupplierCountries to include region and country name
+- [x] Test regional filtering and tab switching
+- [x] Test inline editing with auto-save on blur
+
+## Rate Management - Quick Setup Regional Tabs
+- [x] Add regional tabs to Quick Setup (Africa, Americas, Asia, Europe, Oceania, Cities)
+- [x] Allow suppliers to set different base rates for each region
+- [x] Update "Apply to All Locations" to only apply to selected region/cities
+- [x] Update button text to reflect regional scope (e.g., "Apply to Africa")
+- [x] Test regional rate application
+- [x] Reset rates when switching between regions
+
+## Rate Management - Quick Setup Location Preview
+- [x] Show actual location names instead of just count in Quick Setup
+- [x] Display list of countries/cities that will be affected by the bulk operation
+- [x] Fix typo: "cityies" should be "cities"
+- [x] Show first 5 locations and "and X more" for longer lists
+- [x] Test with all regional tabs

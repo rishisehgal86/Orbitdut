@@ -196,7 +196,19 @@ export async function linkUserToSupplier(userId: number, supplierId: number, rol
 export async function getSupplierCountries(supplierId: number) {
   const db = await getDb();
   if (!db) return [];
-  return await db.select().from(supplierCoverageCountries).where(eq(supplierCoverageCountries.supplierId, supplierId));
+  
+  const { COUNTRIES } = await import("@shared/countries");
+  const coverageRecords = await db.select().from(supplierCoverageCountries).where(eq(supplierCoverageCountries.supplierId, supplierId));
+  
+  // Join with COUNTRIES to get full country info including region
+  return coverageRecords.map(record => {
+    const countryInfo = COUNTRIES.find(c => c.code === record.countryCode);
+    return {
+      ...record,
+      countryName: countryInfo?.name || record.countryCode,
+      region: countryInfo?.region || "Unknown",
+    };
+  });
 }
 
 export async function upsertSupplierCountries(supplierId: number, countryCodes: string[], isExcluded: boolean = false) {
