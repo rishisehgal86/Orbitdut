@@ -162,3 +162,6 @@
 - [ ] Add coverage visualization on supplier profiles
 - [ ] Update job matching algorithm to use coverage data
 - [ ] Test coverage setup and job matching
+
+## Bug Fixes
+- [x] Fix Coverage navigation button to link to /supplier/coverage page

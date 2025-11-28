@@ -1,5 +1,6 @@
 import SupplierLayout from "@/components/SupplierLayout";
 import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, Briefcase, CheckCircle, Clock, DollarSign } from "lucide-react";
 
@@ -78,9 +79,11 @@ export default function SupplierDashboard() {
                   Add your business information to verify your account
                 </p>
               </div>
-              <Button variant="outline" size="sm">
-                Setup
-              </Button>
+              <Link href="/supplier/settings">
+                <Button variant="outline" size="sm">
+                  Setup
+                </Button>
+              </Link>
             </div>
 
             <div className="flex items-start gap-4 rounded-lg border p-4">
@@ -91,9 +94,11 @@ export default function SupplierDashboard() {
                   Define your hourly rates for different countries
                 </p>
               </div>
-              <Button variant="outline" size="sm">
-                Setup
-              </Button>
+              <Link href="/supplier/rates">
+                <Button variant="outline" size="sm">
+                  Setup
+                </Button>
+              </Link>
             </div>
 
             <div className="flex items-start gap-4 rounded-lg border p-4">
@@ -104,9 +109,11 @@ export default function SupplierDashboard() {
                   Specify the geographic regions where you provide services
                 </p>
               </div>
-              <Button variant="outline" size="sm">
-                Setup
-              </Button>
+              <Link href="/supplier/coverage">
+                <Button variant="outline" size="sm">
+                  Setup
+                </Button>
+              </Link>
             </div>
           </CardContent>
         </Card>
