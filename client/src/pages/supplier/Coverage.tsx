@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Globe, MapPin, Clock, Eye, Search, X } from "lucide-react";
+import { Globe, MapPin, Clock, Eye, Search, X, AlertCircle } from "lucide-react";
 import { PlacesAutocomplete } from "@/components/PlacesAutocomplete";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -171,7 +171,7 @@ export default function Coverage() {
   const filteredCountries = COUNTRIES.filter(country =>
     country.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     country.code.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  ).sort((a, b) => a.name.localeCompare(b.name));
 
   const popularCountries = ["US", "GB", "CA", "AU", "DE", "FR", "JP", "SG"];
 
@@ -995,10 +995,16 @@ export default function Coverage() {
                             );
                             const fallbackTime = countryResponseTime?.responseTimeHours || defaultResponseTime;
                             
+                            // Validation: City response time should be faster (lower hours) than country/default
+                            const cityTime = cityResponseTime?.responseTimeHours;
+                            const isInvalid = cityTime && fallbackTime && cityTime > fallbackTime;
+                            
                             return (
                               <div
                                 key={city.id}
-                                className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                                className={`flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors ${
+                                  isInvalid ? 'border-destructive bg-destructive/5' : ''
+                                }`}
                               >
                                 <div className="flex items-center gap-3 flex-1">
                                   <Checkbox
@@ -1006,11 +1012,21 @@ export default function Coverage() {
                                     onCheckedChange={() => handleToggleCitySelection(city.id)}
                                   />
                                   <MapPin className="w-4 h-4 text-primary" />
-                                  <div>
-                                    <p className="font-medium">{city.cityName}</p>
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                      <p className="font-medium">{city.cityName}</p>
+                                      {isInvalid && (
+                                        <AlertCircle className="w-4 h-4 text-destructive" />
+                                      )}
+                                    </div>
                                     <p className="text-xs text-muted-foreground">
                                       {COUNTRIES.find(c => c.code === city.countryCode)?.name || city.countryCode}
                                     </p>
+                                    {isInvalid && (
+                                      <p className="text-xs text-destructive mt-1">
+                                        ⚠️ Priority city response time ({getResponseTimeLabel(cityTime!)}) should be faster than country default ({getResponseTimeLabel(fallbackTime!)})
+                                      </p>
+                                    )}
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-3">

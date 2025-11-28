@@ -233,3 +233,10 @@
 
 ## Critical Bug Fixes
 - [x] Fix × button in Selected countries section - buttons should remove country from selection when clicked
+
+## Bug Fixes - Sorting
+- [x] Fix All Countries (A-Z) list to sort alphabetically by country name instead of by region
+
+## Response Time Validation
+- [x] Implement validation logic ensuring Priority Cities have faster response times than parent countries
+- [x] Add visual warnings when city response time is slower than country response time
