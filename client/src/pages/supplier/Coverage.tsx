@@ -213,7 +213,7 @@ export default function Coverage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2 mb-4">
-                    {existingCountries.slice(0, 20).map(({ countryCode }) => {
+                    {existingCountries.map(({ countryCode }) => {
                       const country = COUNTRIES.find(c => c.code === countryCode);
                       return (
                         <Badge key={countryCode} variant="secondary">
@@ -221,9 +221,6 @@ export default function Coverage() {
                         </Badge>
                       );
                     })}
-                    {existingCountries.length > 20 && (
-                      <Badge variant="outline">+{existingCountries.length - 20} more</Badge>
-                    )}
                   </div>
                   <Button variant="outline" size="sm" onClick={handleCustomSelection}>
                     Edit Coverage

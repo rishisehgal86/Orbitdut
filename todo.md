@@ -169,3 +169,4 @@
 - [x] Add loading states and success feedback to coverage save operation
 - [x] Load existing coverage on page mount and display selected countries
 - [x] Fix coverage mode selection to load existing countries (not replace them)
+- [x] Remove country display limit in Current Coverage section (show all countries)
