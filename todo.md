@@ -141,3 +141,10 @@
 - [x] Disable OAuth fallback in context.ts
 - [x] Update error messages to remove OAuth references
 - [x] Test complete authentication flow without OAuth
+
+## Phase 20: Homepage CTA Differentiation
+- [x] Update navigation to show distinct customer vs supplier CTAs
+- [x] Change "Get Started" to "Request Service" for customers
+- [x] Make "Supplier Signup" more prominent with different styling
+- [x] Update bottom CTA section with clearer messaging
+- [x] Test both signup flows from homepage

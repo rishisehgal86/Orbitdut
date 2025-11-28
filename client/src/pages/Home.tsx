@@ -33,14 +33,14 @@ export default function Home() {
                 <a href="#how-it-works">
                   <Button variant="ghost">How It Works</Button>
                 </a>
-                <Link href="/auth/supplier-signup">
-                  <Button variant="ghost">Supplier Signup</Button>
-                </Link>
                 <Link href="/login">
                   <Button variant="ghost">Sign In</Button>
                 </Link>
+                <Link href="/auth/supplier-signup">
+                  <Button variant="outline">Join as Supplier</Button>
+                </Link>
                 <Link href="/auth/customer-signup">
-                  <Button>Get Started</Button>
+                  <Button>Request Service</Button>
                 </Link>
               </>
             )}
@@ -183,7 +183,7 @@ export default function Home() {
                   <>
                     <Link href="/auth/customer-signup">
                       <Button size="lg" variant="secondary" className="w-full sm:w-auto">
-                        Customer Signup
+                        Request Service Now
                       </Button>
                     </Link>
                     <Link href="/auth/supplier-signup">
@@ -192,7 +192,7 @@ export default function Home() {
                         variant="outline"
                         className="w-full sm:w-auto bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground/10"
                       >
-                        Supplier Signup
+                        Become a Supplier
                       </Button>
                     </Link>
                   </>
