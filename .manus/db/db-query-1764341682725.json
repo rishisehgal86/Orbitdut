@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO supplierUsers (userId, supplierId, role)\nSELECT u.id, s.id, 'supplier_admin'\nFROM users u\nCROSS JOIN suppliers s\nWHERE u.email = 'supplier@test.com' \n  AND s.contactEmail = 'supplier@test.com'\n  AND NOT EXISTS (SELECT 1 FROM supplierUsers su WHERE su.userId = u.id AND su.supplierId = s.id);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute INSERT INTO supplierUsers (userId, supplierId, role)\nSELECT u.id, s.id, 'supplier_admin'\nFROM users u\nCROSS JOIN suppliers s\nWHERE u.email = 'supplier@test.com' \n  AND s.contactEmail = 'supplier@test.com'\n  AND NOT EXISTS (SELECT 1 FROM supplierUsers su WHERE su.userId = u.id AND su.supplierId = s.id);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 81
+}

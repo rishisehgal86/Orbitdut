@@ -233,3 +233,13 @@ export type Region = (typeof REGIONS)[number];
 export function getCountriesByRegion(region: Region): Country[] {
   return COUNTRIES.filter((c) => c.region === region);
 }
+
+export interface RegionWithCountries {
+  name: Region;
+  countries: string[]; // country codes
+}
+
+export const REGIONS_WITH_COUNTRIES: RegionWithCountries[] = REGIONS.map(region => ({
+  name: region,
+  countries: getCountriesByRegion(region).map(c => c.code)
+}));

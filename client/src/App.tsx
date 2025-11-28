@@ -13,6 +13,7 @@ import SupplierSettings from "./pages/supplier/Settings";
 import SupplierRates from "./pages/supplier/Rates";
 import SupplierJobs from "./pages/supplier/Jobs";
 import SupplierJobDetail from "./pages/supplier/JobDetail";
+import SupplierCoverage from "./pages/supplier/Coverage";
 import RequestService from "./pages/RequestService";
 import RequestServicePricing from "./pages/RequestServicePricing";
 import JobConfirmation from "./pages/JobConfirmation";
@@ -45,6 +46,7 @@ function Router() {
       <Route path={"/supplier/rates"} component={SupplierRates} />
       <Route path={"/supplier/jobs"} component={SupplierJobs} />
       <Route path={"/supplier/jobs/:id"} component={SupplierJobDetail} />
+      <Route path={"/supplier/coverage"} component={SupplierCoverage} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

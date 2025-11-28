@@ -153,10 +153,12 @@
 - [x] Update database schema to store coverage data (countries, cities, exclusions, response times)
 - [x] Create ISO 3166-1 country list with codes
 - [x] Build backend API for coverage CRUD operations
-- [ ] Create Tier 1: Country selection UI with search and select all
-- [ ] Create Tier 2: Priority cities/metro areas UI
-- [ ] Create Tier 3: Exclusion zones UI
-- [ ] Create Tier 4: Response time zones UI
-- [ ] Add coverage visualization/summary
+- [x] Create coverage management page with tabbed interface
+- [x] Build Tier 1: Country selection UI with search and select all
+- [ ] Build Tier 2: Priority cities/metro areas UI with Google Maps
+- [ ] Build Tier 4: Response time zones UI
+- [x] Add supplier navigation link to coverage page
+- [ ] Test complete coverage management flow
+- [ ] Add coverage visualization on supplier profiles
 - [ ] Update job matching algorithm to use coverage data
 - [ ] Test coverage setup and job matching
