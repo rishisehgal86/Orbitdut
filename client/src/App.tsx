@@ -8,15 +8,25 @@ import Home from "./pages/Home";
 import SupplierDashboard from "./pages/supplier/Dashboard";
 import SupplierSettings from "./pages/supplier/Settings";
 import SupplierRates from "./pages/supplier/Rates";
+import SupplierJobs from "./pages/supplier/Jobs";
+import SupplierJobDetail from "./pages/supplier/JobDetail";
+import RequestService from "./pages/RequestService";
+import RequestServicePricing from "./pages/RequestServicePricing";
+import JobConfirmation from "./pages/JobConfirmation";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
       <Route path={"/"} component={Home} />
+      <Route path={"/request-service"} component={RequestService} />
+      <Route path={"/request-service/pricing"} component={RequestServicePricing} />
+      <Route path={"/job-confirmation/:id"} component={JobConfirmation} />
       <Route path={"/supplier/dashboard"} component={SupplierDashboard} />
       <Route path={"/supplier/settings"} component={SupplierSettings} />
       <Route path={"/supplier/rates"} component={SupplierRates} />
+      <Route path={"/supplier/jobs"} component={SupplierJobs} />
+      <Route path={"/supplier/jobs/:id"} component={SupplierJobDetail} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

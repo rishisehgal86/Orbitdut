@@ -43,3 +43,32 @@
 - [ ] Rating and review system
 - [ ] Admin dashboard enhancements
 - [ ] Analytics and reporting
+
+## Phase 6: Customer Job Request Flow
+- [x] Create job request form with address lookup
+- [x] Implement service type selection
+- [x] Add scheduling calendar/date picker
+- [x] Build dynamic pricing calculation engine
+- [ ] Integrate payment authorization (Stripe)
+- [x] Create job submission and confirmation
+
+## Phase 7: Supplier Marketplace & Job Distribution
+- [ ] Build geographic matching algorithm
+- [x] Implement FCFS job distribution to qualified suppliers
+- [ ] Create real-time job notification system
+- [x] Build supplier job acceptance interface
+- [ ] Add job offer expiration logic
+
+## Phase 8: Job Workflow Management
+- [x] Implement job status tracking (assigned → en_route → on_site → completed)
+- [x] Create supplier job detail page
+- [x] Build status update interface for suppliers
+- [ ] Add real-time status notifications to customers
+- [ ] Implement job timeline/activity log
+
+## Phase 9: Job Completion & Payment
+- [x] Create job completion workflow for suppliers
+- [x] Implement customer notification on completion
+- [ ] Build automatic payment capture from authorization (Stripe integration pending)
+- [ ] Create supplier payout processing (Stripe integration pending)
+- [ ] Add review/rating system post-completion
