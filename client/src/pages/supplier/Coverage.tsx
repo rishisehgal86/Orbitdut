@@ -552,10 +552,16 @@ export default function Coverage() {
                           return (
                             <Badge key={code} variant="secondary" className="gap-1">
                               {country?.name}
-                              <X
-                                className="w-3 h-3 cursor-pointer"
-                                onClick={() => handleCountryToggle(code)}
-                              />
+                              <button
+                                type="button"
+                                className="ml-1 hover:bg-muted rounded-sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCountryToggle(code);
+                                }}
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
                             </Badge>
                           );
                         })}

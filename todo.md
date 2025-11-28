@@ -230,3 +230,6 @@
 
 ## Bug Fixes
 - [x] Fix × button functionality in custom country selection (Selected countries list)
+
+## Critical Bug Fixes
+- [x] Fix × button in Selected countries section - buttons should remove country from selection when clicked
