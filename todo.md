@@ -165,3 +165,7 @@
 
 ## Bug Fixes
 - [x] Fix Coverage navigation button to link to /supplier/coverage page
+- [x] Fix database delete query error in coverage update operation
+- [x] Add loading states and success feedback to coverage save operation
+- [x] Load existing coverage on page mount and display selected countries
+- [x] Fix coverage mode selection to load existing countries (not replace them)

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SupplierLayout from "@/components/SupplierLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -51,6 +51,9 @@ export default function Coverage() {
     onSuccess: () => {
       toast.success("Coverage updated successfully");
       refetchCountries();
+      setCoverageMode(null); // Return to main view
+      setSelectedRegions([]); // Clear selections
+      setSelectedCountries([]);
     },
     onError: (error) => {
       toast.error(`Failed to update coverage: ${error.message}`);
@@ -96,11 +99,14 @@ export default function Coverage() {
 
   const handleCustomSelection = () => {
     setCoverageMode("custom");
-    // Load existing countries
-    if (existingCountries) {
+  };
+
+  // Load existing countries when entering custom mode
+  useEffect(() => {
+    if (coverageMode === "custom" && existingCountries) {
       setSelectedCountries(existingCountries.map(c => c.countryCode));
     }
-  };
+  }, [coverageMode, existingCountries]);
 
   const handleRegionToggle = (regionName: string) => {
     setSelectedRegions(prev => {
@@ -196,6 +202,36 @@ export default function Coverage() {
 
           {/* Tab 1: Countries */}
           <TabsContent value="countries" className="space-y-6">
+            {/* Current Coverage Display */}
+            {existingCountries && existingCountries.length > 0 && !coverageMode && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Current Coverage</CardTitle>
+                  <CardDescription>
+                    You are currently covering {existingCountries.length} {existingCountries.length === 1 ? 'country' : 'countries'}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {existingCountries.slice(0, 20).map(({ countryCode }) => {
+                      const country = COUNTRIES.find(c => c.code === countryCode);
+                      return (
+                        <Badge key={countryCode} variant="secondary">
+                          {country?.name || countryCode}
+                        </Badge>
+                      );
+                    })}
+                    {existingCountries.length > 20 && (
+                      <Badge variant="outline">+{existingCountries.length - 20} more</Badge>
+                    )}
+                  </div>
+                  <Button variant="outline" size="sm" onClick={handleCustomSelection}>
+                    Edit Coverage
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
             {!coverageMode && (
               <Card>
                 <CardHeader>
@@ -274,11 +310,14 @@ export default function Coverage() {
                   ))}
 
                   <div className="flex gap-2 pt-4">
-                    <Button onClick={applyRegionalSelection} disabled={selectedRegions.length === 0}>
-                      Save Selection ({selectedRegions.reduce((acc, name) => {
+                    <Button 
+                      onClick={applyRegionalSelection} 
+                      disabled={selectedRegions.length === 0 || updateCountries.isPending}
+                    >
+                      {updateCountries.isPending ? "Saving..." : `Save Selection (${selectedRegions.reduce((acc, name) => {
                         const region = REGIONS_WITH_COUNTRIES.find(r => r.name === name);
                         return acc + (region?.countries.length || 0);
-                      }, 0)} countries)
+                      }, 0)} countries)`}
                     </Button>
                     <Button variant="outline" onClick={() => setCoverageMode(null)}>
                       Back
@@ -369,8 +408,11 @@ export default function Coverage() {
                   </div>
 
                   <div className="flex gap-2 pt-4">
-                    <Button onClick={applyCustomSelection} disabled={selectedCountries.length === 0}>
-                      Save Selection ({selectedCountries.length} countries)
+                    <Button 
+                      onClick={applyCustomSelection} 
+                      disabled={selectedCountries.length === 0 || updateCountries.isPending}
+                    >
+                      {updateCountries.isPending ? "Saving..." : `Save Selection (${selectedCountries.length} countries)`}
                     </Button>
                     <Button
                       variant="outline"
