@@ -92,3 +92,9 @@
 - [x] Update frontend RequestService to call timezone API
 - [x] Replace coordinate-based timezone estimation with API call
 - [ ] Test timezone accuracy for various global locations
+
+## Phase 13: Job Duration Constraints
+- [x] Update frontend duration input to enforce 2-16 hour range
+- [x] Add validation messages for duration limits
+- [x] Update backend job creation validation
+- [x] Update pricing calculation to respect duration limits

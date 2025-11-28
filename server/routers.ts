@@ -150,7 +150,7 @@ export const appRouter = router({
           latitude: z.string(),
           longitude: z.string(),
           scheduledStart: z.string(),
-          estimatedDuration: z.number(),
+          estimatedDuration: z.number().min(120, "Duration must be at least 2 hours (120 minutes)").max(960, "Duration must not exceed 16 hours (960 minutes)"),
         })
       )
       .mutation(async ({ input }) => {
@@ -183,7 +183,7 @@ export const appRouter = router({
           latitude: z.string(),
           longitude: z.string(),
           scheduledStart: z.string(),
-          estimatedDuration: z.number(),
+          estimatedDuration: z.number().min(120, "Duration must be at least 2 hours (120 minutes)").max(960, "Duration must not exceed 16 hours (960 minutes)"),
           calculatedPrice: z.number(),
           currency: z.string().length(3),
           isOutOfHours: z.boolean(),

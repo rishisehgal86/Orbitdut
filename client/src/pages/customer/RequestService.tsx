@@ -43,7 +43,7 @@ export default function RequestService() {
     timezone: "",
     scheduledDate: "",
     scheduledTime: "",
-    estimatedDuration: "60",
+    estimatedDuration: "120",
   });
 
   const [mapReady, setMapReady] = useState(false);
@@ -417,14 +417,24 @@ export default function RequestService() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="30">30 minutes</SelectItem>
-                      <SelectItem value="60">1 hour</SelectItem>
-                      <SelectItem value="90">1.5 hours</SelectItem>
                       <SelectItem value="120">2 hours</SelectItem>
                       <SelectItem value="180">3 hours</SelectItem>
                       <SelectItem value="240">4 hours</SelectItem>
+                      <SelectItem value="300">5 hours</SelectItem>
+                      <SelectItem value="360">6 hours</SelectItem>
+                      <SelectItem value="420">7 hours</SelectItem>
+                      <SelectItem value="480">8 hours</SelectItem>
+                      <SelectItem value="540">9 hours</SelectItem>
+                      <SelectItem value="600">10 hours</SelectItem>
+                      <SelectItem value="660">11 hours</SelectItem>
+                      <SelectItem value="720">12 hours</SelectItem>
+                      <SelectItem value="780">13 hours</SelectItem>
+                      <SelectItem value="840">14 hours</SelectItem>
+                      <SelectItem value="900">15 hours</SelectItem>
+                      <SelectItem value="960">16 hours</SelectItem>
                     </SelectContent>
                   </Select>
+                  <p className="text-sm text-muted-foreground">Minimum 2 hours, maximum 16 hours</p>
                 </div>
               </div>
 
