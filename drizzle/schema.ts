@@ -117,9 +117,10 @@ export type InsertSupplierPriorityCity = typeof supplierPriorityCities.$inferIns
 export const supplierResponseTimes = mysqlTable("supplierResponseTimes", {
   id: int("id").autoincrement().primaryKey(),
   supplierId: int("supplierId").notNull(),
-  countryCode: varchar("countryCode", { length: 2 }).notNull(),
-  cityName: varchar("cityName", { length: 255 }), // Null means applies to entire country
-  responseTimeHours: int("responseTimeHours").notNull(), // Hours to be on-site
+  countryCode: varchar("countryCode", { length: 2 }), // NULL = global default
+  cityName: varchar("cityName", { length: 255 }), // NULL = country-level or global
+  responseTimeHours: int("responseTimeHours").notNull(), // 4, 24, 48, 72, 96
+  isDefault: int("isDefault", { unsigned: true }).default(0).notNull(), // 1 = global default
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

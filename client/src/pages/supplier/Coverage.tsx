@@ -7,11 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Globe, MapPin, Clock, Eye, Search, X } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { toast } from "sonner";
 import { COUNTRIES, REGIONS_WITH_COUNTRIES } from "@shared/countries";
+import { RESPONSE_TIME_OPTIONS, getResponseTimeLabel } from "@shared/responseTimes";
 
 type CoverageMode = "quick" | "regional" | "custom";
 
@@ -78,6 +80,13 @@ export default function Coverage() {
   const updateResponseTime = trpc.supplier.updateResponseTime.useMutation({
     onSuccess: () => {
       toast.success("Response time updated");
+      refetchTimes();
+    },
+  });
+
+  const deleteResponseTime = trpc.supplier.deleteResponseTime.useMutation({
+    onSuccess: () => {
+      toast.success("Response time removed");
       refetchTimes();
     },
   });
@@ -181,6 +190,78 @@ export default function Coverage() {
 
   const handleRemoveCity = (cityId: number) => {
     deleteCity.mutate({ id: cityId });
+  };
+
+  // Response time management
+  const defaultResponseTime = responseTimes?.find(rt => rt.isDefault === 1)?.responseTimeHours;
+
+  const handleSetDefaultResponseTime = (hours: number) => {
+    if (!profile?.supplier.id) return;
+    
+    updateResponseTime.mutate({
+      supplierId: profile.supplier.id,
+      countryCode: null,
+      cityName: null,
+      responseTimeHours: hours,
+      isDefault: 1,
+    });
+  };
+
+  const handleSetCountryResponseTime = (countryCode: string, hours: number | null) => {
+    if (!profile?.supplier.id) return;
+    
+    if (hours === null) {
+      // Delete custom setting to use default
+      const existing = responseTimes?.find(rt => rt.countryCode === countryCode && !rt.cityName);
+      if (existing) {
+        deleteResponseTime.mutate({ id: existing.id });
+      }
+    } else {
+      updateResponseTime.mutate({
+        supplierId: profile.supplier.id,
+        countryCode,
+        cityName: null,
+        responseTimeHours: hours,
+        isDefault: 0,
+      });
+    }
+  };
+
+  const handleSetCityResponseTime = (countryCode: string, cityName: string, hours: number | null) => {
+    if (!profile?.supplier.id) return;
+    
+    if (hours === null) {
+      // Delete custom setting to use country/default
+      const existing = responseTimes?.find(rt => rt.countryCode === countryCode && rt.cityName === cityName);
+      if (existing) {
+        deleteResponseTime.mutate({ id: existing.id });
+      }
+    } else {
+      updateResponseTime.mutate({
+        supplierId: profile.supplier.id,
+        countryCode,
+        cityName,
+        responseTimeHours: hours,
+        isDefault: 0,
+      });
+    }
+  };
+
+  const handleBulkSetCountries = (hours: number) => {
+    if (!profile?.supplier.id || !existingCountries) return;
+    
+    // Set response time for all countries
+    existingCountries.forEach(country => {
+      updateResponseTime.mutate({
+        supplierId: profile.supplier.id!,
+        countryCode: country.countryCode,
+        cityName: null,
+        responseTimeHours: hours,
+        isDefault: 0,
+      });
+    });
+    
+    toast.success(`Set response time for all ${existingCountries.length} countries`);
   };
 
   if (!profile) {
@@ -546,26 +627,207 @@ export default function Coverage() {
             </Card>
           </TabsContent>
 
-          {/* Tab 3: Response Times - Placeholder */}
+          {/* Tab 3: Response Times */}
           <TabsContent value="response">
-            <Card>
-              <CardHeader>
-                <CardTitle>Response Times</CardTitle>
-                <CardDescription>
-                  Set your typical on-site arrival time
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Coming soon...</p>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              {/* Default Response Time */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Default Response Time</CardTitle>
+                  <CardDescription>
+                    Set your default response time for all locations without specific settings
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-4">
+                    <Label htmlFor="default-response" className="min-w-[200px]">
+                      For all unconfigured locations, respond within:
+                    </Label>
+                    <Select
+                      value={defaultResponseTime?.toString() || ""}
+                      onValueChange={(value) => handleSetDefaultResponseTime(parseInt(value))}
+                    >
+                      <SelectTrigger id="default-response" className="w-[300px]">
+                        <SelectValue placeholder="Select default response time" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {RESPONSE_TIME_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value.toString()}>
+                            {option.label} ({option.description})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {defaultResponseTime && (
+                    <p className="text-sm text-muted-foreground mt-3">
+                      This will apply to all countries and cities that don't have a custom response time set.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Country-Level Response Times */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Country-Level Response Times</CardTitle>
+                  <CardDescription>
+                    Set specific response times for individual countries (optional)
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {/* Bulk Actions */}
+                    <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
+                      <Label className="min-w-[150px]">Bulk set all countries to:</Label>
+                      <Select onValueChange={(value) => handleBulkSetCountries(parseInt(value))}>
+                        <SelectTrigger className="w-[250px]">
+                          <SelectValue placeholder="Select time for all" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {RESPONSE_TIME_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value.toString()}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">
+                        This will override all existing country settings
+                      </p>
+                    </div>
+
+                    {/* Country List */}
+                    {existingCountries && existingCountries.length > 0 ? (
+                      <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Showing response times for your {existingCountries.length} covered countries
+                        </p>
+                        {existingCountries.map((country) => {
+                          const countryInfo = COUNTRIES.find(c => c.code === country.countryCode);
+                          const countryResponseTime = responseTimes?.find(
+                            rt => rt.countryCode === country.countryCode && !rt.cityName
+                          );
+                          
+                          return (
+                            <div
+                              key={country.countryCode}
+                              className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                            >
+                              <div className="flex items-center gap-3 flex-1">
+                                <Globe className="w-4 h-4 text-muted-foreground" />
+                                <span className="font-medium">{countryInfo?.name || country.countryCode}</span>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <Select
+                                  value={countryResponseTime?.responseTimeHours?.toString() || "default"}
+                                  onValueChange={(value) => 
+                                    handleSetCountryResponseTime(country.countryCode, value === "default" ? null : parseInt(value))
+                                  }
+                                >
+                                  <SelectTrigger className="w-[200px]">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="default">
+                                      Default ({defaultResponseTime ? getResponseTimeLabel(defaultResponseTime) : "Not set"})
+                                    </SelectItem>
+                                    {RESPONSE_TIME_OPTIONS.map((option) => (
+                                      <SelectItem key={option.value} value={option.value.toString()}>
+                                        {option.label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                        <Globe className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+                        <h3 className="font-semibold mb-1">No Countries in Coverage</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Add countries in the Countries tab first
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Priority City Response Times */}
+              {priorityCities && priorityCities.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Priority City Response Times</CardTitle>
+                    <CardDescription>
+                      Set faster response times for your priority cities (optional)
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {priorityCities.map((city) => {
+                        const cityResponseTime = responseTimes?.find(
+                          rt => rt.countryCode === city.countryCode && rt.cityName === city.cityName
+                        );
+                        const countryResponseTime = responseTimes?.find(
+                          rt => rt.countryCode === city.countryCode && !rt.cityName
+                        );
+                        const fallbackTime = countryResponseTime?.responseTimeHours || defaultResponseTime;
+                        
+                        return (
+                          <div
+                            key={city.id}
+                            className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                          >
+                            <div className="flex items-center gap-3 flex-1">
+                              <MapPin className="w-4 h-4 text-primary" />
+                              <div>
+                                <p className="font-medium">{city.cityName}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {COUNTRIES.find(c => c.code === city.countryCode)?.name || city.countryCode}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <Select
+                                value={cityResponseTime?.responseTimeHours?.toString() || "default"}
+                                onValueChange={(value) => 
+                                  handleSetCityResponseTime(city.countryCode, city.cityName, value === "default" ? null : parseInt(value))
+                                }
+                              >
+                                <SelectTrigger className="w-[200px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="default">
+                                    Country default ({fallbackTime ? getResponseTimeLabel(fallbackTime) : "Not set"})
+                                  </SelectItem>
+                                  {RESPONSE_TIME_OPTIONS.map((option) => (
+                                    <SelectItem key={option.value} value={option.value.toString()}>
+                                      {option.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </TabsContent>
 
           {/* Tab 4: Preview */}
           <TabsContent value="preview">
             <div className="space-y-6">
               {/* Statistics Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Card>
                   <CardHeader className="pb-3">
                     <CardDescription>Total Countries</CardDescription>
@@ -610,6 +872,22 @@ export default function Coverage() {
                   <CardContent>
                     <p className="text-sm text-muted-foreground">
                       Out of 5 global regions
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardDescription>Response Time</CardDescription>
+                    <CardTitle className="text-2xl">
+                      {defaultResponseTime ? getResponseTimeLabel(defaultResponseTime) : "Not set"}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      {responseTimes && responseTimes.filter(rt => rt.countryCode && !rt.cityName).length > 0
+                        ? `${responseTimes.filter(rt => rt.countryCode && !rt.cityName).length} custom country settings`
+                        : "Default for all locations"}
                     </p>
                   </CardContent>
                 </Card>

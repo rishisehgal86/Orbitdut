@@ -180,3 +180,18 @@
 - [x] Build Priority Cities UI with city search input
 - [x] Add city management (add/remove cities)
 - [x] Persist priority cities to database
+
+## Coverage Management - Phase 3
+- [ ] Integrate Google Maps Places API for city autocomplete
+- [ ] Auto-detect country code when adding cities using geocoding
+- [ ] Capture and store latitude/longitude coordinates for each city
+- [ ] Add map visualization showing priority cities on a world map
+
+## Response Time Management System
+- [x] Update database schema to support global default response time
+- [x] Create shared response time constants (4h, 24h, 48h, 72h, 96h)
+- [x] Build Default Response Time UI (global fallback setting)
+- [x] Implement Country-Level Response Time management with bulk actions
+- [x] Add Priority City response time overrides
+- [x] Update Preview tab to show response time statistics
+- [x] Add backend API for CRUD operations on response times

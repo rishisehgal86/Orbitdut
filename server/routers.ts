@@ -300,9 +300,10 @@ export const appRouter = router({
       .input(
         z.object({
           supplierId: z.number(),
-          countryCode: z.string(),
-          cityName: z.string().optional(),
+          countryCode: z.string().nullable(),
+          cityName: z.string().nullable().optional(),
           responseTimeHours: z.number(),
+          isDefault: z.number().optional(),
         })
       )
       .mutation(async ({ input }) => {

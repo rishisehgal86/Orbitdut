@@ -247,20 +247,31 @@ export async function upsertSupplierResponseTime(responseTime: InsertSupplierRes
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
+  // Build where conditions
+  const conditions = [
+    eq(supplierResponseTimes.supplierId, responseTime.supplierId),
+  ];
+  
+  if (responseTime.countryCode) {
+    conditions.push(eq(supplierResponseTimes.countryCode, responseTime.countryCode));
+  } else {
+    conditions.push(sql`${supplierResponseTimes.countryCode} IS NULL`);
+  }
+  
+  if (responseTime.cityName) {
+    conditions.push(eq(supplierResponseTimes.cityName, responseTime.cityName));
+  } else {
+    conditions.push(sql`${supplierResponseTimes.cityName} IS NULL`);
+  }
+  
   // Check if exists
   const existing = await db.select().from(supplierResponseTimes)
-    .where(
-      and(
-        eq(supplierResponseTimes.supplierId, responseTime.supplierId),
-        eq(supplierResponseTimes.countryCode, responseTime.countryCode),
-        responseTime.cityName ? eq(supplierResponseTimes.cityName, responseTime.cityName) : sql`${supplierResponseTimes.cityName} IS NULL`
-      )
-    );
+    .where(and(...conditions));
   
   if (existing.length > 0) {
     // Update
     await db.update(supplierResponseTimes)
-      .set({ responseTimeHours: responseTime.responseTimeHours })
+      .set({ responseTimeHours: responseTime.responseTimeHours, updatedAt: new Date() })
       .where(eq(supplierResponseTimes.id, existing[0]!.id));
   } else {
     // Insert
