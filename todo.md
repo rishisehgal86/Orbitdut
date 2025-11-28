@@ -171,3 +171,12 @@
 - [x] Fix coverage mode selection to load existing countries (not replace them)
 - [x] Remove country display limit in Current Coverage section (show all countries)
 - [x] Sort countries alphabetically in Current Coverage display
+
+## Coverage Management - Phase 2
+- [x] Implement Global Coverage one-click selection
+- [x] Build Coverage Preview tab with statistics
+- [x] Add region breakdown display
+- [ ] Implement world map visualization for covered countries (deferred - will add after Priority Cities)
+- [x] Build Priority Cities UI with city search input
+- [x] Add city management (add/remove cities)
+- [x] Persist priority cities to database

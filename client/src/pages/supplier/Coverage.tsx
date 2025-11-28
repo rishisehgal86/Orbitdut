@@ -23,6 +23,7 @@ export default function Coverage() {
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isExclusionMode, setIsExclusionMode] = useState(false);
+  const [citySearchInput, setCitySearchInput] = useState("");
 
   // Get supplier profile
   const { data: profile } = trpc.supplier.getProfile.useQuery(
@@ -159,6 +160,28 @@ export default function Coverage() {
   );
 
   const popularCountries = ["US", "GB", "CA", "AU", "DE", "FR", "JP", "SG"];
+
+  // City management handlers
+  const addCityMutation = addCity;
+  const removeCityMutation = deleteCity;
+
+  const handleAddCity = () => {
+    if (!citySearchInput.trim() || !profile?.supplier.id) return;
+    
+    addCity.mutate({
+      supplierId: profile.supplier.id,
+      cityName: citySearchInput.trim(),
+      countryCode: "US", // Default to US, will be enhanced with geocoding later
+      latitude: undefined,
+      longitude: undefined,
+    });
+    
+    setCitySearchInput("");
+  };
+
+  const handleRemoveCity = (cityId: number) => {
+    deleteCity.mutate({ id: cityId });
+  };
 
   if (!profile) {
     return (
@@ -435,17 +458,90 @@ export default function Coverage() {
             )}
           </TabsContent>
 
-          {/* Tab 2: Priority Cities - Placeholder */}
+          {/* Tab 2: Priority Cities */}
           <TabsContent value="cities">
             <Card>
               <CardHeader>
                 <CardTitle>Priority Cities</CardTitle>
                 <CardDescription>
-                  Add cities where you can respond faster (optional)
+                  Add cities where you can provide faster response times. These will be highlighted to customers in your coverage area.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">Coming soon...</p>
+                <div className="space-y-4">
+                  {/* City Search Input */}
+                  <div>
+                    <Label htmlFor="city-search">Search for a city</Label>
+                    <div className="flex gap-2 mt-2">
+                      <Input
+                        id="city-search"
+                        placeholder="Start typing a city name..."
+                        value={citySearchInput}
+                        onChange={(e) => setCitySearchInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && citySearchInput.trim()) {
+                            handleAddCity();
+                          }
+                        }}
+                      />
+                      <Button
+                        onClick={handleAddCity}
+                        disabled={!citySearchInput.trim() || addCityMutation.isPending}
+                      >
+                        {addCityMutation.isPending ? 'Adding...' : 'Add City'}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Enter city name (e.g., "New York", "London", "Tokyo")
+                    </p>
+                  </div>
+
+                  {/* Current Priority Cities */}
+                  {priorityCities && priorityCities.length > 0 && (
+                    <div>
+                      <Label className="mb-2 block">Your Priority Cities ({priorityCities.length})</Label>
+                      <div className="space-y-2">
+                        {priorityCities.map((city) => (
+                          <div
+                            key={city.id}
+                            className="flex items-center justify-between p-3 border rounded-lg"
+                          >
+                            <div className="flex items-center gap-3">
+                              <MapPin className="w-4 h-4 text-primary" />
+                              <div>
+                                <p className="font-medium">{city.cityName}</p>
+                                {city.countryCode && (
+                                  <p className="text-xs text-muted-foreground">
+                                    {COUNTRIES.find(c => c.code === city.countryCode)?.name || city.countryCode}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoveCity(city.id)}
+                              disabled={removeCityMutation.isPending}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Empty State */}
+                  {(!priorityCities || priorityCities.length === 0) && (
+                    <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                      <MapPin className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+                      <h3 className="font-semibold mb-1">No Priority Cities Yet</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Add cities where you can provide faster service to attract more customers
+                      </p>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -465,38 +561,133 @@ export default function Coverage() {
             </Card>
           </TabsContent>
 
-          {/* Tab 4: Preview - Placeholder */}
+          {/* Tab 4: Preview */}
           <TabsContent value="preview">
-            <Card>
-              <CardHeader>
-                <CardTitle>Coverage Preview</CardTitle>
-                <CardDescription>
-                  Review your complete coverage setup
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <Label className="font-semibold">Countries Covered:</Label>
-                    <p className="text-muted-foreground">
-                      {existingCountries?.length || 0} countries
+            <div className="space-y-6">
+              {/* Statistics Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardDescription>Total Countries</CardDescription>
+                    <CardTitle className="text-4xl">{existingCountries?.length || 0}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      {existingCountries?.length === 195 || existingCountries?.length === 196 ? "Global coverage" : "Custom coverage"}
                     </p>
-                  </div>
-                  <div>
-                    <Label className="font-semibold">Priority Cities:</Label>
-                    <p className="text-muted-foreground">
-                      {priorityCities?.length || 0} cities
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardDescription>Priority Cities</CardDescription>
+                    <CardTitle className="text-4xl">{priorityCities?.length || 0}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      Fast response locations
                     </p>
-                  </div>
-                  <div>
-                    <Label className="font-semibold">Response Time Zones:</Label>
-                    <p className="text-muted-foreground">
-                      {responseTimes?.length || 0} zones configured
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardDescription>Regions Covered</CardDescription>
+                    <CardTitle className="text-4xl">
+                      {existingCountries ? (() => {
+                        const coveredRegions = new Set<string>();
+                        existingCountries.forEach(({ countryCode }) => {
+                          REGIONS_WITH_COUNTRIES.forEach(region => {
+                            if (region.countries.includes(countryCode)) {
+                              coveredRegions.add(region.name);
+                            }
+                          });
+                        });
+                        return coveredRegions.size;
+                      })() : 0}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      Out of 5 global regions
                     </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Region Breakdown */}
+              {existingCountries && existingCountries.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Coverage by Region</CardTitle>
+                    <CardDescription>
+                      Breakdown of your geographic coverage across continents
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {REGIONS_WITH_COUNTRIES.map(region => {
+                        const coveredInRegion = existingCountries.filter(({ countryCode }) =>
+                          region.countries.includes(countryCode)
+                        );
+                        const percentage = Math.round((coveredInRegion.length / region.countries.length) * 100);
+                        
+                        if (coveredInRegion.length === 0) return null;
+
+                        return (
+                          <div key={region.name} className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <Label className="font-medium">{region.name}</Label>
+                              <span className="text-sm text-muted-foreground">
+                                {coveredInRegion.length} / {region.countries.length} countries ({percentage}%)
+                              </span>
+                            </div>
+                            <div className="w-full bg-secondary rounded-full h-2">
+                              <div
+                                className="bg-primary h-2 rounded-full transition-all"
+                                style={{ width: `${percentage}%` }}
+                              />
+                            </div>
+                            <div className="flex flex-wrap gap-1 pt-1">
+                              {coveredInRegion.slice(0, 10).map(({ countryCode }) => {
+                                const country = COUNTRIES.find(c => c.code === countryCode);
+                                return (
+                                  <span key={countryCode} className="text-xs text-muted-foreground">
+                                    {country?.name}
+                                  </span>
+                                );
+                              }).reduce((prev: any, curr: any, i: number) => [
+                                prev,
+                                i > 0 && <span key={`sep-${i}`} className="text-xs text-muted-foreground">, </span>,
+                                curr
+                              ], [])}
+                              {coveredInRegion.length > 10 && (
+                                <span className="text-xs text-muted-foreground">
+                                  , +{coveredInRegion.length - 10} more
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Empty State */}
+              {(!existingCountries || existingCountries.length === 0) && (
+                <Card>
+                  <CardContent className="pt-6 text-center">
+                    <Globe className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                    <h3 className="font-semibold mb-2">No Coverage Defined</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Go to the Countries tab to set up your service coverage
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       </div>
