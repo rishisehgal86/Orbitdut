@@ -3,9 +3,10 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Loader2, Info } from "lucide-react";
+import { Loader2, Info, Check, X, AlertTriangle } from "lucide-react";
 import { Link } from "wouter";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import SupplierLayout from "@/components/SupplierLayout";
@@ -698,6 +699,8 @@ function LocationRatesTable({
   exclusions: any[];
 }) {
   const [editingRates, setEditingRates] = useState<Record<string, Record<number, string>>>({});
+  const [savingStates, setSavingStates] = useState<Record<string, Record<number, 'saving' | 'saved' | 'error'>>>({});
+  const [saveTimers, setSaveTimers] = useState<Record<string, Record<number, NodeJS.Timeout>>>({});
 
   // Helper to check if a service/location combination is excluded
   const isServiceExcluded = (location: any): boolean => {
@@ -715,16 +718,52 @@ function LocationRatesTable({
   };
 
   const upsertMutation = trpc.supplier.upsertRate.useMutation({
-    onSuccess: () => {
-      toast.success("Rate updated successfully");
+    onSuccess: (_, variables) => {
+      const locationKey = variables.countryCode || `city-${variables.cityId}`;
+      const responseTimeHours = variables.responseTimeHours;
+      
+      // Set saved state
+      setSavingStates((prev) => ({
+        ...prev,
+        [locationKey]: {
+          ...(prev[locationKey] || {}),
+          [responseTimeHours]: 'saved',
+        },
+      }));
+
+      // Clear saved indicator after 2 seconds
+      setTimeout(() => {
+        setSavingStates((prev) => {
+          const newState = { ...prev };
+          if (newState[locationKey]?.[responseTimeHours] === 'saved') {
+            delete newState[locationKey][responseTimeHours];
+            if (Object.keys(newState[locationKey] || {}).length === 0) {
+              delete newState[locationKey];
+            }
+          }
+          return newState;
+        });
+      }, 2000);
+
       onSuccess();
     },
-    onError: (error) => {
+    onError: (error, variables) => {
+      const locationKey = variables.countryCode || `city-${variables.cityId}`;
+      const responseTimeHours = variables.responseTimeHours;
+      
+      setSavingStates((prev) => ({
+        ...prev,
+        [locationKey]: {
+          ...(prev[locationKey] || {}),
+          [responseTimeHours]: 'error',
+        },
+      }));
+      
       toast.error(error.message || "Failed to update rate");
     },
   });
 
-  const handleRateChange = (locationKey: string, responseTimeHours: number, value: string) => {
+  const handleRateChange = (locationKey: string, responseTimeHours: number, value: string, location: any) => {
     setEditingRates((prev) => ({
       ...prev,
       [locationKey]: {
@@ -732,15 +771,39 @@ function LocationRatesTable({
         [responseTimeHours]: value,
       },
     }));
+
+    // Clear existing timer for this field
+    if (saveTimers[locationKey]?.[responseTimeHours]) {
+      clearTimeout(saveTimers[locationKey][responseTimeHours]);
+    }
+
+    // Set up debounced auto-save (500ms)
+    const timer = setTimeout(() => {
+      handleAutoSave(location, responseTimeHours, value);
+    }, 500);
+
+    setSaveTimers((prev) => ({
+      ...prev,
+      [locationKey]: {
+        ...(prev[locationKey] || {}),
+        [responseTimeHours]: timer,
+      },
+    }));
   };
 
-  const handleRateBlur = async (location: any, responseTimeHours: number) => {
+  const handleAutoSave = async (location: any, responseTimeHours: number, value: string) => {
     const locationKey = location.type === "country" ? location.code : `city-${location.id}`;
-    const editedValue = editingRates[locationKey]?.[responseTimeHours];
     
-    if (editedValue === undefined) return;
+    // Set saving state
+    setSavingStates((prev) => ({
+      ...prev,
+      [locationKey]: {
+        ...(prev[locationKey] || {}),
+        [responseTimeHours]: 'saving',
+      },
+    }));
 
-    const rateUsdCents = editedValue === "" ? null : Math.round(parseFloat(editedValue) * 100);
+    const rateUsdCents = value === "" ? null : Math.round(parseFloat(value) * 100);
 
     await upsertMutation.mutateAsync({
       supplierId,
@@ -780,6 +843,31 @@ function LocationRatesTable({
     return "";
   };
 
+  // Check if a rate has pricing inconsistencies
+  const hasValidationWarning = (location: any, responseTimeHours: number): string | null => {
+    const locationKey = location.type === "country" ? location.code : `city-${location.id}`;
+    const currentValue = getRateValue(location, responseTimeHours);
+    
+    if (!currentValue || parseFloat(currentValue) === 0) return null;
+
+    const currentRate = parseFloat(currentValue);
+    
+    // Check if faster response times are more expensive (as they should be)
+    for (const rt of RATE_RESPONSE_TIMES) {
+      if (rt.hours < responseTimeHours) {
+        const fasterValue = getRateValue(location, rt.hours);
+        if (fasterValue && parseFloat(fasterValue) > 0) {
+          const fasterRate = parseFloat(fasterValue);
+          if (fasterRate < currentRate) {
+            return `${rt.label} response ($${fasterRate.toFixed(2)}) is cheaper than this slower ${responseTimeHours}h response`;
+          }
+        }
+      }
+    }
+
+    return null;
+  };
+
   if (locations.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
@@ -789,61 +877,95 @@ function LocationRatesTable({
   }
 
   return (
-    <div className="border rounded-lg overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-muted">
-            <tr>
-              <th className="text-left p-3 font-medium">Location</th>
-              {RATE_RESPONSE_TIMES.map((rt) => (
-                <th key={rt.hours} className="text-center p-3 font-medium min-w-[100px]">
-                  {rt.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {locations.map((location) => {
-              const locationKey = location.type === "country" ? location.code : `city-${location.id}`;
-              
-              return (
-                <tr key={locationKey} className="border-t">
-                  <td className="p-3 font-medium">{location.name}</td>
-                  {RATE_RESPONSE_TIMES.map((rt) => {
-                    const isExcluded = isServiceExcluded(location);
-                    return (
-                      <td key={rt.hours} className="p-3">
-                        <div className="relative">
-                          <span className={`absolute left-2 top-1/2 -translate-y-1/2 text-sm ${
-                            isExcluded ? "text-muted-foreground/50" : "text-muted-foreground"
-                          }`}>
-                            $
-                          </span>
-                          <Input
-                            type="number"
-                            placeholder={isExcluded ? "Not Offered" : "0.00"}
-                            className={`pl-6 text-center ${
-                              isExcluded ? "bg-muted text-muted-foreground cursor-not-allowed" : ""
-                            }`}
-                            value={isExcluded ? "" : getRateValue(location, rt.hours)}
-                            onChange={(e) => !isExcluded && handleRateChange(locationKey, rt.hours, e.target.value)}
-                            onBlur={() => !isExcluded && handleRateBlur(location, rt.hours)}
-                            disabled={isExcluded}
-                            min="0"
-                            step="0.01"
-                            title={isExcluded ? "This service is not offered in this location" : ""}
-                          />
+    <Accordion type="multiple" className="space-y-2">
+      {locations.map((location) => {
+        const locationKey = location.type === "country" ? location.code : `city-${location.id}`;
+        const isExcluded = isServiceExcluded(location);
+        const configuredCount = RATE_RESPONSE_TIMES.filter(rt => {
+          const val = getRateValue(location, rt.hours);
+          return val !== "" && parseFloat(val) > 0;
+        }).length;
+        
+        return (
+          <AccordionItem key={locationKey} value={locationKey} className="border rounded-lg">
+            <AccordionTrigger className="px-4 hover:no-underline">
+              <div className="flex items-center justify-between w-full pr-4">
+                <div className="flex items-center gap-3">
+                  <span className="font-medium">{location.name}</span>
+                  {location.type === "country" && (
+                    <span className="text-xs text-muted-foreground">{location.code}</span>
+                  )}
+                  {isExcluded && (
+                    <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded">
+                      Not Offered
+                    </span>
+                  )}
+                </div>
+                {!isExcluded && (
+                  <span className="text-sm text-muted-foreground">
+                    {configuredCount} / {RATE_RESPONSE_TIMES.length} rates configured
+                  </span>
+                )}
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
+              <div className="grid grid-cols-5 gap-4 mt-2">
+                {RATE_RESPONSE_TIMES.map((rt) => (
+                  <div key={rt.hours} className="space-y-2">
+                    <label className="text-sm font-medium text-muted-foreground">
+                      {rt.label}
+                    </label>
+                    <div className="relative">
+                      <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-sm ${
+                        isExcluded ? "text-muted-foreground/50" : "text-muted-foreground"
+                      }`}>
+                        $
+                      </span>
+                      <Input
+                        type="number"
+                        placeholder={isExcluded ? "Not Offered" : "0.00"}
+                        className={`pl-7 pr-8 ${
+                          isExcluded ? "bg-muted text-muted-foreground cursor-not-allowed" : ""
+                        }`}
+                        value={isExcluded ? "" : getRateValue(location, rt.hours)}
+                        onChange={(e) => !isExcluded && handleRateChange(locationKey, rt.hours, e.target.value, location)}
+                        disabled={isExcluded}
+                        min="0"
+                        step="0.01"
+                        title={isExcluded ? "This service is not offered in this location" : ""}
+                      />
+                      {!isExcluded && (
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                          {hasValidationWarning(location, rt.hours) && (
+                            <AlertTriangle 
+                              className="h-4 w-4 text-amber-500" 
+                              title={hasValidationWarning(location, rt.hours) || ""}
+                            />
+                          )}
+                          {savingStates[locationKey]?.[rt.hours] && (
+                            <>
+                              {savingStates[locationKey][rt.hours] === 'saving' && (
+                                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                              )}
+                              {savingStates[locationKey][rt.hours] === 'saved' && (
+                                <Check className="h-4 w-4 text-green-600" />
+                              )}
+                              {savingStates[locationKey][rt.hours] === 'error' && (
+                                <X className="h-4 w-4 text-destructive" />
+                              )}
+                            </>
+                          )}
                         </div>
-                      </td>
-                    );
-                  })}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        );
+      })}
+    </Accordion>
   );
 }
 

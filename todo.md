@@ -257,9 +257,9 @@
 - [x] Add refetch for stats query after bulk upsert
 - [x] Test Quick Setup tab with all 3 service types (L1 EUC, L1 Network, Smart Hands)
 - [ ] Build By Location tab with searchable location list
-- [ ] Create expandable rate cards for each location
-- [ ] Implement inline rate editing with auto-save
-- [ ] Add validation warnings (e.g., faster response time cheaper than slower)
+- [x] Create expandable rate cards for each location
+- [x] Implement inline rate editing with auto-save
+- [x] Add validation warnings (e.g., faster response time cheaper than slower)
 - [ ] Test rate CRUD operations thoroughly
 - [ ] Test with multiple locations and service types
 
@@ -560,3 +560,15 @@
 - [x] Analyze exclusion key generation logic for cities
 - [x] Fix checkbox state management to properly handle individual cities
 - [x] Test with multiple cities and different services
+
+## By Location Tab Enhancements
+- [x] Replace flat table with Accordion-based expandable cards for each location
+- [x] Add location header showing country/city name and configured count
+- [x] Implement collapsible rate sections per location
+- [x] Add inline rate editing with debounced auto-save (500ms delay)
+- [x] Show save status indicators (saving, saved, error)
+- [x] Add validation warnings for pricing inconsistencies (faster cheaper than slower)
+- [x] Display amber warning icons with tooltips for invalid rates
+- [ ] Test expandable cards with multiple locations
+- [ ] Test auto-save functionality with rapid edits
+- [ ] Test validation warnings with various rate combinations
