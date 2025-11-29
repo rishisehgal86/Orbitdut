@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "added9cc-91bc-4cc1-94a8-c82a724ce6ea",
-  "prevId": "f698c6ee-c4e4-4057-90d6-f8b49d6b4bfd",
+  "id": "60338ac2-a557-4adc-890f-10db25a1e362",
+  "prevId": "d413fdf8-c868-4518-8a01-449633c35877",
   "tables": {
     "jobs": {
       "name": "jobs",
@@ -760,6 +760,13 @@
           "notNull": false,
           "autoincrement": false
         },
+        "isServiceable": {
+          "name": "isServiceable",
+          "type": "int unsigned",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "createdAt": {
           "name": "createdAt",
           "type": "timestamp",
@@ -938,6 +945,111 @@
       "compositePrimaryKeys": {
         "supplierResponseTimes_id": {
           "name": "supplierResponseTimes_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "supplierServiceExclusions": {
+      "name": "supplierServiceExclusions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "supplierId": {
+          "name": "supplierId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "countryCode": {
+          "name": "countryCode",
+          "type": "varchar(2)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "cityId": {
+          "name": "cityId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "serviceType": {
+          "name": "serviceType",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "supplierServiceExclusions_supplierId_idx": {
+          "name": "supplierServiceExclusions_supplierId_idx",
+          "columns": [
+            "supplierId"
+          ],
+          "isUnique": false
+        },
+        "supplierServiceExclusions_unique": {
+          "name": "supplierServiceExclusions_unique",
+          "columns": [
+            "supplierId",
+            "countryCode",
+            "cityId",
+            "serviceType"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "supplierServiceExclusions_supplierId_suppliers_id_fk": {
+          "name": "supplierServiceExclusions_supplierId_suppliers_id_fk",
+          "tableFrom": "supplierServiceExclusions",
+          "tableTo": "suppliers",
+          "columnsFrom": [
+            "supplierId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "supplierServiceExclusions_cityId_supplierPriorityCities_id_fk": {
+          "name": "supplierServiceExclusions_cityId_supplierPriorityCities_id_fk",
+          "tableFrom": "supplierServiceExclusions",
+          "tableTo": "supplierPriorityCities",
+          "columnsFrom": [
+            "cityId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "supplierServiceExclusions_id": {
+          "name": "supplierServiceExclusions_id",
           "columns": [
             "id"
           ]

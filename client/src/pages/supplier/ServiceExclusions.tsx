@@ -4,6 +4,7 @@ import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -144,11 +145,11 @@ export default function ServiceExclusions() {
   };
 
   const filteredCountries = countries?.filter((country) =>
-    country.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    country.countryName?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
   const filteredCities = cities?.filter((city) =>
-    city.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    city.cityName?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
   if (!supplierId) {

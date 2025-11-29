@@ -1,0 +1,380 @@
+{
+  "query": "SELECT s.id, s.companyName, COUNT(c.id) as country_count FROM suppliers s LEFT JOIN supplierCoverageCountries c ON s.id = c.supplierId GROUP BY s.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT s.id, s.companyName, COUNT(c.id) as country_count FROM suppliers s LEFT JOIN supplierCoverageCountries c ON s.id = c.supplierId GROUP BY s.id;",
+  "rows": [
+    {
+      "id": "120001",
+      "companyName": "Test Supplier Co",
+      "country_count": "0"
+    },
+    {
+      "id": "150030",
+      "companyName": "Delete Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "150010",
+      "companyName": "Delete Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "180002",
+      "companyName": "Updated Name",
+      "country_count": "0"
+    },
+    {
+      "id": "150013",
+      "companyName": "Rate Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "150003",
+      "companyName": "Rate Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "150011",
+      "companyName": "Test Supplier Co",
+      "country_count": "0"
+    },
+    {
+      "id": "150029",
+      "companyName": "Coverage Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "150025",
+      "companyName": "Delete Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "150027",
+      "companyName": "Updated Name",
+      "country_count": "0"
+    },
+    {
+      "id": "60001",
+      "companyName": "Test Supplier Co",
+      "country_count": "0"
+    },
+    {
+      "id": "10",
+      "companyName": "Delete Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "60002",
+      "companyName": "Updated Name",
+      "country_count": "0"
+    },
+    {
+      "id": "90001",
+      "companyName": "Test Supplier Co",
+      "country_count": "0"
+    },
+    {
+      "id": "150004",
+      "companyName": "Coverage Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "120004",
+      "companyName": "Coverage Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "150012",
+      "companyName": "Updated Name",
+      "country_count": "0"
+    },
+    {
+      "id": "90008",
+      "companyName": "Rate Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "90005",
+      "companyName": "Delete Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "180006",
+      "companyName": "Test Company",
+      "country_count": "0"
+    },
+    {
+      "id": "150015",
+      "companyName": "Delete Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "30003",
+      "companyName": "Rate Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "90003",
+      "companyName": "Rate Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "150016",
+      "companyName": "Test Supplier Co",
+      "country_count": "0"
+    },
+    {
+      "id": "150017",
+      "companyName": "Updated Name",
+      "country_count": "0"
+    },
+    {
+      "id": "90007",
+      "companyName": "Updated Name",
+      "country_count": "0"
+    },
+    {
+      "id": "180001",
+      "companyName": "Test Supplier Co",
+      "country_count": "0"
+    },
+    {
+      "id": "30001",
+      "companyName": "Test Supplier Co",
+      "country_count": "0"
+    },
+    {
+      "id": "6",
+      "companyName": "Test Supplier Co",
+      "country_count": "0"
+    },
+    {
+      "id": "150018",
+      "companyName": "Rate Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "150009",
+      "companyName": "Coverage Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "180004",
+      "companyName": "Coverage Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "150007",
+      "companyName": "Updated Name",
+      "country_count": "0"
+    },
+    {
+      "id": "7",
+      "companyName": "Updated Name",
+      "country_count": "0"
+    },
+    {
+      "id": "120002",
+      "companyName": "Updated Name",
+      "country_count": "0"
+    },
+    {
+      "id": "150021",
+      "companyName": "Test Supplier Co",
+      "country_count": "0"
+    },
+    {
+      "id": "150022",
+      "companyName": "Updated Name",
+      "country_count": "0"
+    },
+    {
+      "id": "8",
+      "companyName": "Rate Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "90009",
+      "companyName": "Coverage Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "150019",
+      "companyName": "Coverage Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "90002",
+      "companyName": "Updated Name",
+      "country_count": "0"
+    },
+    {
+      "id": "150008",
+      "companyName": "Rate Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "150024",
+      "companyName": "Coverage Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "180007",
+      "companyName": "Rates Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "30005",
+      "companyName": "Delete Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "150002",
+      "companyName": "Updated Name",
+      "country_count": "0"
+    },
+    {
+      "id": "150014",
+      "companyName": "Coverage Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "150005",
+      "companyName": "Delete Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "9",
+      "companyName": "Coverage Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "150026",
+      "companyName": "Test Supplier Co",
+      "country_count": "0"
+    },
+    {
+      "id": "2",
+      "companyName": "Original Name",
+      "country_count": "0"
+    },
+    {
+      "id": "90010",
+      "companyName": "Delete Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "60003",
+      "companyName": "Rate Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "150001",
+      "companyName": "Test Supplier Co",
+      "country_count": "0"
+    },
+    {
+      "id": "30004",
+      "companyName": "Coverage Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "90004",
+      "companyName": "Coverage Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "180005",
+      "companyName": "Delete Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "120005",
+      "companyName": "Delete Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "180003",
+      "companyName": "Rate Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "30002",
+      "companyName": "Updated Name",
+      "country_count": "0"
+    },
+    {
+      "id": "120003",
+      "companyName": "Rate Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "3",
+      "companyName": "Rate Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "60005",
+      "companyName": "Delete Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "210001",
+      "companyName": "Test Engineering Co",
+      "country_count": "196"
+    },
+    {
+      "id": "150020",
+      "companyName": "Delete Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "5",
+      "companyName": "Delete Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "150023",
+      "companyName": "Rate Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "60004",
+      "companyName": "Coverage Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "4",
+      "companyName": "Coverage Test Co",
+      "country_count": "0"
+    },
+    {
+      "id": "90006",
+      "companyName": "Test Supplier Co",
+      "country_count": "0"
+    },
+    {
+      "id": "240001",
+      "companyName": "test",
+      "country_count": "14"
+    },
+    {
+      "id": "1",
+      "companyName": "Test Supplier Co",
+      "country_count": "0"
+    },
+    {
+      "id": "150006",
+      "companyName": "Test Supplier Co",
+      "country_count": "0"
+    },
+    {
+      "id": "150028",
+      "companyName": "Rate Test Co",
+      "country_count": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcompanyName\tcountry_count\n120001\tTest Supplier Co\t0\n150030\tDelete Test Co\t0\n150010\tDelete Test Co\t0\n180002\tUpdated Name\t0\n150013\tRate Test Co\t0\n150003\tRate Test Co\t0\n150011\tTest Supplier Co\t0\n150029\tCoverage Test Co\t0\n150025\tDelete Test Co\t0\n150027\tUpdated Name\t0\n60001\tTest Supplier Co\t0\n10\tDelete Test Co\t0\n60002\tUpdated Name\t0\n90001\tTest Supplier Co\t0\n150004\tCoverage Test Co\t0\n120004\tCoverage Test Co\t0\n150012\tUpdated Name\t0\n90008\tRate Test Co\t0\n90005\tDelete Test Co\t0\n180006\tTest Company\t0\n150015\tDelete Test Co\t0\n30003\tRate Test Co\t0\n90003\tRate Test Co\t0\n150016\tTest Supplier Co\t0\n150017\tUpdated Name\t0\n90007\tUpdated Name\t0\n180001\tTest Supplier Co\t0\n30001\tTest Supplier Co\t0\n6\tTest Supplier Co\t0\n150018\tRate Test Co\t0\n150009\tCoverage Test Co\t0\n180004\tCoverage Test Co\t0\n150007\tUpdated Name\t0\n7\tUpdated Name\t0\n120002\tUpdated Name\t0\n150021\tTest Supplier Co\t0\n150022\tUpdated Name\t0\n8\tRate Test Co\t0\n90009\tCoverage Test Co\t0\n150019\tCoverage Test Co\t0\n90002\tUpdated Name\t0\n150008\tRate Test Co\t0\n150024\tCoverage Test Co\t0\n180007\tRates Test Co\t0\n30005\tDelete Test Co\t0\n150002\tUpdated Name\t0\n150014\tCoverage Test Co\t0\n150005\tDelete Test Co\t0\n9\tCoverage Test Co\t0\n150026\tTest Supplier Co\t0\n2\tOriginal Name\t0\n90010\tDelete Test Co\t0\n60003\tRate Test Co\t0\n150001\tTest Supplier Co\t0\n30004\tCoverage Test Co\t0\n90004\tCoverage Test Co\t0\n180005\tDelete Test Co\t0\n120005\tDelete Test Co\t0\n180003\tRate Test Co\t0\n30002\tUpdated Name\t0\n120003\tRate Test Co\t0\n3\tRate Test Co\t0\n60005\tDelete Test Co\t0\n210001\tTest Engineering Co\t196\n150020\tDelete Test Co\t0\n5\tDelete Test Co\t0\n150023\tRate Test Co\t0\n60004\tCoverage Test Co\t0\n4\tCoverage Test Co\t0\n90006\tTest Supplier Co\t0\n240001\ttest\t14\n1\tTest Supplier Co\t0\n150006\tTest Supplier Co\t0\n150028\tRate Test Co\t0\n",
+  "stderr": "",
+  "execution_time_ms": 113
+}

@@ -71,6 +71,13 @@
       "when": 1764374235,
       "tag": "0009_bouncy_dexter_bennett",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1764378328424,
+      "tag": "0010_serious_firedrake",
+      "breakpoints": true
     }
   ]
 }

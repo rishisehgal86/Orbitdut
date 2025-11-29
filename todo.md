@@ -478,3 +478,26 @@
 - [x] Update handleRemoveCity to pass supplierId along with id
 - [x] Add optimistic updates to deleteCity mutation for instant UI feedback
 - [x] Test that cities disappear immediately after clicking X button
+
+## Fix Google Maps API Deprecation Warnings
+- [ ] Update Google Maps script loading to use `loading=async` parameter for better performance
+- [ ] Migrate from deprecated `google.maps.places.Autocomplete` to new `google.maps.places.PlaceAutocompleteElement` API
+- [ ] Test city search functionality with new PlaceAutocompleteElement
+- [ ] Verify all Maps features work correctly after migration
+- [ ] Remove deprecation warnings from browser console
+
+## Fix Service Exclusions Page - Not Showing Coverage Countries
+- [x] Investigate why Service Exclusions page shows "Countries (0)" when Geographic Coverage has 196 countries (missing database tables)
+- [ ] Verify tenant isolation in all Service Exclusions tRPC procedures (getServiceExclusions, bulkAddServiceExclusions, bulkRemoveServiceExclusions)
+- [ ] Create missing database tables (supplier_coverage_countries, supplierServiceExclusions, etc.)
+- [ ] Fix data fetching to load countries from supplier coverage settings
+- [ ] Fix data fetching to load priority cities from supplier coverage settings
+- [ ] Test that countries and cities appear on Service Exclusions page
+
+## Fix Service Exclusions Page - Database and UI Issues
+- [x] Investigate why Service Exclusions page shows "Countries (0)" when Geographic Coverage has 196 countries
+- [x] Verify tenant isolation in all Service Exclusions tRPC procedures (all properly implemented with supplierId checks)
+- [x] Create missing supplierServiceExclusions table via drizzle migration
+- [x] Fix field name mismatch (changed country.name to country.countryName, city.name to city.cityName)
+- [x] Add missing Label component import to ServiceExclusions.tsx
+- [x] Test that countries and cities appear on Service Exclusions page (196 countries, 2 cities now showing correctly)
