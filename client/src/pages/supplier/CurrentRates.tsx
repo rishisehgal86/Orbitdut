@@ -51,6 +51,14 @@ export default function CurrentRates() {
     { supplierId: supplierId! },
     { enabled: !!supplierId }
   );
+  const { data: serviceExclusions } = trpc.supplier.getServiceExclusions.useQuery(
+    { supplierId: supplierId! },
+    { enabled: !!supplierId }
+  );
+  const { data: responseTimeExclusions } = trpc.supplier.getResponseTimeExclusions.useQuery(
+    { supplierId: supplierId! },
+    { enabled: !!supplierId }
+  );
 
   // Build rate lookup map
   const rateMap = useMemo(() => {
@@ -106,6 +114,29 @@ export default function CurrentRates() {
     const query = searchQuery.toLowerCase();
     return locations.filter((loc) => loc.name.toLowerCase().includes(query));
   }, [locations, searchQuery]);
+
+  // Check if service is excluded for a location
+  const isServiceExcluded = (location: any, serviceType: ServiceType) => {
+    if (!serviceExclusions) return false;
+    return serviceExclusions.some((exc) => {
+      const matchesCountry = location.type === "country" && exc.countryCode === location.code;
+      const matchesCity = location.type === "city" && exc.cityId === location.cityId;
+      const matchesService = exc.serviceType === serviceType;
+      return (matchesCountry || matchesCity) && matchesService;
+    });
+  };
+
+  // Check if response time is excluded for a location/service
+  const isResponseTimeExcluded = (location: any, serviceType: ServiceType, responseTime: ResponseTime) => {
+    if (!responseTimeExclusions) return false;
+    return responseTimeExclusions.some((exc) => {
+      const matchesCountry = location.type === "country" && exc.countryCode === location.code;
+      const matchesCity = location.type === "city" && exc.cityId === location.cityId;
+      const matchesService = exc.serviceType === serviceType;
+      const matchesResponseTime = exc.responseTimeHours === responseTime;
+      return (matchesCountry || matchesCity) && matchesService && matchesResponseTime;
+    });
+  };
 
   // Get rate for a location/service/response time
   const getRate = (location: any, serviceType: ServiceType, responseTime: ResponseTime) => {
@@ -391,11 +422,19 @@ export default function CurrentRates() {
                             </td>
 
                             {filters.serviceTypes.map((serviceType) => {
+                              const serviceExcluded = isServiceExcluded(location, serviceType);
                               const status = getLocationServiceStatus(location, serviceType);
 
                               return (
                                 <td key={serviceType} className="p-3">
-                                  {!isExpanded ? (
+                                  {serviceExcluded ? (
+                                    <Badge
+                                      variant="outline"
+                                      className="bg-red-50 text-red-700 border-red-200"
+                                    >
+                                      Service Excluded
+                                    </Badge>
+                                  ) : !isExpanded ? (
                                     <Badge
                                       variant={
                                         status === "configured"
@@ -421,10 +460,13 @@ export default function CurrentRates() {
                                   ) : (
                                     <div className="space-y-1">
                                       {filters.responseTimes.map((rt) => {
+                                        const rtExcluded = isResponseTimeExcluded(location, serviceType, rt);
                                         const rate = getRate(location, serviceType, rt);
                                         return (
                                           <div key={rt} className="text-sm">
-                                            {rate && rate > 0 ? (
+                                            {rtExcluded ? (
+                                              <span className="text-red-600 italic">Response Time Excluded</span>
+                                            ) : rate && rate > 0 ? (
                                               <span className="text-green-600 font-medium">
                                                 {formatCurrency(rate)}
                                               </span>

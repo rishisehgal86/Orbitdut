@@ -601,3 +601,15 @@
 
 ## Bug Fixes - Response Time Exclusions
 - [x] Fix X icon re-enabling behavior to be instant (currently has delay when removing exclusions)
+
+## Current Rates Page - Show Exclusions
+- [ ] Query service exclusions in Current Rates page
+- [ ] Query response time exclusions in Current Rates page
+- [ ] Display service exclusions in the rates table (e.g., "Service Not Offered")
+- [ ] Display response time exclusions in the rates table (e.g., grey out or show "N/A")
+- [ ] Test exclusion display with various scenarios
+
+## Current Rates Page - Show Exclusions
+- [x] Query both service exclusions and response time exclusions tables
+- [x] Display "Service Excluded" badge when a service is excluded for a location
+- [x] Display "Response Time Excluded" text when a response time is excluded
