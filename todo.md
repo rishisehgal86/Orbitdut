@@ -501,3 +501,11 @@
 - [x] Fix field name mismatch (changed country.name to country.countryName, city.name to city.cityName)
 - [x] Add missing Label component import to ServiceExclusions.tsx
 - [x] Test that countries and cities appear on Service Exclusions page (196 countries, 2 cities now showing correctly)
+
+## Service Exclusions Page Layout Optimization
+- [x] Analyze current layout structure and identify spacing issues (Card wrapper with pt-6 padding, individual bordered boxes for each checkbox)
+- [x] Redesign service checkboxes to use horizontal inline layout instead of cards
+- [x] Implement four-column grid layout (180px for location, 1fr each for 3 service types)
+- [x] Reduce padding and margins for more compact display (p-3, space-y-1)
+- [x] Test layout responsiveness on different screen sizes
+- [x] Verify all 196 countries fit better on screen with reduced scrolling (now shows ~11 countries vs 3-4 before)

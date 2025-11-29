@@ -224,95 +224,80 @@ export default function ServiceExclusions() {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="countries" className="space-y-2 mt-4">
+            <TabsContent value="countries" className="space-y-1 mt-4">
               {filteredCountries.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   No countries found. Add countries in your coverage settings first.
                 </div>
               ) : (
                 filteredCountries.map((country) => (
-                  <Card key={country.countryCode}>
-                    <CardContent className="pt-6">
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-medium">{country.name}</h3>
-                          <Badge variant="outline">{country.countryCode}</Badge>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                          {RATE_SERVICE_TYPES.map((service) => {
-                            const key = `country-${country.countryCode}-${service.value}`;
-                            const isExcluded = localExclusions.has(key);
-                            return (
-                              <div
-                                key={service.value}
-                                className="flex items-center space-x-2 p-3 border rounded-md hover:bg-accent/50 transition-colors"
-                              >
-                                <Checkbox
-                                  id={key}
-                                  checked={!isExcluded}
-                                  onCheckedChange={() => handleToggleExclusion(key)}
-                                />
-                                <Label
-                                  htmlFor={key}
-                                  className="text-sm font-normal cursor-pointer flex-1"
-                                >
-                                  {service.label}
-                                </Label>
-                              </div>
-                            );
-                          })}
-                        </div>
+                  <div key={country.countryCode} className="border rounded-md p-3 hover:bg-accent/30 transition-colors">
+                    <div className="grid grid-cols-[180px_1fr_1fr_1fr] gap-4 items-center">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="font-mono text-xs">{country.countryCode}</Badge>
+                        <span className="text-sm font-medium truncate">{country.countryName}</span>
                       </div>
-                    </CardContent>
-                  </Card>
+                      {RATE_SERVICE_TYPES.map((service) => {
+                        const key = `country-${country.countryCode}-${service.value}`;
+                        const isExcluded = localExclusions.has(key);
+                        return (
+                          <div key={service.value} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={key}
+                              checked={!isExcluded}
+                              onCheckedChange={() => handleToggleExclusion(key)}
+                            />
+                            <Label
+                              htmlFor={key}
+                              className="text-sm font-normal cursor-pointer"
+                            >
+                              {service.label}
+                            </Label>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 ))
               )}
             </TabsContent>
 
-            <TabsContent value="cities" className="space-y-2 mt-4">
+            <TabsContent value="cities" className="space-y-1 mt-4">
               {filteredCities.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   No priority cities found. Add cities in your coverage settings first.
                 </div>
               ) : (
                 filteredCities.map((city) => (
-                  <Card key={city.id}>
-                    <CardContent className="pt-6">
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-medium">{city.name}</h3>
-                          {city.state && (
-                            <Badge variant="outline">{city.state}</Badge>
-                          )}
-                          <Badge variant="secondary">{city.countryCode}</Badge>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                          {RATE_SERVICE_TYPES.map((service) => {
-                            const key = `city-${city.id}-${service.value}`;
-                            const isExcluded = localExclusions.has(key);
-                            return (
-                              <div
-                                key={service.value}
-                                className="flex items-center space-x-2 p-3 border rounded-md hover:bg-accent/50 transition-colors"
-                              >
-                                <Checkbox
-                                  id={key}
-                                  checked={!isExcluded}
-                                  onCheckedChange={() => handleToggleExclusion(key)}
-                                />
-                                <Label
-                                  htmlFor={key}
-                                  className="text-sm font-normal cursor-pointer flex-1"
-                                >
-                                  {service.label}
-                                </Label>
-                              </div>
-                            );
-                          })}
-                        </div>
+                  <div key={city.id} className="border rounded-md p-3 hover:bg-accent/30 transition-colors">
+                    <div className="grid grid-cols-[180px_1fr_1fr_1fr] gap-4 items-center">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="font-mono text-xs">{city.countryCode}</Badge>
+                        <span className="text-sm font-medium truncate" title={`${city.cityName}${city.state ? ', ' + city.state : ''}`}>
+                          {city.cityName}{city.state && <span className="text-xs text-muted-foreground ml-1">({city.state})</span>}
+                        </span>
                       </div>
-                    </CardContent>
-                  </Card>
+                      {RATE_SERVICE_TYPES.map((service) => {
+                        const key = `city-${city.id}-${service.value}`;
+                        const isExcluded = localExclusions.has(key);
+                        return (
+                          <div key={service.value} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={key}
+                              checked={!isExcluded}
+                              onCheckedChange={() => handleToggleExclusion(key)}
+                            />
+                            <Label
+                              htmlFor={key}
+                              className="text-sm font-normal cursor-pointer"
+                            >
+                              {service.label}
+                            </Label>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 ))
               )}
             </TabsContent>
