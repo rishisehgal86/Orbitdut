@@ -406,10 +406,10 @@ export const appRouter = router({
       }),
 
     deletePriorityCity: protectedProcedure
-      .input(z.object({ id: z.number() }))
+      .input(z.object({ id: z.number(), supplierId: z.number() }))
       .mutation(async ({ input }) => {
         const { deleteSupplierPriorityCity } = await import("./db");
-        await deleteSupplierPriorityCity(input.id);
+        await deleteSupplierPriorityCity(input.id, input.supplierId);
         return { success: true };
       }),
 

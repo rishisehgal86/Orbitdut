@@ -76,9 +76,39 @@ export default function Coverage() {
     },
   });
 
+  const utils = trpc.useUtils();
+
   const deleteCity = trpc.supplier.deletePriorityCity.useMutation({
+    onMutate: async (variables) => {
+      // Cancel outgoing refetches
+      await utils.supplier.getPriorityCities.cancel();
+      
+      // Snapshot the previous value
+      const previousCities = utils.supplier.getPriorityCities.getData({ supplierId: profile?.supplier.id || 0 });
+      
+      // Optimistically update to remove the city
+      utils.supplier.getPriorityCities.setData(
+        { supplierId: profile?.supplier.id || 0 },
+        (old) => old?.filter((city) => city.id !== variables.id) || []
+      );
+      
+      return { previousCities };
+    },
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousCities) {
+        utils.supplier.getPriorityCities.setData(
+          { supplierId: profile?.supplier.id || 0 },
+          context.previousCities
+        );
+      }
+      toast.error("Failed to remove city");
+    },
     onSuccess: () => {
       toast.success("City removed");
+    },
+    onSettled: () => {
+      // Refetch to ensure consistency
       refetchCities();
     },
   });
@@ -204,7 +234,8 @@ export default function Coverage() {
   };
 
   const handleRemoveCity = (cityId: number) => {
-    deleteCity.mutate({ id: cityId });
+    if (!profile?.supplier?.id) return;
+    deleteCity.mutate({ id: cityId, supplierId: profile.supplier.id });
   };
 
   // Response time management

@@ -471,3 +471,10 @@
 - [x] Add route for /supplier/coverage/exclusions in App.tsx
 - [x] Fix null safety in filter functions
 - [x] Test all coverage management features together
+
+## Fix Priority Cities Deletion UI Issue
+- [x] Investigate why deleted cities remain visible in the UI (tenant isolation issue)
+- [x] Fix deletePriorityCity procedure to include supplierId parameter for tenant isolation
+- [x] Update handleRemoveCity to pass supplierId along with id
+- [x] Add optimistic updates to deleteCity mutation for instant UI feedback
+- [x] Test that cities disappear immediately after clicking X button
