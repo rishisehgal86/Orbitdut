@@ -29,7 +29,15 @@ interface NavItem {
 const navItems: NavItem[] = [
   { title: "Dashboard", href: "/supplier/dashboard", icon: Home },
   { title: "My Jobs", href: "/supplier/jobs", icon: Building2 },
-  { title: "Coverage", href: "/supplier/coverage", icon: MapPin },
+  { 
+    title: "Coverage", 
+    href: "/supplier/coverage", 
+    icon: MapPin,
+    submenu: [
+      { title: "Geographic Coverage", href: "/supplier/coverage" },
+      { title: "Service Exclusions", href: "/supplier/coverage/exclusions" },
+    ]
+  },
   { 
     title: "Rates", 
     href: "/supplier/rates", 

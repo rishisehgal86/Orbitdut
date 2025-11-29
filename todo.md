@@ -462,3 +462,12 @@
 ## Fix Coverage Management Page Layout
 - [x] Add SupplierLayout wrapper to Coverage.tsx to display left sidebar navigation
 - [x] Test that sidebar navigation appears on Coverage page
+
+## Restore Full Coverage Page Functionality
+- [x] Check if original coverage page with country/city/response time management still exists
+- [x] Restore original coverage features (country selection, priority cities, response times)
+- [x] Create separate ServiceExclusions.tsx page
+- [x] Add Coverage submenu in SupplierLayout (Geographic Coverage, Service Exclusions)
+- [x] Add route for /supplier/coverage/exclusions in App.tsx
+- [x] Fix null safety in filter functions
+- [x] Test all coverage management features together
