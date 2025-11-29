@@ -10,7 +10,7 @@ import SupplierLayout from "@/components/SupplierLayout";
 import { RATE_SERVICE_TYPES, RATE_RESPONSE_TIMES } from "@shared/rates";
 import { validateBaseRates } from "@shared/rateValidation";
 
-export default function SupplierRates() {
+export default function RateManagement() {
   // Using sonner toast
   const [activeTab, setActiveTab] = useState("quick-setup");
 

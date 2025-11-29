@@ -386,3 +386,33 @@
 - [x] Use amber/yellow color for warnings, blue for suggestions
 - [ ] Add visual warning indicators in By Location tab
 - [ ] Test validation with various rate combinations
+
+## Rates Submenu Restructuring
+- [ ] Design submenu structure with two sections: Current Rates and Rate Management
+- [ ] Create Current Rates page (read-only view)
+- [ ] Show all applied rates with status indicators (configured, missing, no coverage)
+- [ ] Add filtering by location, service type, response time
+- [ ] Add search functionality for locations
+- [ ] Show visual indicators: green for configured, amber for missing, gray for no coverage
+- [ ] Add export to CSV/Excel functionality
+- [ ] Show rate statistics and completion summary
+- [ ] Rename existing Rates page to Rate Management
+- [ ] Update sidebar navigation to show Rates submenu
+- [ ] Update routing: /supplier/rates/current and /supplier/rates/manage
+- [ ] Test navigation between Current Rates and Rate Management
+- [ ] Ensure progress tracker is visible on both pages
+
+## Rates Submenu Restructuring
+- [x] Create submenu structure with two pages: Current Rates and Rate Management
+- [x] Design Current Rates page (read-only view)
+- [x] Add multi-select filters (service types, regions, response times, status)
+- [x] Create comprehensive table view showing all rates
+- [x] Add export to CSV functionality
+- [x] Add search bar for location filtering
+- [x] Show rate status with color coding (configured, missing, no coverage)
+- [x] Rename existing Rates page to Rate Management
+- [x] Update App.tsx routing for both pages (/supplier/rates/current, /supplier/rates/manage)
+- [x] Update SupplierLayout navigation with submenu support
+- [x] Add submenu rendering in navigation (indented, smaller text)
+- [x] Fix stats API response structure in CurrentRates
+- [x] Test both pages with real data

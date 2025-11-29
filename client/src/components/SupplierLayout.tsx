@@ -23,13 +23,22 @@ interface NavItem {
   title: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
+  submenu?: { title: string; href: string }[];
 }
 
 const navItems: NavItem[] = [
   { title: "Dashboard", href: "/supplier/dashboard", icon: Home },
   { title: "My Jobs", href: "/supplier/jobs", icon: Building2 },
   { title: "Coverage", href: "/supplier/coverage", icon: MapPin },
-  { title: "Rates", href: "/supplier/rates", icon: DollarSign },
+  { 
+    title: "Rates", 
+    href: "/supplier/rates", 
+    icon: DollarSign,
+    submenu: [
+      { title: "Current Rates", href: "/supplier/rates/current" },
+      { title: "Rate Management", href: "/supplier/rates/manage" },
+    ]
+  },
   { title: "Earnings", href: "/supplier/earnings", icon: Wallet },
   { title: "Settings", href: "/supplier/settings", icon: Settings },
 ];
@@ -74,21 +83,44 @@ export default function SupplierLayout({ children }: SupplierLayoutProps) {
         <nav className="space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location === item.href;
+            const isActive = location === item.href || item.submenu?.some(sub => location === sub.href);
 
             const linkContent = (
-              <Link
-                href={item.href}
-                onClick={() => isMobile && setIsMobileOpen(false)}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                  isActive
-                    ? "bg-primary/10 text-primary border-l-4 border-primary"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                } ${isCollapsed && !isMobile ? "justify-center" : ""}`}
-              >
-                <Icon className="h-5 w-5 flex-shrink-0" />
-                {(!isCollapsed || isMobile) && <span>{item.title}</span>}
-              </Link>
+              <div className="space-y-1">
+                <Link
+                  href={item.href}
+                  onClick={() => isMobile && setIsMobileOpen(false)}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-primary/10 text-primary border-l-4 border-primary"
+                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  } ${isCollapsed && !isMobile ? "justify-center" : ""}`}
+                >
+                  <Icon className="h-5 w-5 flex-shrink-0" />
+                  {(!isCollapsed || isMobile) && <span>{item.title}</span>}
+                </Link>
+                {item.submenu && (!isCollapsed || isMobile) && (
+                  <div className="ml-8 space-y-1">
+                    {item.submenu.map((subItem) => {
+                      const isSubActive = location === subItem.href;
+                      return (
+                        <Link
+                          key={subItem.href}
+                          href={subItem.href}
+                          onClick={() => isMobile && setIsMobileOpen(false)}
+                          className={`block rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                            isSubActive
+                              ? "bg-primary/10 text-primary"
+                              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                          }`}
+                        >
+                          {subItem.title}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             );
 
             if (isCollapsed && !isMobile) {
@@ -97,6 +129,15 @@ export default function SupplierLayout({ children }: SupplierLayoutProps) {
                   <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
                   <TooltipContent side="right">
                     <p>{item.title}</p>
+                    {item.submenu && (
+                      <div className="mt-1 space-y-1">
+                        {item.submenu.map(sub => (
+                          <div key={sub.href} className="text-xs text-muted-foreground">
+                            {sub.title}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </TooltipContent>
                 </Tooltip>
               );

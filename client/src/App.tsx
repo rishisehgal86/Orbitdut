@@ -10,7 +10,8 @@ import CustomerSignup from "./pages/auth/CustomerSignup";
 import SupplierSignup from "./pages/auth/SupplierSignup";
 import SupplierDashboard from "./pages/supplier/Dashboard";
 import SupplierSettings from "./pages/supplier/Settings";
-import SupplierRates from "./pages/supplier/Rates";
+import CurrentRates from "./pages/supplier/CurrentRates";
+import RateManagement from "./pages/supplier/RateManagement";
 import SupplierJobs from "./pages/supplier/Jobs";
 import SupplierJobDetail from "./pages/supplier/JobDetail";
 import SupplierCoverage from "./pages/supplier/Coverage";
@@ -43,7 +44,9 @@ function Router() {
       <Route path={"/customer/jobs/:id"} component={CustomerJobDetail} />
       <Route path={"/supplier/dashboard"} component={SupplierDashboard} />
       <Route path={"/supplier/settings"} component={SupplierSettings} />
-      <Route path={"/supplier/rates"} component={SupplierRates} />
+      <Route path={"/supplier/rates/current"} component={CurrentRates} />
+      <Route path={"/supplier/rates/manage"} component={RateManagement} />
+      <Route path={"/supplier/rates"} component={CurrentRates} />
       <Route path={"/supplier/jobs"} component={SupplierJobs} />
       <Route path={"/supplier/jobs/:id"} component={SupplierJobDetail} />
       <Route path={"/supplier/coverage"} component={SupplierCoverage} />
