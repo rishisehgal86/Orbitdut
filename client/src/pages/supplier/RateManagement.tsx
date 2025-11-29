@@ -1298,10 +1298,41 @@ function BulkImportExportTab({ supplierId, onSuccess }: { supplierId: number; on
   const [validationErrors, setValidationErrors] = useState<any[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
 
+  const downloadTemplateMutation = trpc.rates.downloadExcelTemplate.useQuery(
+    { supplierId },
+    { enabled: false }
+  );
+
   const handleDownloadTemplate = async () => {
     toast.info("Generating Excel template...");
-    // TODO: Call backend API to generate template
-    toast.success("Template downloaded!");
+    try {
+      const result = await downloadTemplateMutation.refetch();
+      if (result.data) {
+        // Convert base64 to blob and trigger download
+        const byteCharacters = atob(result.data.data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: result.data.mimeType });
+        
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = result.data.filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        
+        toast.success("Template downloaded!");
+      }
+    } catch (error) {
+      toast.error("Failed to generate template");
+      console.error(error);
+    }
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {

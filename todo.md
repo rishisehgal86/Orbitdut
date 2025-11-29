@@ -650,3 +650,15 @@
 - [x] Show import summary (X rows valid, Y rows with errors per service type)
 - [ ] Add "Confirm Import" button to execute bulk upsert
 - [ ] Test with sample Excel files
+
+## Bulk Import/Export - Excel Template Generation Implementation
+- [ ] Create tRPC procedure `rates.downloadExcelTemplate` to generate Excel file
+- [ ] Query supplier's covered locations from coverage tables
+- [ ] Query current rates for all service types and response times
+- [ ] Generate 6 sheets using xlsx library (L1 EUC Countries, L1 EUC Cities, L1 Network Countries, L1 Network Cities, Smart Hands Countries, Smart Hands Cities)
+- [ ] Add columns: Region, Location, Country Code, 4h Rate, 24h Rate, 48h Rate, 72h Rate, 96h Rate
+- [ ] Pre-fill with current rates where they exist
+- [ ] Style fixed columns (Region, Location, Country Code) with different background color
+- [ ] Return Excel file as base64 or buffer for download
+- [ ] Connect frontend download button to call the tRPC procedure
+- [ ] Test download with actual supplier data

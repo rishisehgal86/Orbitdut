@@ -268,6 +268,14 @@ export const appRouter = router({
         return await getRateCompletionStats(input.supplierId);
       }),
 
+    // Download Excel template with current rates
+    downloadExcelTemplate: protectedProcedure
+      .input(z.object({ supplierId: z.number() }))
+      .query(async ({ input }) => {
+        const { generateExcelTemplate } = await import("./excelTemplate");
+        return await generateExcelTemplate(input.supplierId);
+      }),
+
     // ========== SERVICE EXCLUSIONS ==========
     
     // Get all service exclusions for a supplier
