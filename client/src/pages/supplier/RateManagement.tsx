@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -567,6 +567,17 @@ function ByLocationTab({ supplierId, onSuccess }: { supplierId: number; onSucces
     );
   };
 
+  // Add loading state
+  if (!countries || !cities || !rates) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-12">
+          <Loader2 className="h-6 w-6 animate-spin" />
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -1010,6 +1021,53 @@ function LocationRatesTable({
                       />
                       {!isExcluded && (
                         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                          {/* X icon toggle for response time exclusions */}
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const isCurrentlyExcluded = isResponseTimeExcluded(location, rt.hours);
+                                    if (isCurrentlyExcluded) {
+                                      // Re-enable this response time
+                                      removeResponseTimeExclusionMutation.mutate({
+                                        supplierId,
+                                        serviceType: selectedService,
+                                        responseTimeHours: rt.hours,
+                                        countryCode: location.type === "country" ? location.code : undefined,
+                                        cityId: location.type === "city" ? location.id : undefined,
+                                      });
+                                    } else {
+                                      // Disable this response time
+                                      addResponseTimeExclusionMutation.mutate({
+                                        supplierId,
+                                        serviceType: selectedService,
+                                        responseTimeHours: rt.hours,
+                                        countryCode: location.type === "country" ? location.code : undefined,
+                                        cityId: location.type === "city" ? location.id : undefined,
+                                      });
+                                    }
+                                  }}
+                                  className={`p-0.5 rounded hover:bg-muted transition-colors ${
+                                    isResponseTimeExcluded(location, rt.hours)
+                                      ? "text-green-600 hover:text-green-700"
+                                      : "text-muted-foreground hover:text-destructive"
+                                  }`}
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="max-w-xs">
+                                <p className="text-sm">
+                                  {isResponseTimeExcluded(location, rt.hours)
+                                    ? "Click to re-enable this response time"
+                                    : "Click to mark this response time as not offered"}
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          
                           {hasValidationWarning(location, rt.hours) && (
                             <TooltipProvider>
                               <Tooltip>
@@ -1040,7 +1098,7 @@ function LocationRatesTable({
                     </div>
                   </div>
                 );
-                })}
+              })}
               </div>
             </AccordionContent>
           </AccordionItem>

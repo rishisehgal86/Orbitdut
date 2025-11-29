@@ -582,7 +582,7 @@
 - [x] Update database schema to support response time exclusions (supplierResponseTimeExclusions table)
 - [x] Add supplierId, serviceType, countryCode/cityId, responseTimeHours columns
 - [x] Create backend tRPC procedures (addResponseTimeExclusion, removeResponseTimeExclusion, getResponseTimeExclusions)
-- [ ] Add X icon next to each rate input in By Location tab
+- [x] Add X icon next to each rate input in By Location tab
 - [ ] Implement click handler to toggle exclusion state
 - [ ] Show tooltip "Mark Xh response time as not offered" on hover
 - [ ] Grey out input and show "N/A" when response time is excluded
