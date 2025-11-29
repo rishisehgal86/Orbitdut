@@ -504,6 +504,7 @@ function ByLocationTab({ supplierId, onSuccess }: { supplierId: number; onSucces
   const { data: countries } = trpc.supplier.getCountries.useQuery({ supplierId });
   const { data: cities } = trpc.supplier.getPriorityCities.useQuery({ supplierId });
   const { data: rates } = trpc.supplier.getRates.useQuery({ supplierId });
+  const { data: exclusions } = trpc.supplier.getServiceExclusions.useQuery({ supplierId });
 
   // Group countries by region
   const countryRatesByRegion = useMemo(() => {
@@ -618,6 +619,7 @@ function ByLocationTab({ supplierId, onSuccess }: { supplierId: number; onSucces
               selectedService={selectedService}
               supplierId={supplierId}
               onSuccess={onSuccess}
+              exclusions={exclusions || []}
             />
           </TabsContent>
 
@@ -628,6 +630,7 @@ function ByLocationTab({ supplierId, onSuccess }: { supplierId: number; onSucces
               selectedService={selectedService}
               supplierId={supplierId}
               onSuccess={onSuccess}
+              exclusions={exclusions || []}
             />
           </TabsContent>
 
@@ -638,6 +641,7 @@ function ByLocationTab({ supplierId, onSuccess }: { supplierId: number; onSucces
               selectedService={selectedService}
               supplierId={supplierId}
               onSuccess={onSuccess}
+              exclusions={exclusions || []}
             />
           </TabsContent>
 
@@ -648,6 +652,7 @@ function ByLocationTab({ supplierId, onSuccess }: { supplierId: number; onSucces
               selectedService={selectedService}
               supplierId={supplierId}
               onSuccess={onSuccess}
+              exclusions={exclusions || []}
             />
           </TabsContent>
 
@@ -658,6 +663,7 @@ function ByLocationTab({ supplierId, onSuccess }: { supplierId: number; onSucces
               selectedService={selectedService}
               supplierId={supplierId}
               onSuccess={onSuccess}
+              exclusions={exclusions || []}
             />
           </TabsContent>
 
@@ -668,6 +674,7 @@ function ByLocationTab({ supplierId, onSuccess }: { supplierId: number; onSucces
               selectedService={selectedService}
               supplierId={supplierId}
               onSuccess={onSuccess}
+              exclusions={exclusions || []}
             />
           </TabsContent>
         </Tabs>
@@ -682,13 +689,30 @@ function LocationRatesTable({
   selectedService,
   supplierId,
   onSuccess,
+  exclusions,
 }: {
   locations: any[];
   selectedService: string;
   supplierId: number;
   onSuccess: () => void;
+  exclusions: any[];
 }) {
   const [editingRates, setEditingRates] = useState<Record<string, Record<number, string>>>({});
+
+  // Helper to check if a service/location combination is excluded
+  const isServiceExcluded = (location: any): boolean => {
+    return exclusions.some((exclusion: any) => {
+      // Check if service type matches
+      if (exclusion.serviceType !== selectedService) return false;
+      
+      // Check if location matches (country or city)
+      if (location.type === "country") {
+        return exclusion.countryCode === location.code;
+      } else {
+        return exclusion.cityId === location.id;
+      }
+    });
+  };
 
   const upsertMutation = trpc.supplier.upsertRate.useMutation({
     onSuccess: () => {
@@ -785,25 +809,34 @@ function LocationRatesTable({
               return (
                 <tr key={locationKey} className="border-t">
                   <td className="p-3 font-medium">{location.name}</td>
-                  {RATE_RESPONSE_TIMES.map((rt) => (
-                    <td key={rt.hours} className="p-3">
-                      <div className="relative">
-                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-                          $
-                        </span>
-                        <Input
-                          type="number"
-                          placeholder="0.00"
-                          className="pl-6 text-center"
-                          value={getRateValue(location, rt.hours)}
-                          onChange={(e) => handleRateChange(locationKey, rt.hours, e.target.value)}
-                          onBlur={() => handleRateBlur(location, rt.hours)}
-                          min="0"
-                          step="0.01"
-                        />
-                      </div>
-                    </td>
-                  ))}
+                  {RATE_RESPONSE_TIMES.map((rt) => {
+                    const isExcluded = isServiceExcluded(location);
+                    return (
+                      <td key={rt.hours} className="p-3">
+                        <div className="relative">
+                          <span className={`absolute left-2 top-1/2 -translate-y-1/2 text-sm ${
+                            isExcluded ? "text-muted-foreground/50" : "text-muted-foreground"
+                          }`}>
+                            $
+                          </span>
+                          <Input
+                            type="number"
+                            placeholder={isExcluded ? "Not Offered" : "0.00"}
+                            className={`pl-6 text-center ${
+                              isExcluded ? "bg-muted text-muted-foreground cursor-not-allowed" : ""
+                            }`}
+                            value={isExcluded ? "" : getRateValue(location, rt.hours)}
+                            onChange={(e) => !isExcluded && handleRateChange(locationKey, rt.hours, e.target.value)}
+                            onBlur={() => !isExcluded && handleRateBlur(location, rt.hours)}
+                            disabled={isExcluded}
+                            min="0"
+                            step="0.01"
+                            title={isExcluded ? "This service is not offered in this location" : ""}
+                          />
+                        </div>
+                      </td>
+                    );
+                  })}
                 </tr>
               );
             })}

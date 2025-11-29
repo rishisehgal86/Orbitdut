@@ -90,17 +90,17 @@ export default function ServiceAvailability() {
       }) || []
     );
 
-    const toAdd: Array<{ countryCode?: string; cityId?: number; serviceType: string }> = [];
-    const toRemove: Array<{ countryCode?: string; cityId?: number; serviceType: string }> = [];
+    const toAdd: Array<{ supplierId: number; countryCode?: string; cityId?: number; serviceType: string }> = [];
+    const toRemove: Array<{ supplierId: number; countryCode?: string; cityId?: number; serviceType: string }> = [];
 
     // Find new exclusions to add
     localExclusions.forEach((key) => {
       if (!serverKeys.has(key)) {
         const parts = key.split("-");
         if (parts[0] === "city") {
-          toAdd.push({ cityId: parseInt(parts[1]), serviceType: parts[2] });
+          toAdd.push({ supplierId, cityId: parseInt(parts[1]), serviceType: parts[2] });
         } else {
-          toAdd.push({ countryCode: parts[1], serviceType: parts[2] });
+          toAdd.push({ supplierId, countryCode: parts[1], serviceType: parts[2] });
         }
       }
     });
@@ -110,9 +110,9 @@ export default function ServiceAvailability() {
       if (!localExclusions.has(key)) {
         const parts = key.split("-");
         if (parts[0] === "city") {
-          toRemove.push({ cityId: parseInt(parts[1]), serviceType: parts[2] });
+          toRemove.push({ supplierId, cityId: parseInt(parts[1]), serviceType: parts[2] });
         } else {
-          toRemove.push({ countryCode: parts[1], serviceType: parts[2] });
+          toRemove.push({ supplierId, countryCode: parts[1], serviceType: parts[2] });
         }
       }
     });
