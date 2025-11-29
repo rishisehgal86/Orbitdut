@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import SupplierLayout from "@/components/SupplierLayout";
 import { RATE_SERVICE_TYPES, RATE_RESPONSE_TIMES } from "@shared/rates";
+import { validateBaseRates } from "@shared/rateValidation";
 
 export default function SupplierRates() {
   // Using sonner toast
@@ -441,6 +442,9 @@ function QuickSetupTab({ supplierId, onSuccess }: { supplierId: number; onSucces
                   </div>
                 ))}
               </div>
+
+              {/* Validation Warnings */}
+              <RateValidationWarnings baseRates={baseRates} />
             </div>
           </Tabs>
         </div>
@@ -792,6 +796,70 @@ function LocationRatesTable({
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+// Rate Validation Warnings Component
+function RateValidationWarnings({ baseRates }: { baseRates: Record<number, string> }) {
+  const warnings = useMemo(() => {
+    return validateBaseRates(baseRates);
+  }, [baseRates]);
+
+  if (warnings.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-2 mt-4">
+      {warnings.map((warning, index) => (
+        <div
+          key={index}
+          className={`flex items-start gap-3 p-3 rounded-lg border ${
+            warning.severity === "warning"
+              ? "bg-amber-50 border-amber-200 text-amber-900"
+              : "bg-blue-50 border-blue-200 text-blue-900"
+          }`}
+        >
+          <div className="flex-shrink-0 mt-0.5">
+            {warning.severity === "warning" ? (
+              <svg
+                className="h-5 w-5 text-amber-600"
+                fill="none"
+                strokeWidth="2"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+                />
+              </svg>
+            ) : (
+              <svg
+                className="h-5 w-5 text-blue-600"
+                fill="none"
+                strokeWidth="2"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
+                />
+              </svg>
+            )}
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-medium">
+              {warning.severity === "warning" ? "Pricing Issue" : "Suggestion"}
+            </p>
+            <p className="text-sm mt-1">{warning.message}</p>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

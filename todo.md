@@ -374,3 +374,15 @@
 - [x] Verified: updateJobStatus - already secure with supplier check
 - [x] Verified: acceptJob - has business logic TODO but no security issue
 - [ ] Create test cases for cross-tenant access attempts
+
+## Rate Validation Warnings
+- [x] Design validation rules for rate patterns
+- [x] Rule 1: Faster response time should not be cheaper than slower response time
+- [x] Rule 2: Rates should be positive numbers
+- [x] Rule 3: Warn if rate difference between tiers is too large (>50%)
+- [x] Create validation utility function (shared/rateValidation.ts)
+- [x] Add visual warning indicators in Quick Setup tab
+- [x] Show warning icon with tooltip explaining the issue
+- [x] Use amber/yellow color for warnings, blue for suggestions
+- [ ] Add visual warning indicators in By Location tab
+- [ ] Test validation with various rate combinations
