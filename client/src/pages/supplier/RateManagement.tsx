@@ -67,143 +67,249 @@ export default function RateManagement() {
           </AlertDescription>
         </Alert>
 
-        {/* Completion Tracker */}
+        {/* Completion Tracker - Redesigned */}
         {stats && (
           <Card>
             <CardHeader>
-              <CardTitle>Rates configured</CardTitle>
+              <CardTitle>Rate Configuration Status</CardTitle>
               <CardDescription>
-                Set rates for your covered locations to start receiving job offers
+                Track your progress and quickly identify missing rates
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                {/* Overall Progress */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium">Overall Progress</span>
-                    <span className="text-muted-foreground">
-                      {stats.configured} / {stats.totalPossible} ({stats.percentage}%)
-                    </span>
+                {/* Overall Status Summary */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                    <div className="text-2xl font-bold text-green-700 dark:text-green-400">{stats.configured}</div>
+                    <div className="text-xs text-green-600 dark:text-green-500 mt-1">Configured Rates</div>
                   </div>
-                  <div className="w-full bg-secondary rounded-full h-2.5">
-                    <div
-                      className="bg-primary h-2.5 rounded-full transition-all"
-                      style={{ width: `${stats.percentage}%` }}
-                    />
+                  <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                    <div className="text-2xl font-bold text-red-700 dark:text-red-400">{stats.totalPossible - stats.configured}</div>
+                    <div className="text-xs text-red-600 dark:text-red-500 mt-1">Missing Rates</div>
                   </div>
-                </div>
-
-                {/* By Location Type */}
-                <div className="space-y-3">
-                  <h4 className="text-sm font-medium">By Location Type</h4>
-                  <div className="space-y-3">
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">Countries</span>
-                        <span className="text-muted-foreground">
-                          {stats.byLocationType.countries.configured} / {stats.byLocationType.countries.totalPossible} ({stats.byLocationType.countries.percentage}%)
-                        </span>
-                      </div>
-                      <div className="w-full bg-secondary rounded-full h-2">
-                        <div
-                          className="bg-blue-500 h-2 rounded-full transition-all"
-                          style={{ width: `${stats.byLocationType.countries.percentage}%` }}
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">Cities</span>
-                        <span className="text-muted-foreground">
-                          {stats.byLocationType.cities.configured} / {stats.byLocationType.cities.totalPossible} ({stats.byLocationType.cities.percentage}%)
-                        </span>
-                      </div>
-                      <div className="w-full bg-secondary rounded-full h-2">
-                        <div
-                          className="bg-green-500 h-2 rounded-full transition-all"
-                          style={{ width: `${stats.byLocationType.cities.percentage}%` }}
-                        />
-                      </div>
-                    </div>
+                  <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <div className="text-2xl font-bold text-blue-700 dark:text-blue-400">{stats.percentage}%</div>
+                    <div className="text-xs text-blue-600 dark:text-blue-500 mt-1">Completion Rate</div>
                   </div>
                 </div>
 
                 {/* Legacy Rates Warning */}
                 {stats.legacyRates > 0 && (
-                  <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="text-amber-600 dark:text-amber-400 mt-0.5">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="text-sm font-medium text-amber-900 dark:text-amber-100 mb-1">
-                          {stats.legacyRates} Legacy Rates Detected
-                        </h4>
-                        <p className="text-xs text-amber-700 dark:text-amber-300">
-                          You have rates from the old system that need to be reconfigured with service types. Use Quick Setup to set rates for each service type.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                  <Alert className="bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                    <AlertDescription className="text-amber-900 dark:text-amber-100">
+                      <strong>{stats.legacyRates} legacy rates</strong> need to be reconfigured with service types. Use Quick Setup below to migrate them.
+                    </AlertDescription>
+                  </Alert>
                 )}
 
-                {/* By Service Type */}
+                {/* Service Type Breakdown with Actions */}
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium">By Service Type</h4>
-                    {stats.legacyRates > 0 && (
-                      <span className="text-xs text-amber-600 dark:text-amber-400">
-                        Configure service-specific rates
-                      </span>
-                    )}
-                  </div>
-                  <div className="space-y-3">
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">L1 End User Computing</span>
-                        <span className="text-muted-foreground">
-                          {stats.byServiceType.l1_euc.configured} / {stats.byServiceType.l1_euc.totalPossible} ({stats.byServiceType.l1_euc.percentage}%)
-                        </span>
-                      </div>
-                      <div className="w-full bg-secondary rounded-full h-2">
-                        <div
-                          className="bg-purple-500 h-2 rounded-full transition-all"
-                          style={{ width: `${stats.byServiceType.l1_euc.percentage}%` }}
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">L1 Network Support</span>
-                        <span className="text-muted-foreground">
-                          {stats.byServiceType.l1_network.configured} / {stats.byServiceType.l1_network.totalPossible} ({stats.byServiceType.l1_network.percentage}%)
-                        </span>
-                      </div>
-                      <div className="w-full bg-secondary rounded-full h-2">
-                        <div
-                          className="bg-orange-500 h-2 rounded-full transition-all"
-                          style={{ width: `${stats.byServiceType.l1_network.percentage}%` }}
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">Smart Hands</span>
-                        <span className="text-muted-foreground">
-                          {stats.byServiceType.smart_hands.configured} / {stats.byServiceType.smart_hands.totalPossible} ({stats.byServiceType.smart_hands.percentage}%)
-                        </span>
-                      </div>
-                      <div className="w-full bg-secondary rounded-full h-2">
-                        <div
-                          className="bg-cyan-500 h-2 rounded-full transition-all"
-                          style={{ width: `${stats.byServiceType.smart_hands.percentage}%` }}
-                        />
-                      </div>
-                    </div>
-                  </div>
+                  <h4 className="text-sm font-semibold">Missing Rates by Service Type</h4>
+                  
+                  {/* L1 End User Computing */}
+                  <Accordion type="single" collapsible className="w-full">
+                    <AccordionItem value="l1-euc" className="border rounded-lg px-4">
+                      <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center justify-between w-full pr-4">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-2 h-2 rounded-full ${
+                              stats.byServiceType.l1_euc.percentage === 100 ? 'bg-green-500' :
+                              stats.byServiceType.l1_euc.percentage >= 50 ? 'bg-amber-500' :
+                              'bg-red-500'
+                            }`} />
+                            <span className="text-sm font-medium">L1 End User Computing</span>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <span className="text-xs text-muted-foreground">
+                              {stats.byServiceType.l1_euc.configured} / {stats.byServiceType.l1_euc.totalPossible}
+                            </span>
+                            {stats.byServiceType.l1_euc.percentage < 100 && (
+                              <span className="text-xs font-medium text-red-600 dark:text-red-400">
+                                {stats.byServiceType.l1_euc.totalPossible - stats.byServiceType.l1_euc.configured} missing
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <div className="pt-2 pb-4 space-y-3">
+                          <div className="w-full bg-secondary rounded-full h-2">
+                            <div
+                              className="bg-purple-500 h-2 rounded-full transition-all"
+                              style={{ width: `${stats.byServiceType.l1_euc.percentage}%` }}
+                            />
+                          </div>
+                          {stats.byServiceType.l1_euc.percentage < 100 && (
+                            <div className="space-y-2">
+                              <p className="text-xs text-muted-foreground">
+                                You have {stats.byServiceType.l1_euc.totalPossible - stats.byServiceType.l1_euc.configured} locations without L1 EUC rates.
+                              </p>
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => setActiveTab('quick-setup')}
+                                  className="text-xs h-8"
+                                >
+                                  Quick Setup
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => setActiveTab('by-location')}
+                                  className="text-xs h-8"
+                                >
+                                  Edit by Location
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                          {stats.byServiceType.l1_euc.percentage === 100 && (
+                            <div className="flex items-center gap-2 text-xs text-green-600 dark:text-green-400">
+                              <Check className="h-3 w-3" />
+                              <span>All L1 EUC rates configured</span>
+                            </div>
+                          )}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+
+                    {/* L1 Network Support */}
+                    <AccordionItem value="l1-network" className="border rounded-lg px-4">
+                      <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center justify-between w-full pr-4">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-2 h-2 rounded-full ${
+                              stats.byServiceType.l1_network.percentage === 100 ? 'bg-green-500' :
+                              stats.byServiceType.l1_network.percentage >= 50 ? 'bg-amber-500' :
+                              'bg-red-500'
+                            }`} />
+                            <span className="text-sm font-medium">L1 Network Support</span>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <span className="text-xs text-muted-foreground">
+                              {stats.byServiceType.l1_network.configured} / {stats.byServiceType.l1_network.totalPossible}
+                            </span>
+                            {stats.byServiceType.l1_network.percentage < 100 && (
+                              <span className="text-xs font-medium text-red-600 dark:text-red-400">
+                                {stats.byServiceType.l1_network.totalPossible - stats.byServiceType.l1_network.configured} missing
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <div className="pt-2 pb-4 space-y-3">
+                          <div className="w-full bg-secondary rounded-full h-2">
+                            <div
+                              className="bg-orange-500 h-2 rounded-full transition-all"
+                              style={{ width: `${stats.byServiceType.l1_network.percentage}%` }}
+                            />
+                          </div>
+                          {stats.byServiceType.l1_network.percentage < 100 && (
+                            <div className="space-y-2">
+                              <p className="text-xs text-muted-foreground">
+                                You have {stats.byServiceType.l1_network.totalPossible - stats.byServiceType.l1_network.configured} locations without L1 Network rates.
+                              </p>
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => setActiveTab('quick-setup')}
+                                  className="text-xs h-8"
+                                >
+                                  Quick Setup
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => setActiveTab('by-location')}
+                                  className="text-xs h-8"
+                                >
+                                  Edit by Location
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                          {stats.byServiceType.l1_network.percentage === 100 && (
+                            <div className="flex items-center gap-2 text-xs text-green-600 dark:text-green-400">
+                              <Check className="h-3 w-3" />
+                              <span>All L1 Network rates configured</span>
+                            </div>
+                          )}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+
+                    {/* Smart Hands */}
+                    <AccordionItem value="smart-hands" className="border rounded-lg px-4">
+                      <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center justify-between w-full pr-4">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-2 h-2 rounded-full ${
+                              stats.byServiceType.smart_hands.percentage === 100 ? 'bg-green-500' :
+                              stats.byServiceType.smart_hands.percentage >= 50 ? 'bg-amber-500' :
+                              'bg-red-500'
+                            }`} />
+                            <span className="text-sm font-medium">Smart Hands</span>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <span className="text-xs text-muted-foreground">
+                              {stats.byServiceType.smart_hands.configured} / {stats.byServiceType.smart_hands.totalPossible}
+                            </span>
+                            {stats.byServiceType.smart_hands.percentage < 100 && (
+                              <span className="text-xs font-medium text-red-600 dark:text-red-400">
+                                {stats.byServiceType.smart_hands.totalPossible - stats.byServiceType.smart_hands.configured} missing
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <div className="pt-2 pb-4 space-y-3">
+                          <div className="w-full bg-secondary rounded-full h-2">
+                            <div
+                              className="bg-cyan-500 h-2 rounded-full transition-all"
+                              style={{ width: `${stats.byServiceType.smart_hands.percentage}%` }}
+                            />
+                          </div>
+                          {stats.byServiceType.smart_hands.percentage < 100 && (
+                            <div className="space-y-2">
+                              <p className="text-xs text-muted-foreground">
+                                You have {stats.byServiceType.smart_hands.totalPossible - stats.byServiceType.smart_hands.configured} locations without Smart Hands rates.
+                              </p>
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => setActiveTab('quick-setup')}
+                                  className="text-xs h-8"
+                                >
+                                  Quick Setup
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => setActiveTab('by-location')}
+                                  className="text-xs h-8"
+                                >
+                                  Edit by Location
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                          {stats.byServiceType.smart_hands.percentage === 100 && (
+                            <div className="flex items-center gap-2 text-xs text-green-600 dark:text-green-400">
+                              <Check className="h-3 w-3" />
+                              <span>All Smart Hands rates configured</span>
+                            </div>
+                          )}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
                 </div>
               </div>
             </CardContent>
