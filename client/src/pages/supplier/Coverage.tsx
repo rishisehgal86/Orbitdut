@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { SERVICE_TYPES } from "@/../../shared/rates";
+import { RATE_SERVICE_TYPES } from "@/../../shared/rates";
 import { Search, Save, AlertCircle } from "lucide-react";
 
 export default function Coverage() {
@@ -39,9 +39,9 @@ export default function Coverage() {
       const keys = new Set(
         exclusions.map((e) => {
           if (e.cityId) {
-            return `city-\${e.cityId}-\${e.serviceType}`;
+            return `city-${e.cityId}-${e.serviceType}`;
           } else {
-            return `country-\${e.countryCode}-\${e.serviceType}`;
+            return `country-${e.countryCode}-${e.serviceType}`;
           }
         })
       );
@@ -233,8 +233,8 @@ export default function Coverage() {
                             <Badge variant="outline">{country.countryCode}</Badge>
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            {SERVICE_TYPES.map((service) => {
-                              const key = `country-\${country.countryCode}-\${service.value}`;
+                            {RATE_SERVICE_TYPES.map((service) => {
+                              const key = `country-${country.countryCode}-${service.value}`;
                               const isExcluded = localExclusions.has(key);
                               return (
                                 <div
@@ -283,8 +283,8 @@ export default function Coverage() {
                             <Badge variant="secondary">{city.countryCode}</Badge>
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            {SERVICE_TYPES.map((service) => {
-                              const key = `city-\${city.id}-\${service.value}`;
+                            {RATE_SERVICE_TYPES.map((service) => {
+                              const key = `city-${city.id}-${service.value}`;
                               const isExcluded = localExclusions.has(key);
                               return (
                                 <div

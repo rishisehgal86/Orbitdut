@@ -452,3 +452,9 @@
 - [ ] Update progress tracking to exclude non-serviceable rates
 - [ ] Add visual distinction: Missing (amber) vs Not Offered (gray) vs Configured (green)
 - [ ] Test service exclusions end-to-end
+
+## Fix Coverage.tsx Syntax Error (CRITICAL)
+- [x] Investigate syntax error at line 406:184 in Coverage.tsx
+- [x] Fix the Unicode escape sequence issue causing application crash (template literals had \$ instead of $)
+- [x] Fix SERVICE_TYPES import (changed to RATE_SERVICE_TYPES array)
+- [x] Restart dev server and test Coverage page
