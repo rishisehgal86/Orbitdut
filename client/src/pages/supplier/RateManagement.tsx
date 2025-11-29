@@ -231,17 +231,7 @@ export default function RateManagement() {
 
           {/* By Service Tab */}
           <TabsContent value="by-service">
-            <Card>
-              <CardHeader>
-                <CardTitle>Rates by Service</CardTitle>
-                <CardDescription>
-                  View and edit rates organized by service type
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Coming soon...</p>
-              </CardContent>
-            </Card>
+            <ByServiceTab supplierId={supplierId} onSuccess={() => { refetchRates(); refetchStats(); }} />
           </TabsContent>
 
           {/* Bulk Import/Export Tab */}
@@ -1159,6 +1149,131 @@ function LocationRatesTable({
         );
       })}
     </Accordion>
+  );
+}
+
+// By Service Tab Component
+function ByServiceTab({ supplierId, onSuccess }: { supplierId: number; onSuccess: () => void }) {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Get covered locations
+  const { data: countries } = trpc.supplier.getCountries.useQuery({ supplierId });
+  const { data: cities } = trpc.supplier.getPriorityCities.useQuery({ supplierId });
+  const { data: rates } = trpc.supplier.getRates.useQuery({ supplierId });
+  const { data: exclusions } = trpc.supplier.getServiceExclusions.useQuery({ supplierId });
+  const { data: responseTimeExclusions } = trpc.supplier.getResponseTimeExclusions.useQuery({ supplierId });
+
+  // Group locations by service type
+  const locationsByService = useMemo(() => {
+    if (!countries || !cities || !rates) return {};
+    
+    const grouped: Record<string, any[]> = {};
+    
+    RATE_SERVICE_TYPES.forEach((serviceType) => {
+      const locations: any[] = [];
+      
+      // Add countries
+      countries.forEach((country) => {
+        const countryRates = rates.filter(
+          (r) => r.countryCode === country.countryCode && r.serviceType === serviceType.value
+        );
+        
+        locations.push({
+          type: "country",
+          code: country.countryCode,
+          name: country.countryName,
+          region: country.region,
+          rates: countryRates,
+        });
+      });
+      
+      // Add cities
+      cities.forEach((city) => {
+        const cityRates = rates.filter(
+          (r) => r.cityId === city.id && r.serviceType === serviceType.value
+        );
+        
+        locations.push({
+          type: "city",
+          id: city.id,
+          name: `${city.cityName}, ${city.stateProvince ? city.stateProvince + ", " : ""}${city.countryCode}`,
+          rates: cityRates,
+        });
+      });
+      
+      // Sort locations alphabetically
+      locations.sort((a, b) => a.name.localeCompare(b.name));
+      
+      grouped[serviceType.value] = locations;
+    });
+    
+    return grouped;
+  }, [countries, cities, rates]);
+
+  // Filter by search query
+  const filterLocations = (locations: any[]) => {
+    if (!searchQuery) return locations;
+    return locations.filter((loc) =>
+      loc.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  };
+
+  // Add loading state
+  if (!countries || !cities || !rates) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-12">
+          <Loader2 className="h-6 w-6 animate-spin" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Rates by Service</CardTitle>
+        <CardDescription>
+          View and edit rates organized by service type. All locations shown for each service.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Search */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Search Locations</label>
+          <Input
+            type="text"
+            placeholder="Search countries or cities..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+
+        {/* Service Type Tabs */}
+        <Tabs defaultValue={RATE_SERVICE_TYPES[0].value}>
+          <TabsList className="grid w-full grid-cols-3">
+            {RATE_SERVICE_TYPES.map((service) => (
+              <TabsTrigger key={service.value} value={service.value}>
+                {service.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
+          {RATE_SERVICE_TYPES.map((service) => (
+            <TabsContent key={service.value} value={service.value}>
+              <LocationRatesTable
+                locations={filterLocations(locationsByService[service.value] || [])}
+                selectedService={service.value}
+                supplierId={supplierId}
+                onSuccess={onSuccess}
+                exclusions={exclusions || []}
+                responseTimeExclusions={responseTimeExclusions || []}
+              />
+            </TabsContent>
+          ))}
+        </Tabs>
+      </CardContent>
+    </Card>
   );
 }
 

@@ -613,3 +613,11 @@
 - [x] Query both service exclusions and response time exclusions tables
 - [x] Display "Service Excluded" badge when a service is excluded for a location
 - [x] Display "Response Time Excluded" text when a response time is excluded
+
+## Rate Management - By Service Tab Implementation
+- [x] Create By Service tab component mirroring By Location tab structure
+- [x] Group locations by service type (L1 EUC, L1 Network, Smart Hands)
+- [x] Reuse same table UI and inline editing components
+- [x] Add search functionality for filtering locations
+- [x] Implement X icon toggle for response time exclusions
+- [x] Test all service type tabs and inline editing
