@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { RATE_SERVICE_TYPES } from "@/../../shared/rates";
+import { RATE_SERVICE_TYPES, COUNTRY_REGIONS } from "@/../../shared/rates";
 import { Search, Save, AlertCircle } from "lucide-react";
 
 export default function ServiceAvailability() {
@@ -32,6 +32,7 @@ export default function ServiceAvailability() {
   );
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [regionTab, setRegionTab] = useState("all");
   const [localExclusions, setLocalExclusions] = useState<Set<string>>(new Set());
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -89,52 +90,40 @@ export default function ServiceAvailability() {
       }) || []
     );
 
-    const toAdd: Array<{
-      supplierId: number;
-      countryCode?: string;
-      cityId?: number;
-      serviceType: string;
-    }> = [];
+    const toAdd: Array<{ countryCode?: string; cityId?: number; serviceType: string }> = [];
+    const toRemove: Array<{ countryCode?: string; cityId?: number; serviceType: string }> = [];
 
-    const toRemove: Array<{ id: number; supplierId: number }> = [];
-
-    // Find additions
+    // Find new exclusions to add
     localExclusions.forEach((key) => {
       if (!serverKeys.has(key)) {
         const parts = key.split("-");
         if (parts[0] === "city") {
-          toAdd.push({
-            supplierId,
-            cityId: parseInt(parts[1]),
-            serviceType: parts[2],
-          });
+          toAdd.push({ cityId: parseInt(parts[1]), serviceType: parts[2] });
         } else {
-          toAdd.push({
-            supplierId,
-            countryCode: parts[1],
-            serviceType: parts[2],
-          });
+          toAdd.push({ countryCode: parts[1], serviceType: parts[2] });
         }
       }
     });
 
-    // Find removals
-    exclusions?.forEach((e) => {
-      const key = e.cityId
-        ? `city-${e.cityId}-${e.serviceType}`
-        : `country-${e.countryCode}-${e.serviceType}`;
+    // Find removed exclusions
+    serverKeys.forEach((key) => {
       if (!localExclusions.has(key)) {
-        toRemove.push({ id: e.id, supplierId });
+        const parts = key.split("-");
+        if (parts[0] === "city") {
+          toRemove.push({ cityId: parseInt(parts[1]), serviceType: parts[2] });
+        } else {
+          toRemove.push({ countryCode: parts[1], serviceType: parts[2] });
+        }
       }
     });
 
     // Execute mutations
     try {
       if (toAdd.length > 0) {
-        await bulkAddMutation.mutateAsync({ exclusions: toAdd });
+        await bulkAddMutation.mutateAsync({ supplierId, exclusions: toAdd });
       }
       if (toRemove.length > 0) {
-        await bulkRemoveMutation.mutateAsync({ exclusions: toRemove });
+        await bulkRemoveMutation.mutateAsync({ supplierId, exclusions: toRemove });
       }
       if (toAdd.length === 0 && toRemove.length === 0) {
         toast.info("No changes to save");
@@ -144,9 +133,31 @@ export default function ServiceAvailability() {
     }
   };
 
-  const filteredCountries = countries?.filter((country) =>
-    country.countryName?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  const filteredCountries = countries?.filter((country) => {
+    if (!searchTerm) return true;
+    return country.countryName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           country.countryCode?.toLowerCase().includes(searchTerm.toLowerCase());
+  }) || [];
+
+  // Group countries by region
+  const countriesByRegion = useMemo(() => {
+    const grouped = {
+      africa: [] as typeof filteredCountries,
+      americas: [] as typeof filteredCountries,
+      asia: [] as typeof filteredCountries,
+      europe: [] as typeof filteredCountries,
+      oceania: [] as typeof filteredCountries,
+    };
+    
+    filteredCountries.forEach(country => {
+      const region = COUNTRY_REGIONS[country.countryCode]?.toLowerCase();
+      if (region && region in grouped) {
+        grouped[region as keyof typeof grouped].push(country);
+      }
+    });
+    
+    return grouped;
+  }, [filteredCountries]);
 
   const filteredCities = cities?.filter((city) =>
     city.cityName?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -167,6 +178,38 @@ export default function ServiceAvailability() {
     );
   }
 
+  // Helper function to render country rows
+  const renderCountryRow = (country: typeof filteredCountries[0]) => (
+    <div key={country.countryCode} className="border rounded-md p-3 hover:bg-accent/30 transition-colors">
+      <div className="grid grid-cols-[180px_1fr_1fr_1fr] gap-4 items-center">
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="font-mono text-xs">{country.countryCode}</Badge>
+          <span className="text-sm font-medium truncate">{country.countryName}</span>
+        </div>
+        {RATE_SERVICE_TYPES.map((service) => {
+          const key = `country-${country.countryCode}-${service.value}`;
+          const isExcluded = localExclusions.has(key);
+          return (
+            <div key={service.value} className="flex items-center space-x-2">
+              <Checkbox
+                id={key}
+                checked={!isExcluded}
+                onCheckedChange={() => handleToggleExclusion(key)}
+                className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
+              />
+              <Label
+                htmlFor={key}
+                className="text-sm font-normal cursor-pointer"
+              >
+                {service.label}
+              </Label>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
   return (
     <SupplierLayout>
       <div className="space-y-6">
@@ -179,28 +222,21 @@ export default function ServiceAvailability() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Service Availability by Location</CardTitle>
-              <CardDescription>
-                Check the services you offer in each location. Unchecked services will not be available for booking.
-              </CardDescription>
-            </div>
-            {hasChanges && (
-              <Button onClick={handleSave} disabled={bulkAddMutation.isPending}>
-                <Save className="w-4 h-4 mr-2" />
-                Save Changes
-              </Button>
-            )}
-          </div>
+          <CardTitle>Service Availability by Location</CardTitle>
+          <CardDescription>
+            Select which services you provide in each country and priority city
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {hasChanges && (
-            <div className="flex items-center gap-2 p-3 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-md">
-              <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            <div className="flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-md">
               <p className="text-sm text-amber-900 dark:text-amber-100">
-                You have unsaved changes. Click "Save Changes" to apply them.
+                You have unsaved changes
               </p>
+              <Button onClick={handleSave} size="sm" disabled={bulkAddMutation.isPending || bulkRemoveMutation.isPending}>
+                <Save className="w-4 h-4 mr-2" />
+                Save Changes
+              </Button>
             </div>
           )}
 
@@ -224,43 +260,84 @@ export default function ServiceAvailability() {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="countries" className="space-y-1 mt-4">
-              {filteredCountries.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No countries found. Add countries in your coverage settings first.
-                </div>
-              ) : (
-                filteredCountries.map((country) => (
-                  <div key={country.countryCode} className="border rounded-md p-3 hover:bg-accent/30 transition-colors">
-                    <div className="grid grid-cols-[180px_1fr_1fr_1fr] gap-4 items-center">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="font-mono text-xs">{country.countryCode}</Badge>
-                        <span className="text-sm font-medium truncate">{country.countryName}</span>
-                      </div>
-                      {RATE_SERVICE_TYPES.map((service) => {
-                        const key = `country-${country.countryCode}-${service.value}`;
-                        const isExcluded = localExclusions.has(key);
-                          return (
-                            <div key={service.value} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={key}
-                                checked={!isExcluded}
-                                onCheckedChange={() => handleToggleExclusion(key)}
-                                className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
-                              />
-                            <Label
-                              htmlFor={key}
-                              className="text-sm font-normal cursor-pointer"
-                            >
-                              {service.label}
-                            </Label>
-                          </div>
-                        );
-                      })}
+            <TabsContent value="countries" className="space-y-4 mt-4">
+              {/* Regional Tabs */}
+              <Tabs value={regionTab} onValueChange={setRegionTab}>
+                <TabsList className="grid w-full grid-cols-6">
+                  <TabsTrigger value="all">All</TabsTrigger>
+                  <TabsTrigger value="africa">Africa</TabsTrigger>
+                  <TabsTrigger value="americas">Americas</TabsTrigger>
+                  <TabsTrigger value="asia">Asia</TabsTrigger>
+                  <TabsTrigger value="europe">Europe</TabsTrigger>
+                  <TabsTrigger value="oceania">Oceania</TabsTrigger>
+                </TabsList>
+
+                {/* All Tab */}
+                <TabsContent value="all" className="space-y-1 mt-4">
+                  {filteredCountries.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No countries found. Add countries in your coverage settings first.
                     </div>
-                  </div>
-                ))
-              )}
+                  ) : (
+                    filteredCountries.map(renderCountryRow)
+                  )}
+                </TabsContent>
+
+                {/* Africa Tab */}
+                <TabsContent value="africa" className="space-y-1 mt-4">
+                  {countriesByRegion.africa.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No African countries in your coverage.
+                    </div>
+                  ) : (
+                    countriesByRegion.africa.map(renderCountryRow)
+                  )}
+                </TabsContent>
+
+                {/* Americas Tab */}
+                <TabsContent value="americas" className="space-y-1 mt-4">
+                  {countriesByRegion.americas.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No American countries in your coverage.
+                    </div>
+                  ) : (
+                    countriesByRegion.americas.map(renderCountryRow)
+                  )}
+                </TabsContent>
+
+                {/* Asia Tab */}
+                <TabsContent value="asia" className="space-y-1 mt-4">
+                  {countriesByRegion.asia.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No Asian countries in your coverage.
+                    </div>
+                  ) : (
+                    countriesByRegion.asia.map(renderCountryRow)
+                  )}
+                </TabsContent>
+
+                {/* Europe Tab */}
+                <TabsContent value="europe" className="space-y-1 mt-4">
+                  {countriesByRegion.europe.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No European countries in your coverage.
+                    </div>
+                  ) : (
+                    countriesByRegion.europe.map(renderCountryRow)
+                  )}
+                </TabsContent>
+
+                {/* Oceania Tab */}
+                <TabsContent value="oceania" className="space-y-1 mt-4">
+                  {countriesByRegion.oceania.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No Oceania countries in your coverage.
+                    </div>
+                  ) : (
+                    countriesByRegion.oceania.map(renderCountryRow)
+                  )}
+                </TabsContent>
+              </Tabs>
             </TabsContent>
 
             <TabsContent value="cities" className="space-y-1 mt-4">
@@ -272,23 +349,21 @@ export default function ServiceAvailability() {
                 filteredCities.map((city) => (
                   <div key={city.id} className="border rounded-md p-3 hover:bg-accent/30 transition-colors">
                     <div className="grid grid-cols-[180px_1fr_1fr_1fr] gap-4 items-center">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="font-mono text-xs">{city.countryCode}</Badge>
-                        <span className="text-sm font-medium truncate" title={`${city.cityName}${city.state ? ', ' + city.state : ''}`}>
-                          {city.cityName}{city.state && <span className="text-xs text-muted-foreground ml-1">({city.state})</span>}
-                        </span>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">{city.cityName}</span>
+                        <span className="text-xs text-muted-foreground">{city.countryCode}</span>
                       </div>
-                        {RATE_SERVICE_TYPES.map((service) => {
-                          const key = `city-${city.id}-${service.value}`;
-                          const isExcluded = localExclusions.has(key);
-                          return (
-                            <div key={service.value} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={key}
-                                checked={!isExcluded}
-                                onCheckedChange={() => handleToggleExclusion(key)}
-                                className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
-                              />
+                      {RATE_SERVICE_TYPES.map((service) => {
+                        const key = `city-${city.id}-${service.value}`;
+                        const isExcluded = localExclusions.has(key);
+                        return (
+                          <div key={service.value} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={key}
+                              checked={!isExcluded}
+                              onCheckedChange={() => handleToggleExclusion(key)}
+                              className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
+                            />
                             <Label
                               htmlFor={key}
                               className="text-sm font-normal cursor-pointer"

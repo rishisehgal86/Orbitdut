@@ -182,27 +182,8 @@ export async function linkUserToSupplier(userId: number, supplierId: number, rol
 
 /**
  * Supplier Rates Functions
+ * Note: Rate functions have been moved to server/rates.ts
  */
-
-// OLD: Rate functions moved to server/rates.ts
-// export async function getSupplierRates(supplierId: number) {
-//   const db = await getDb();
-//   if (!db) return [];
-//   
-//   return await db.select().from(supplierRates).where(eq(supplierRates.supplierId, supplierId));
-// }
-
-// export async function upsertSupplierRate(rate: InsertSupplierRate) {
-//   const db = await getDb();
-//   if (!db) throw new Error("Database not available");
-//   
-//   await db.insert(supplierRates).values(rate).onDuplicateKeyUpdate({
-//     set: {
-//       hourlyRate: rate.hourlyRate,
-//       updatedAt: new Date(),
-//     },
-//   });
-// }
 
 /**
  * Supplier Coverage Functions

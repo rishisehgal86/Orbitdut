@@ -5,7 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Info } from "lucide-react";
+import { Link } from "wouter";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import SupplierLayout from "@/components/SupplierLayout";
 import { RATE_SERVICE_TYPES, RATE_RESPONSE_TIMES } from "@shared/rates";
 import { validateBaseRates } from "@shared/rateValidation";
@@ -50,6 +52,18 @@ export default function RateManagement() {
             Set your hourly rates in USD for each location, service type, and response time
           </p>
         </div>
+
+        {/* Service Availability Notice */}
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertDescription>
+            Rates are only shown for services you've marked as available. To manage which services you offer in each location, visit{" "}
+            <Link href="/supplier/coverage/availability" className="font-medium underline underline-offset-4 hover:text-primary">
+              Service Availability
+            </Link>
+            .
+          </AlertDescription>
+        </Alert>
 
         {/* Completion Tracker */}
         {stats && (
@@ -535,7 +549,7 @@ function ByLocationTab({ supplierId, onSuccess }: { supplierId: number; onSucces
       return {
         type: "city",
         id: city.id,
-        name: `${city.cityName}, ${city.stateProvince ? city.stateProvince + ", " : ""}${city.countryName}`,
+        name: `${city.cityName}, ${city.stateProvince ? city.stateProvince + ", " : ""}${city.countryCode}`,
         rates: cityRates,
       };
     });

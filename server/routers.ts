@@ -318,8 +318,32 @@ export const appRouter = router({
         })
       )
       .mutation(async ({ input }) => {
-        const { bulkAddServiceExclusions } = await import("./serviceExclusions");
+        const { bulkAddServiceExclusions, syncRatesWithAvailability } = await import("./serviceExclusions");
         await bulkAddServiceExclusions(input.exclusions);
+        
+        // Sync rates: mark excluded services as unavailable (isServiceable = 0)
+        for (const exclusion of input.exclusions) {
+          await syncRatesWithAvailability(
+            exclusion.supplierId,
+            { countryCode: exclusion.countryCode, cityId: exclusion.cityId },
+            exclusion.serviceType,
+            false // not available
+          );
+        }
+        
+        return { success: true };
+      }),
+
+    // Bulk sync all rates with current service availability
+    bulkSyncRatesWithAvailability: protectedProcedure
+      .input(
+        z.object({
+          supplierId: z.number(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { bulkSyncAllRatesWithAvailability } = await import("./serviceExclusions");
+        await bulkSyncAllRatesWithAvailability(input.supplierId);
         return { success: true };
       }),
 
@@ -334,27 +358,24 @@ export const appRouter = router({
         })
       )
       .mutation(async ({ input }) => {
-        const { bulkRemoveServiceExclusions } = await import("./serviceExclusions");
+        const { bulkRemoveServiceExclusions, syncRatesWithAvailability } = await import("./serviceExclusions");
         const { supplierId, ...filters } = input;
         await bulkRemoveServiceExclusions(supplierId, filters);
+        
+        // Sync rates: mark re-enabled services as available (isServiceable = 1)
+        if (filters.countryCode && filters.serviceType) {
+          await syncRatesWithAvailability(
+            supplierId,
+            { countryCode: filters.countryCode, cityId: filters.cityId },
+            filters.serviceType,
+            true // now available
+          );
+        }
+        
         return { success: true };
       }),
 
-    // OLD: Upsert supplier rate (deprecated - replaced by new rate management system)
-    // upsertRate: protectedProcedure
-    //   .input(
-    //     z.object({
-    //       supplierId: z.number(),
-    //       country: z.string().length(2),
-    //       hourlyRate: z.number().min(0),
-    //       currency: z.string().length(3),
-    //     })
-    //   )
-    //   .mutation(async ({ input }) => {
-    //     const { upsertSupplierRate } = await import("./db");
-    //     await upsertSupplierRate(input);
-    //     return { success: true };
-    //   }),
+    // Note: Old upsertRate procedure removed - replaced by new rate management system in server/rates.ts
 
     // Tier 1: Country Coverage
     getCountries: protectedProcedure
@@ -447,31 +468,7 @@ export const appRouter = router({
   }),
 
   jobs: router({
-    // Calculate price for a job request
-    // OLD: calculatePrice (temporarily disabled - depends on old pricing.ts)
-    // calculatePrice: publicProcedure
-    //   .input(
-    //     z.object({
-    //       country: z.string().length(2),
-    //       latitude: z.string(),
-    //       longitude: z.string(),
-    //       scheduledStart: z.string(),
-    //       estimatedDuration: z.number().min(120, "Duration must be at least 2 hours (120 minutes)").max(960, "Duration must not exceed 16 hours (960 minutes)"),
-    //     })
-    //   )
-    //   .mutation(async ({ input }) => {
-    //     const { calculateJobPrice } = await import("./pricing");
-    //     const pricing = await calculateJobPrice({
-    //       ...input,
-    //       scheduledStart: new Date(input.scheduledStart),
-    //     });
-
-    //     if (!pricing) {
-    //       throw new Error("No suppliers available for this location");
-    //     }
-
-    //     return pricing;
-    //   }),
+    // Note: Old calculatePrice procedure removed - pricing logic needs to be reimplemented
 
     // Create a new job request
     create: publicProcedure

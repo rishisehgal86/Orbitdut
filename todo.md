@@ -522,3 +522,23 @@
 - [x] Backend logic remains unchanged (still stores exclusions, but UI presents as availability)
 - [x] Test that checkbox states work correctly with new logic
 - [x] Verify data persistence with flipped logic
+
+## Integrate Service Availability with Rates System
+- [x] Analyze current service availability and rates data flow (isServiceable field exists but unused)
+- [x] Implement sync logic: when service availability changes, update supplierRates.isServiceable field
+- [x] Add syncServiceAvailabilityToRates and syncServiceExclusionToRates functions in serviceExclusions.ts
+- [x] Update bulkAddServiceExclusions to call syncServiceExclusionToRates (sets isServiceable = 0)
+- [x] Update bulkRemoveServiceExclusions to call syncServiceAvailabilityToRates (sets isServiceable = 1)
+- [x] Add bulkSyncAllRatesWithAvailability procedure for fixing existing data inconsistencies
+- [x] Update getSupplierRates query to filter WHERE isServiceable = 1 OR isServiceable IS NULL
+- [x] Add info banner to Rate Management page explaining service availability connection
+- [x] Add link from Rate Management to Service Availability page
+- [x] Test that info banner displays correctly with proper messaging
+- [x] Verify sync logic updates isServiceable when availability changes
+
+## Service Availability Page - Add Region Filter
+- [x] Add region filter tabs to Countries section (All, Africa, Americas, Asia, Europe, Oceania)
+- [x] Update countries query to include region field
+- [x] Implement region filtering logic in frontend
+- [x] Test region filter with all 196 countries
+- [x] Verify service checkboxes work correctly after filtering

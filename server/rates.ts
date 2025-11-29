@@ -85,10 +85,21 @@ export async function bulkUpsertRates(rates: RateInput[]): Promise<void> {
 export async function getSupplierRates(supplierId: number): Promise<SupplierRate[]> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
+  const { or } = await import("drizzle-orm");
+  
+  // Only return rates where service is available (isServiceable = 1 or null for legacy data)
   return await db
     .select()
     .from(supplierRates)
-    .where(eq(supplierRates.supplierId, supplierId));
+    .where(
+      and(
+        eq(supplierRates.supplierId, supplierId),
+        or(
+          eq(supplierRates.isServiceable, 1),
+          isNull(supplierRates.isServiceable)
+        )
+      )
+    );
 }
 
 /**
