@@ -416,3 +416,21 @@
 - [x] Add submenu rendering in navigation (indented, smaller text)
 - [x] Fix stats API response structure in CurrentRates
 - [x] Test both pages with real data
+
+## Service Exclusion System
+- [x] Design service exclusion architecture (coverage-level + bulk actions)
+- [x] Update database schema to add supplierServiceExclusions table
+- [x] Add isServiceable field to supplierRates (null=missing, 0=not_offered, 1=active)
+- [x] Create backend API for service exclusions CRUD (server/serviceExclusions.ts)
+- [x] Add tenant isolation to all service exclusion operations
+- [ ] Add tRPC procedures for service exclusions
+- [ ] Add "Service Exclusions" section to Coverage page
+- [ ] Allow excluding service types per country (e.g., "No Smart Hands in Algeria")
+- [ ] Allow excluding service types per city (e.g., "No L1 Network in New York")
+- [ ] Add bulk "Mark as Not Offered" button in Rate Management By Location tab
+- [ ] Add "Mark Region as Not Offered" option in Quick Setup tab
+- [ ] Update getRates API to filter out excluded service/location combinations
+- [ ] Update progress tracking to exclude non-serviceable rates from completion %
+- [ ] Add visual distinction: Missing (amber) vs Not Offered (gray) vs Configured (green)
+- [ ] Show "X rates opted out" stat in progress card
+- [ ] Test service exclusions with various combinations

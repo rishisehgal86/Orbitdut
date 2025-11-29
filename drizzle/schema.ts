@@ -90,6 +90,9 @@ export const supplierRates = mysqlTable("supplierRates", {
   // Rate in USD cents (nullable - allows opt-out)
   rateUsdCents: int("rateUsdCents"),
   
+  // Service status: null = not configured, 0 = not offered (opted out), 1 = active
+  isServiceable: int("isServiceable", { unsigned: true }),
+  
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, (table) => ({
@@ -254,3 +257,34 @@ export const reviews = mysqlTable("reviews", {
 
 export type Review = typeof reviews.$inferSelect;
 export type InsertReview = typeof reviews.$inferInsert;
+
+/**
+ * Supplier service exclusions - allows suppliers to mark specific service/location combinations as non-serviceable
+ * This is a coverage-level exclusion that prevents rates from being required for excluded combinations
+ */
+export const supplierServiceExclusions = mysqlTable("supplierServiceExclusions", {
+  id: int("id").autoincrement().primaryKey(),
+  supplierId: int("supplierId").notNull().references(() => suppliers.id, { onDelete: "cascade" }),
+  
+  // Location: Country OR Priority City (mutually exclusive)
+  countryCode: varchar("countryCode", { length: 2 }), // ISO 3166-1 alpha-2 (null if cityId is set)
+  cityId: int("cityId").references(() => supplierPriorityCities.id, { onDelete: "cascade" }), // References supplierPriorityCities (null if countryCode is set)
+  
+  // Service Type: L1_EUC, L1_NETWORK, SMART_HANDS
+  serviceType: varchar("serviceType", { length: 50 }).notNull(),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => ({
+  // Index for tenant isolation queries
+  supplierIdIdx: index("supplierServiceExclusions_supplierId_idx").on(table.supplierId),
+  // Composite unique constraint: prevent duplicate exclusions
+  uniqueExclusion: index("supplierServiceExclusions_unique").on(
+    table.supplierId,
+    table.countryCode,
+    table.cityId,
+    table.serviceType
+  ),
+}));
+
+export type SupplierServiceExclusion = typeof supplierServiceExclusions.$inferSelect;
+export type InsertSupplierServiceExclusion = typeof supplierServiceExclusions.$inferInsert;
