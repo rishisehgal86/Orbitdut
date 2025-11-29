@@ -547,7 +547,7 @@
 - [x] Fetch service exclusions in By Location tab
 - [x] Disable rate input fields for excluded service/location combinations
 - [x] Add grey styling and "Not Offered" tooltip for disabled inputs
-- [ ] Update By Service tab (when built) to also respect exclusions
+- [x] Update By Service tab (when built) to also respect exclusions
 - [x] Test with various exclusion scenarios (cities only, countries only, mixed)
 
 ## Fix Service Availability Save Error
