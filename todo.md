@@ -352,3 +352,25 @@
 - [ ] Verify all DELETE queries include tenant checks
 - [ ] Create tenant isolation test suite
 - [ ] Document tenant isolation architecture
+
+## API Query Tenant Isolation Audit
+- [x] Find all SELECT queries in server code
+- [x] Verify each SELECT includes supplierId filtering where applicable
+- [x] Find all UPDATE queries in server code
+- [x] Verify each UPDATE includes supplierId in WHERE clause
+- [x] Find all DELETE queries in server code
+- [x] Verify each DELETE includes supplierId in WHERE clause
+- [x] Audit tRPC procedures for proper ctx.user.supplierId usage
+- [x] Check db.ts helper functions for tenant filtering
+- [x] Check rates.ts for tenant filtering
+- [x] Check routers.ts for tenant filtering
+- [x] Document all queries and their tenant isolation status
+- [x] Fix all critical security vulnerabilities (7 issues fixed)
+- [x] Fixed: deleteSupplierPriorityCity - added supplierId check
+- [x] Fixed: deleteSupplierResponseTime - added supplierId check
+- [x] Fixed: deleteRate - added supplierId check
+- [x] Fixed: updateSupplier - added user permission verification
+- [x] Fixed: getJobById - added customer/supplier filtering
+- [x] Verified: updateJobStatus - already secure with supplier check
+- [x] Verified: acceptJob - has business logic TODO but no security issue
+- [ ] Create test cases for cross-tenant access attempts

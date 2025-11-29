@@ -192,8 +192,13 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
 /**
  * Delete a rate
  */
-export async function deleteRate(rateId: number): Promise<void> {
+export async function deleteRate(rateId: number, supplierId: number): Promise<void> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.delete(supplierRates).where(eq(supplierRates.id, rateId));
+  await db.delete(supplierRates).where(
+    and(
+      eq(supplierRates.id, rateId),
+      eq(supplierRates.supplierId, supplierId)
+    )
+  );
 }

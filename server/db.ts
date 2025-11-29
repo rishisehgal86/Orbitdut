@@ -146,9 +146,25 @@ export async function getSupplierByUserId(userId: number) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-export async function updateSupplier(id: number, data: Partial<InsertSupplier>) {
+export async function updateSupplier(id: number, userId: number, data: Partial<Supplier>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
+  
+  // Verify the user belongs to this supplier
+  const supplierUser = await db
+    .select()
+    .from(supplierUsers)
+    .where(
+      and(
+        eq(supplierUsers.supplierId, id),
+        eq(supplierUsers.userId, userId)
+      )
+    )
+    .limit(1);
+  
+  if (supplierUser.length === 0) {
+    throw new Error("Unauthorized: You do not have permission to update this supplier");
+  }
   
   await db.update(suppliers).set(data).where(eq(suppliers.id, id));
 }
@@ -251,10 +267,15 @@ export async function addSupplierPriorityCity(city: Omit<InsertSupplierPriorityC
   await db.insert(supplierPriorityCities).values(cityData);
 }
 
-export async function deleteSupplierPriorityCity(id: number) {
+export async function deleteSupplierPriorityCity(id: number, supplierId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.delete(supplierPriorityCities).where(eq(supplierPriorityCities.id, id));
+  await db.delete(supplierPriorityCities).where(
+    and(
+      eq(supplierPriorityCities.id, id),
+      eq(supplierPriorityCities.supplierId, supplierId)
+    )
+  );
 }
 
 // Tier 4: Response Times
@@ -300,8 +321,13 @@ export async function upsertSupplierResponseTime(responseTime: InsertSupplierRes
   }
 }
 
-export async function deleteSupplierResponseTime(id: number) {
+export async function deleteSupplierResponseTime(id: number, supplierId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.delete(supplierResponseTimes).where(eq(supplierResponseTimes.id, id));
+  await db.delete(supplierResponseTimes).where(
+    and(
+      eq(supplierResponseTimes.id, id),
+      eq(supplierResponseTimes.supplierId, supplierId)
+    )
+  );
 }

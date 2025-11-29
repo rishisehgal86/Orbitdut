@@ -453,17 +453,38 @@ export const appRouter = router({
         return { success: true, jobId };
       }),
 
-    // Get job by ID
-    getById: publicProcedure
+    // Get job by ID (only if user is customer or assigned supplier)
+    getById: protectedProcedure
       .input(z.object({ id: z.number() }))
-      .query(async ({ input }) => {
-        const { getDb } = await import("./db");
+      .query(async ({ input, ctx }) => {
+        const { getDb, getSupplierByUserId } = await import("./db");
         const { jobs } = await import("../drizzle/schema");
-        const { eq } = await import("drizzle-orm");
+        const { eq, or, and } = await import("drizzle-orm");
         const db = await getDb();
         if (!db) return null;
 
-        const result = await db.select().from(jobs).where(eq(jobs.id, input.id)).limit(1);
+        // Get supplier if user is a supplier
+        const supplier = await getSupplierByUserId(ctx.user.id);
+        
+        // User can only see jobs they created or jobs assigned to their supplier
+        const conditions = [
+          eq(jobs.customerId, ctx.user.id), // User is the customer
+        ];
+        
+        if (supplier) {
+          conditions.push(eq(jobs.assignedSupplierId, supplier.supplier.id)); // User's supplier is assigned
+        }
+
+        const result = await db
+          .select()
+          .from(jobs)
+          .where(
+            and(
+              eq(jobs.id, input.id),
+              or(...conditions)
+            )
+          )
+          .limit(1);
         return result.length > 0 ? result[0] : null;
       }),
 
