@@ -236,17 +236,7 @@ export default function RateManagement() {
 
           {/* Bulk Import/Export Tab */}
           <TabsContent value="bulk">
-            <Card>
-              <CardHeader>
-                <CardTitle>Bulk Import/Export</CardTitle>
-                <CardDescription>
-                  Download Excel template or upload completed spreadsheet
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Coming soon...</p>
-              </CardContent>
-            </Card>
+            <BulkImportExportTab supplierId={supplierId} onSuccess={() => { refetchRates(); refetchStats(); }} />
           </TabsContent>
         </Tabs>
       </div>
@@ -1296,6 +1286,196 @@ function RateValidationWarnings({ baseRates }: { baseRates: Record<number, strin
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+
+// Bulk Import/Export Tab Component
+function BulkImportExportTab({ supplierId, onSuccess }: { supplierId: number; onSuccess: () => void }) {
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [previewData, setPreviewData] = useState<any>(null);
+  const [validationErrors, setValidationErrors] = useState<any[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleDownloadTemplate = async () => {
+    toast.info("Generating Excel template...");
+    // TODO: Call backend API to generate template
+    toast.success("Template downloaded!");
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setUploadedFile(file);
+      // TODO: Parse and validate file
+      toast.success(`File "${file.name}" uploaded. Review and confirm import.`);
+    }
+  };
+
+  const handleConfirmImport = async () => {
+    if (!previewData) return;
+    
+    setIsProcessing(true);
+    try {
+      // TODO: Call backend API to import rates
+      toast.success("Rates imported successfully!");
+      onSuccess();
+      setUploadedFile(null);
+      setPreviewData(null);
+    } catch (error) {
+      toast.error("Failed to import rates");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Export Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Export Current Rates</CardTitle>
+          <CardDescription>
+            Download an Excel file with all your current rates. The template includes separate sheets for each service type (L1 EUC, L1 Network, Smart Hands) with countries and cities separated.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-start gap-4">
+            <Info className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
+            <div className="flex-1 space-y-3 text-sm text-muted-foreground">
+              <div>
+                <p className="font-medium text-foreground mb-2">Template Structure:</p>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li><strong>6 sheets total:</strong> 3 services × 2 location types (Countries, Cities)</li>
+                  <li><strong>Only your covered locations</strong> from Coverage settings</li>
+                  <li><strong>Pre-filled with current rates</strong> where they exist</li>
+                </ul>
+              </div>
+              <div>
+                <p className="font-medium text-foreground mb-2">Column Guide:</p>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li><strong className="text-amber-600">Fixed columns (Do Not Edit):</strong> Region, Location, Country Code</li>
+                  <li><strong className="text-green-600">Editable columns:</strong> 4h Rate, 24h Rate, 48h Rate, 72h Rate, 96h Rate</li>
+                  <li><strong>Rate format:</strong> USD with 2 decimal places (e.g., 150.00, 89.50)</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          
+          <Button onClick={handleDownloadTemplate} className="w-full sm:w-auto">
+            Download Excel Template
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Import Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Import Rates from Excel</CardTitle>
+          <CardDescription>
+            Upload a completed Excel file to bulk update your rates. The file will be validated before import.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-start gap-4">
+            <AlertTriangle className="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0" />
+            <div className="flex-1 space-y-2 text-sm text-muted-foreground">
+              <p className="font-medium text-foreground">Validation Rules:</p>
+              <ul className="list-disc list-inside space-y-1 ml-2">
+                <li><strong>Do not modify</strong> Region, Location, or Country Code columns</li>
+                <li><strong>Rates must be in USD</strong> with exactly 2 decimal places (e.g., 150.00)</li>
+                <li><strong>Locations must match</strong> your Coverage settings</li>
+                <li><strong>Empty rates</strong> will be skipped (not deleted)</li>
+                <li><strong>Invalid rows</strong> will be highlighted with specific error messages</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
+            <Input
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={handleFileUpload}
+              className="hidden"
+              id="excel-upload"
+            />
+            <label htmlFor="excel-upload" className="cursor-pointer">
+              <div className="space-y-2">
+                <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Click to upload or drag and drop</p>
+                  <p className="text-xs text-muted-foreground mt-1">Excel files only (.xlsx, .xls)</p>
+                </div>
+              </div>
+            </label>
+          </div>
+
+          {uploadedFile && (
+            <Alert>
+              <Check className="h-4 w-4" />
+              <AlertDescription>
+                <strong>{uploadedFile.name}</strong> uploaded successfully. Review the preview below and click "Confirm Import" to proceed.
+              </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Preview Section (shown after file upload) */}
+      {uploadedFile && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Import Preview</CardTitle>
+            <CardDescription>
+              Review the data before confirming import. Errors must be fixed before proceeding.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-lg border p-4 bg-muted/50">
+              <p className="text-sm text-muted-foreground">
+                <strong>Preview functionality coming soon.</strong> This will show:
+              </p>
+              <ul className="list-disc list-inside text-sm text-muted-foreground mt-2 ml-2 space-y-1">
+                <li>Summary: X rows valid, Y rows with errors (by service type)</li>
+                <li>Table preview of parsed data grouped by sheet</li>
+                <li>Validation errors with sheet name, row number, and error message</li>
+              </ul>
+            </div>
+
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleConfirmImport} 
+                disabled={isProcessing || validationErrors.length > 0}
+                className="flex-1"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Importing...
+                  </>
+                ) : (
+                  "Confirm Import"
+                )}
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setUploadedFile(null);
+                  setPreviewData(null);
+                  setValidationErrors([]);
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

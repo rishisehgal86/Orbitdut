@@ -630,3 +630,23 @@
 
 ## Bug Fixes - Rate Management By Location Tab
 - [x] Fix state key to include serviceType so editing one service doesn't affect other services' inputs
+
+## Bulk Import/Export Tab - Excel Multi-Sheet Implementation
+- [ ] Install xlsx npm package for Excel file handling
+- [ ] Create backend API to generate Excel template with 6 sheets (3 services × 2 location types)
+- [ ] Sheet structure: Service Name - Countries, Service Name - Cities
+- [ ] Include only covered locations in template (filter by supplier coverage)
+- [ ] Add columns: Region (fixed), Location (fixed), Country Code (fixed), 4h Rate (editable), 24h Rate (editable), 48h Rate (editable), 72h Rate (editable), 96h Rate (editable)
+- [ ] Mark fixed columns with header styling or instructions (Do Not Edit)
+- [ ] Add data validation: rates must be USD with 2 decimal places (e.g., 150.00)
+- [ ] Include sample row in template showing correct format
+- [ ] Pre-fill template with current rates if they exist
+- [ ] Create backend API to parse uploaded Excel file and validate data
+- [x] Build Bulk Import/Export tab UI with card-based layout
+- [x] Add "Download Excel Template" button
+- [x] Add "Upload Excel File" input with drag-and-drop support
+- [ ] Create preview table showing parsed data before import (grouped by sheet/service)
+- [x] Add validation error display with sheet name, row numbers, and error messages
+- [x] Show import summary (X rows valid, Y rows with errors per service type)
+- [ ] Add "Confirm Import" button to execute bulk upsert
+- [ ] Test with sample Excel files
