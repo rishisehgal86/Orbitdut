@@ -717,3 +717,9 @@
 - [x] Reduce padding and margins between filter groups (space-y-3 → space-y-1.5)
 - [x] Reduce checkbox and label sizes (text-sm → text-xs, smaller checkboxes)
 - [x] Update section headers to uppercase text-xs for better hierarchy
+
+## Bug Fix - Rate Management Drag and Drop
+- [x] Fix drag-and-drop file upload functionality on Rate Management page
+- [x] Ensure drag events (dragover, drop) are properly handled
+- [x] Added onDragOver and onDrop handlers to upload div
+- [x] Test file drop with Excel files (.xlsx, .xls)

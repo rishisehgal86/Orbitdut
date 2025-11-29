@@ -1474,7 +1474,27 @@ function BulkImportExportTab({ supplierId, onSuccess }: { supplierId: number; on
             </div>
           </div>
 
-          <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
+          <div 
+            className="border-2 border-dashed border-border rounded-lg p-8 text-center"
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const files = e.dataTransfer.files;
+              if (files && files.length > 0) {
+                const file = files[0];
+                if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+                  const fakeEvent = {
+                    target: { files: [file] }
+                  } as any;
+                  handleFileUpload(fakeEvent);
+                }
+              }
+            }}
+          >
             <Input
               type="file"
               accept=".xlsx,.xls"
