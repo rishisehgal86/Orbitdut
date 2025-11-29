@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, Fragment } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ type ResponseTime = typeof RESPONSE_TIME_HOURS[number];
 
 interface FilterState {
   serviceTypes: ServiceType[];
+  locationTypes: string[];
   regions: string[];
   responseTimes: ResponseTime[];
   statuses: string[];
@@ -25,6 +26,7 @@ export default function CurrentRates() {
   const [expandedLocations, setExpandedLocations] = useState<Set<string>>(new Set());
   const [filters, setFilters] = useState<FilterState>({
     serviceTypes: RATE_SERVICE_TYPES.map(s => s.value),
+    locationTypes: ["countries", "cities"],
     regions: ["africa", "americas", "asia", "europe", "oceania", "cities"],
     responseTimes: [...RESPONSE_TIME_HOURS],
     statuses: ["configured", "missing"],
@@ -78,7 +80,7 @@ export default function CurrentRates() {
     const locs: any[] = [];
 
     // Add countries
-    if (countries) {
+    if (countries && filters.locationTypes.includes("countries")) {
       countries.forEach((country) => {
         if (filters.regions.includes(country.region.toLowerCase())) {
           locs.push({
@@ -93,7 +95,7 @@ export default function CurrentRates() {
     }
 
     // Add cities
-    if (cities && filters.regions.includes("cities")) {
+    if (cities && filters.locationTypes.includes("cities") && filters.regions.includes("cities")) {
       cities.forEach((city) => {
         locs.push({
           type: "city",
@@ -106,7 +108,7 @@ export default function CurrentRates() {
     }
 
     return locs;
-  }, [countries, cities, filters.regions]);
+  }, [countries, cities, filters.regions, filters.locationTypes]);
 
   // Filter locations by search
   const filteredLocations = useMemo(() => {
@@ -275,20 +277,21 @@ export default function CurrentRates() {
             </div>
 
             {/* Filter Sections */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Service Types */}
-              <div className="space-y-3">
-                <Label className="text-sm font-medium">Service Types</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Service Types</Label>
                 {RATE_SERVICE_TYPES.map((service) => (
-                  <div key={service.value} className="flex items-center space-x-2">
+                  <div key={service.value} className="flex items-center space-x-1.5">
                     <Checkbox
                       id={`service-${service.value}`}
                       checked={filters.serviceTypes.includes(service.value)}
                       onCheckedChange={() => toggleFilter("serviceTypes", service.value)}
+                      className="h-3.5 w-3.5"
                     />
                     <label
                       htmlFor={`service-${service.value}`}
-                      className="text-sm cursor-pointer"
+                      className="text-xs cursor-pointer leading-none"
                     >
                       {service.label}
                     </label>
@@ -296,9 +299,33 @@ export default function CurrentRates() {
                 ))}
               </div>
 
+              {/* Location Types */}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Location Types</Label>
+                {[
+                  { value: "countries", label: "Countries" },
+                  { value: "cities", label: "Cities" },
+                ].map((locType) => (
+                  <div key={locType.value} className="flex items-center space-x-1.5">
+                    <Checkbox
+                      id={`loctype-${locType.value}`}
+                      checked={filters.locationTypes.includes(locType.value)}
+                      onCheckedChange={() => toggleFilter("locationTypes", locType.value)}
+                      className="h-3.5 w-3.5"
+                    />
+                    <label
+                      htmlFor={`loctype-${locType.value}`}
+                      className="text-xs cursor-pointer leading-none"
+                    >
+                      {locType.label}
+                    </label>
+                  </div>
+                ))}
+              </div>
+
               {/* Regions */}
-              <div className="space-y-3">
-                <Label className="text-sm font-medium">Regions</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Regions</Label>
                 {[
                   { value: "africa", label: "Africa" },
                   { value: "americas", label: "Americas" },
@@ -307,15 +334,16 @@ export default function CurrentRates() {
                   { value: "oceania", label: "Oceania" },
                   { value: "cities", label: "Cities" },
                 ].map((region) => (
-                  <div key={region.value} className="flex items-center space-x-2">
+                  <div key={region.value} className="flex items-center space-x-1.5">
                     <Checkbox
                       id={`region-${region.value}`}
                       checked={filters.regions.includes(region.value)}
                       onCheckedChange={() => toggleFilter("regions", region.value)}
+                      className="h-3.5 w-3.5"
                     />
                     <label
                       htmlFor={`region-${region.value}`}
-                      className="text-sm cursor-pointer"
+                      className="text-xs cursor-pointer leading-none"
                     >
                       {region.label}
                     </label>
@@ -324,16 +352,17 @@ export default function CurrentRates() {
               </div>
 
               {/* Response Times */}
-              <div className="space-y-3">
-                <Label className="text-sm font-medium">Response Times</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Response Times</Label>
                 {RESPONSE_TIME_HOURS.map((rt) => (
-                  <div key={rt} className="flex items-center space-x-2">
+                  <div key={rt} className="flex items-center space-x-1.5">
                     <Checkbox
                       id={`rt-${rt}`}
                       checked={filters.responseTimes.includes(rt)}
                       onCheckedChange={() => toggleFilter("responseTimes", rt)}
+                      className="h-3.5 w-3.5"
                     />
-                    <label htmlFor={`rt-${rt}`} className="text-sm cursor-pointer">
+                    <label htmlFor={`rt-${rt}`} className="text-xs cursor-pointer leading-none">
                       {rt}h
                     </label>
                   </div>
@@ -341,22 +370,23 @@ export default function CurrentRates() {
               </div>
 
               {/* Status */}
-              <div className="space-y-3">
-                <Label className="text-sm font-medium">Status</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Status</Label>
                 {[
                   { value: "configured", label: "Configured" },
                   { value: "partial", label: "Partially Configured" },
                   { value: "missing", label: "Missing" },
                 ].map((status) => (
-                  <div key={status.value} className="flex items-center space-x-2">
+                  <div key={status.value} className="flex items-center space-x-1.5">
                     <Checkbox
                       id={`status-${status.value}`}
                       checked={filters.statuses.includes(status.value)}
                       onCheckedChange={() => toggleFilter("statuses", status.value)}
+                      className="h-3.5 w-3.5"
                     />
                     <label
                       htmlFor={`status-${status.value}`}
-                      className="text-sm cursor-pointer"
+                      className="text-xs cursor-pointer leading-none"
                     >
                       {status.label}
                     </label>
@@ -395,93 +425,94 @@ export default function CurrentRates() {
                         const isExpanded = expandedLocations.has(locationKey);
 
                         return (
-                          <tr key={locationKey} className="border-t hover:bg-muted/50">
-                            <td className="p-3">
-                              <button
-                                onClick={() => toggleExpanded(locationKey)}
-                                className="flex items-center gap-2 text-left w-full hover:text-primary"
-                              >
-                                {isExpanded ? (
-                                  <ChevronDown className="h-4 w-4" />
-                                ) : (
-                                  <ChevronRight className="h-4 w-4" />
-                                )}
-                                <span className="font-medium">{location.name}</span>
-                              </button>
-
-                              {/* Expanded Response Time Details */}
-                              {isExpanded && (
-                                <div className="ml-6 mt-2 space-y-1">
-                                  {filters.responseTimes.map((rt) => (
-                                    <div key={rt} className="text-sm text-muted-foreground">
-                                      {rt}h
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </td>
-
-                            {filters.serviceTypes.map((serviceType) => {
-                              const serviceExcluded = isServiceExcluded(location, serviceType);
-                              const status = getLocationServiceStatus(location, serviceType);
-
-                              return (
-                                <td key={serviceType} className="p-3">
-                                  {serviceExcluded ? (
-                                    <Badge
-                                      variant="outline"
-                                      className="bg-red-50 text-red-700 border-red-200"
-                                    >
-                                      Service Excluded
-                                    </Badge>
-                                  ) : !isExpanded ? (
-                                    <Badge
-                                      variant={
-                                        status === "configured"
-                                          ? "default"
-                                          : status === "partial"
-                                          ? "secondary"
-                                          : "outline"
-                                      }
-                                      className={
-                                        status === "configured"
-                                          ? "bg-green-100 text-green-800 border-green-200"
-                                          : status === "partial"
-                                          ? "bg-amber-100 text-amber-800 border-amber-200"
-                                          : "bg-gray-100 text-gray-600 border-gray-200"
-                                      }
-                                    >
-                                      {status === "configured"
-                                        ? "Configured"
-                                        : status === "partial"
-                                        ? "Partial"
-                                        : "Missing"}
-                                    </Badge>
+                          <>
+                            {/* Main location row */}
+                            <tr key={locationKey} className="border-t hover:bg-muted/50">
+                              <td className="p-3">
+                                <button
+                                  onClick={() => toggleExpanded(locationKey)}
+                                  className="flex items-center gap-2 text-left w-full hover:text-primary"
+                                >
+                                  {isExpanded ? (
+                                    <ChevronDown className="h-4 w-4" />
                                   ) : (
-                                    <div className="space-y-1">
-                                      {filters.responseTimes.map((rt) => {
-                                        const rtExcluded = isResponseTimeExcluded(location, serviceType, rt);
-                                        const rate = getRate(location, serviceType, rt);
-                                        return (
-                                          <div key={rt} className="text-sm">
-                                            {rtExcluded ? (
-                                              <span className="text-muted-foreground text-xs">Excluded</span>
-                                            ) : rate && rate > 0 ? (
-                                              <span className="font-medium">
-                                                {formatCurrency(rate)}
-                                              </span>
-                                            ) : (
-                                              <span className="text-muted-foreground">—</span>
-                                            )}
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
+                                    <ChevronRight className="h-4 w-4" />
                                   )}
+                                  <span className="font-medium">{location.name}</span>
+                                </button>
+                              </td>
+
+                              {filters.serviceTypes.map((serviceType) => {
+                                const serviceExcluded = isServiceExcluded(location, serviceType);
+                                const status = getLocationServiceStatus(location, serviceType);
+
+                                return (
+                                  <td key={serviceType} className="p-3">
+                                    {serviceExcluded ? (
+                                      <Badge
+                                        variant="outline"
+                                        className="bg-red-50 text-red-700 border-red-200"
+                                      >
+                                        Service Excluded
+                                      </Badge>
+                                    ) : !isExpanded ? (
+                                      <Badge
+                                        variant={
+                                          status === "configured"
+                                            ? "default"
+                                            : status === "partial"
+                                            ? "secondary"
+                                            : "outline"
+                                        }
+                                        className={
+                                          status === "configured"
+                                            ? "bg-green-100 text-green-800 border-green-200"
+                                            : status === "partial"
+                                            ? "bg-amber-100 text-amber-800 border-amber-200"
+                                            : "bg-gray-100 text-gray-600 border-gray-200"
+                                        }
+                                      >
+                                        {status === "configured"
+                                          ? "Configured"
+                                          : status === "partial"
+                                          ? "Partial"
+                                          : "Missing"}
+                                      </Badge>
+                                    ) : null}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+
+                            {/* Expanded response time rows */}
+                            {isExpanded && filters.responseTimes.map((rt) => (
+                              <tr key={`${locationKey}-${rt}`} className="bg-muted/30">
+                                <td className="py-1.5 px-3 pl-12 text-sm text-muted-foreground">
+                                  {rt}h
                                 </td>
-                              );
-                            })}
-                          </tr>
+                                {filters.serviceTypes.map((serviceType) => {
+                                  const serviceExcluded = isServiceExcluded(location, serviceType);
+                                  const rtExcluded = isResponseTimeExcluded(location, serviceType, rt);
+                                  const rate = getRate(location, serviceType, rt);
+                                  return (
+                                    <td key={serviceType} className="py-1.5 px-3 text-sm">
+                                      {serviceExcluded ? (
+                                        <span className="text-muted-foreground text-xs">—</span>
+                                      ) : rtExcluded ? (
+                                        <span className="text-muted-foreground text-xs">Excluded</span>
+                                      ) : rate && rate > 0 ? (
+                                        <span className="font-medium">
+                                          {formatCurrency(rate)}
+                                        </span>
+                                      ) : (
+                                        <span className="text-muted-foreground">—</span>
+                                      )}
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                            ))}
+                          </>
                         );
                       })
                     )}

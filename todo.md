@@ -699,3 +699,21 @@
 - [x] Updated findRateColumns to use pattern: \b${responseTime}h\s+rate
 - [x] Verified all response times now map to correct columns
 - [x] Tested with Micronesia data: 4h=299, 24h=289, 48h=279, 72h=269, 96h=259
+
+## Bug Fixes - Current Rates Table Alignment
+- [x] Fix table alignment issue where response time labels (4h, 24h, etc.) appear in Location column
+- [x] Restructured expanded view to use separate table rows for each response time
+- [x] Each response time now has its own row with proper alignment across service columns
+- [x] Condensed spacing with reduced padding (py-1.5 instead of p-3) for better readability
+
+## Feature - Current Rates Location Filtering
+- [x] Add location type filter (Countries/Cities) to Current Rates page sidebar
+- [x] Allow users to toggle between showing countries only, cities only, or both
+- [x] Separate cities from countries list instead of showing mixed at the end
+
+## UI Improvement - Condense Filter Menu
+- [x] Reduce vertical spacing in filter sections on Current Rates page
+- [x] Use more compact grid layout for filter checkboxes (gap-6 → gap-4)
+- [x] Reduce padding and margins between filter groups (space-y-3 → space-y-1.5)
+- [x] Reduce checkbox and label sizes (text-sm → text-xs, smaller checkboxes)
+- [x] Update section headers to uppercase text-xs for better hierarchy
