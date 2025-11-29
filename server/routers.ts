@@ -276,6 +276,92 @@ export const appRouter = router({
         return await generateExcelTemplate(input.supplierId);
       }),
 
+    // Parse and validate uploaded Excel file
+    parseExcelFile: protectedProcedure
+      .input(z.object({ 
+        supplierId: z.number(),
+        fileData: z.string() // base64 encoded Excel file
+      }))
+      .mutation(async ({ input }) => {
+        const { parseExcelFile } = await import("./excelImport");
+        return await parseExcelFile(input.fileData);
+      }),
+
+    // Import rates from parsed Excel data
+    importRatesFromExcel: protectedProcedure
+      .input(z.object({
+        supplierId: z.number(),
+        rates: z.array(z.object({
+          serviceType: z.string(),
+          locationType: z.enum(["country", "city"]),
+          countryCode: z.string().optional(),
+          cityId: z.number().optional(),
+          cityName: z.string().optional(),
+          responseTimeHours: z.number(),
+          rateUsd: z.number(),
+          rowNumber: z.number(),
+        }))
+      }))
+      .mutation(async ({ input }) => {
+        const { bulkUpsertRates } = await import("./db");
+        const { dollarsToCents } = await import("../shared/rates");
+        const db = await import("./db").then(m => m.getDb());
+        
+        if (!db) {
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+        }
+
+        // Convert parsed rates to database format
+        const ratesToInsert = [];
+        
+        for (const rate of input.rates) {
+          // For city rates, look up cityId from supplier_priority_cities
+          let cityId = rate.cityId;
+          
+          if (rate.locationType === "city" && rate.cityName && rate.countryCode) {
+            const { supplierPriorityCities } = await import("../drizzle/schema");
+            const { eq, and } = await import("drizzle-orm");
+            
+            const city = await db
+              .select()
+              .from(supplierPriorityCities)
+              .where(
+                and(
+                  eq(supplierPriorityCities.supplierId, input.supplierId),
+                  eq(supplierPriorityCities.cityName, rate.cityName),
+                  eq(supplierPriorityCities.countryCode, rate.countryCode)
+                )
+              )
+              .limit(1);
+            
+            if (city.length === 0) {
+              // Skip rates for cities not in supplier's priority cities
+              continue;
+            }
+            
+            cityId = city[0].id;
+          }
+
+          ratesToInsert.push({
+            supplierId: input.supplierId,
+            serviceType: rate.serviceType,
+            responseTimeHours: rate.responseTimeHours,
+            countryCode: rate.locationType === "country" ? rate.countryCode : null,
+            cityId: rate.locationType === "city" ? cityId : null,
+            rateUsdCents: dollarsToCents(rate.rateUsd),
+          });
+        }
+
+        // Bulk upsert rates
+        await bulkUpsertRates(input.supplierId, ratesToInsert as any);
+        
+        return { 
+          success: true, 
+          imported: ratesToInsert.length,
+          skipped: input.rates.length - ratesToInsert.length 
+        };
+      }),
+
     // ========== SERVICE EXCLUSIONS ==========
     
     // Get all service exclusions for a supplier

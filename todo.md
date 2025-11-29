@@ -663,3 +663,13 @@
 - [x] Connect frontend download button to call the tRPC procedure
 - [x] Test download with actual supplier data
 - [x] Fix sheet names to comply with Excel 31-character limit
+
+## Bug Fixes - Bulk Import/Export
+- [x] Fix Confirm Import button not working - implement Excel file parsing and validation
+- [x] Create backend API to parse uploaded Excel file
+- [x] Implement rate import with validation and error handling
+- [x] Add parseExcelFile tRPC procedure to validate uploaded files
+- [x] Add importRatesFromExcel tRPC procedure to bulk import rates
+- [x] Update frontend to convert file to base64 and call parse API
+- [x] Display validation results and error messages in UI
+- [x] Connect Confirm Import button to import API

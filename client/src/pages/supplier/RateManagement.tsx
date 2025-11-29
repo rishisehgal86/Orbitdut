@@ -1335,27 +1335,74 @@ function BulkImportExportTab({ supplierId, onSuccess }: { supplierId: number; on
     }
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const parseFileMutation = trpc.supplier.parseExcelFile.useMutation();
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      setUploadedFile(file);
-      // TODO: Parse and validate file
-      toast.success(`File "${file.name}" uploaded. Review and confirm import.`);
+    if (!file) return;
+
+    setUploadedFile(file);
+    setIsProcessing(true);
+    
+    try {
+      // Convert file to base64
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => {
+          const result = reader.result as string;
+          // Remove data URL prefix (e.g., "data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,")
+          const base64 = result.split(',')[1];
+          resolve(base64);
+        };
+        reader.onerror = reject;
+      });
+      
+      reader.readAsDataURL(file);
+      const fileData = await base64Promise;
+      
+      // Parse and validate file
+      toast.info("Validating Excel file...");
+      const result = await parseFileMutation.mutateAsync({
+        supplierId,
+        fileData,
+      });
+      
+      setPreviewData(result);
+      setValidationErrors(result.errors || []);
+      
+      if (result.errors.length > 0) {
+        toast.warning(`File uploaded with ${result.errors.length} validation error(s). Review below.`);
+      } else {
+        toast.success(`File validated successfully! ${result.summary.validRows} rates ready to import.`);
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to parse Excel file");
+      setUploadedFile(null);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
+  const importRatesMutation = trpc.supplier.importRatesFromExcel.useMutation();
+
   const handleConfirmImport = async () => {
-    if (!previewData) return;
+    if (!previewData || !previewData.rates) return;
     
     setIsProcessing(true);
     try {
-      // TODO: Call backend API to import rates
-      toast.success("Rates imported successfully!");
+      toast.info("Importing rates...");
+      const result = await importRatesMutation.mutateAsync({
+        supplierId,
+        rates: previewData.rates,
+      });
+      
+      toast.success(`Successfully imported ${result.imported} rates!${result.skipped > 0 ? ` (${result.skipped} skipped)` : ''}`);
       onSuccess();
       setUploadedFile(null);
       setPreviewData(null);
-    } catch (error) {
-      toast.error("Failed to import rates");
+      setValidationErrors([]);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to import rates");
     } finally {
       setIsProcessing(false);
     }
