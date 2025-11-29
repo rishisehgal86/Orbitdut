@@ -673,3 +673,8 @@
 - [x] Update frontend to convert file to base64 and call parse API
 - [x] Display validation results and error messages in UI
 - [x] Connect Confirm Import button to import API
+
+## Bug Fixes - Import Functionality
+- [x] Fix bulkUpsertRates is not a function error
+- [x] Implement bulkUpsertRates function in db.ts to handle bulk rate insertions
+- [x] Test complete import workflow with real Excel file

@@ -312,3 +312,54 @@ export async function deleteSupplierResponseTime(id: number, supplierId: number)
     )
   );
 }
+
+/**
+ * Bulk upsert supplier rates
+ * Inserts new rates or updates existing ones based on supplierId, serviceType, responseTimeHours, and location
+ */
+export async function bulkUpsertRates(supplierId: number, rates: InsertSupplierRate[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  for (const rate of rates) {
+    // Build where conditions to find existing rate
+    const conditions = [
+      eq(supplierRates.supplierId, supplierId),
+      eq(supplierRates.serviceType, rate.serviceType),
+      eq(supplierRates.responseTimeHours, rate.responseTimeHours),
+    ];
+
+    // Add location-specific conditions
+    if (rate.countryCode) {
+      conditions.push(eq(supplierRates.countryCode, rate.countryCode));
+      conditions.push(sql`${supplierRates.cityId} IS NULL`);
+    } else if (rate.cityId) {
+      conditions.push(eq(supplierRates.cityId, rate.cityId));
+      conditions.push(sql`${supplierRates.countryCode} IS NULL`);
+    }
+
+    // Check if rate exists
+    const existing = await db
+      .select()
+      .from(supplierRates)
+      .where(and(...conditions))
+      .limit(1);
+
+    if (existing.length > 0) {
+      // Update existing rate
+      await db
+        .update(supplierRates)
+        .set({
+          rateUsdCents: rate.rateUsdCents,
+          updatedAt: new Date(),
+        })
+        .where(eq(supplierRates.id, existing[0]!.id));
+    } else {
+      // Insert new rate
+      await db.insert(supplierRates).values({
+        ...rate,
+        supplierId,
+      });
+    }
+  }
+}
