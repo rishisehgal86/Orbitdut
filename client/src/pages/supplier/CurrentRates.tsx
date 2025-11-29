@@ -465,9 +465,9 @@ export default function CurrentRates() {
                                         return (
                                           <div key={rt} className="text-sm">
                                             {rtExcluded ? (
-                                              <span className="text-red-600 italic">Response Time Excluded</span>
+                                              <span className="text-muted-foreground text-xs">Excluded</span>
                                             ) : rate && rate > 0 ? (
-                                              <span className="text-green-600 font-medium">
+                                              <span className="font-medium">
                                                 {formatCurrency(rate)}
                                               </span>
                                             ) : (
