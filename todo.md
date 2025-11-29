@@ -429,8 +429,8 @@
 - [ ] Allow excluding service types per city (e.g., "No L1 Network in New York")
 - [ ] Add bulk "Mark as Not Offered" button in Rate Management By Location tab
 - [ ] Add "Mark Region as Not Offered" option in Quick Setup tab
-- [ ] Update getRates API to filter out excluded service/location combinations
-- [ ] Update progress tracking to exclude non-serviceable rates from completion %
+- [x] Update getRates API to filter out excluded service/location combinations
+- [x] Update progress tracking to exclude non-serviceable rates from completion %
 - [ ] Add visual distinction: Missing (amber) vs Not Offered (gray) vs Configured (green)
 - [ ] Show "X rates opted out" stat in progress card
 - [ ] Test service exclusions with various combinations
@@ -448,8 +448,8 @@
 - [x] Add unsaved changes warning
 - [ ] Add bulk "Mark as Not Offered" button in Rate Management By Location tab
 - [ ] Add "Mark Region as Not Offered" option in Quick Setup tab
-- [ ] Update getRates to filter out excluded combinations
-- [ ] Update progress tracking to exclude non-serviceable rates
+- [x] Update getRates to filter out excluded combinations
+- [x] Update progress tracking to exclude non-serviceable rates
 - [ ] Add visual distinction: Missing (amber) vs Not Offered (gray) vs Configured (green)
 - [ ] Test service exclusions end-to-end
 

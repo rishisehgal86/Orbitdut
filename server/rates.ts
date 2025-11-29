@@ -125,31 +125,55 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
   const countries = await getSupplierCountries(supplierId);
   const cities = await getSupplierPriorityCities(supplierId);
 
-  // Calculate total possible rates
-  // (countries + cities) × 3 services × 5 response times
-  const totalLocations = countries.length + cities.length;
-  const totalPossible = totalLocations * 3 * 5;
-
-  // Get all rates for this supplier
+  // Get service exclusions to calculate actual serviceable combinations
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
+  const { supplierServiceExclusions } = await import("../drizzle/schema");
+  const exclusions = await db
+    .select()
+    .from(supplierServiceExclusions)
+    .where(eq(supplierServiceExclusions.supplierId, supplierId));
+
+  // Calculate total possible rates accounting for service exclusions
+  // Base: (countries + cities) × 3 services × 5 response times
+  // Subtract: excluded service/location combinations × 5 response times
+  const totalLocations = countries.length + cities.length;
+  const baseTotal = totalLocations * 3 * 5;
+  const excludedCombinations = exclusions.length; // Each exclusion is one service/location combo
+  const totalPossible = baseTotal - (excludedCombinations * 5); // Each combo has 5 response times
+
+  // Get all rates for this supplier (db already initialized above)
+  
+  // Only count rates where service is available (isServiceable = 1 or null for legacy data)
+  const { or, isNull } = await import("drizzle-orm");
   const rates = await db
     .select()
     .from(supplierRates)
-    .where(eq(supplierRates.supplierId, supplierId));
+    .where(
+      and(
+        eq(supplierRates.supplierId, supplierId),
+        or(
+          eq(supplierRates.isServiceable, 1),
+          isNull(supplierRates.isServiceable)
+        )
+      )
+    );
 
   const configuredRates = rates.filter((r: SupplierRate) => r.rateUsdCents !== null);
   const configured = configuredRates.length;
 
-  // Calculate by location type
+  // Calculate by location type (accounting for exclusions)
   const countryRates = configuredRates.filter((r: SupplierRate) => r.countryCode !== null);
   const cityRates = configuredRates.filter((r: SupplierRate) => r.cityId !== null);
   
-  const countryTotalPossible = countries.length * 3 * 5;
-  const cityTotalPossible = cities.length * 3 * 5;
+  const countryExclusions = exclusions.filter((e: any) => e.countryCode !== null).length;
+  const cityExclusions = exclusions.filter((e: any) => e.cityId !== null).length;
+  
+  const countryTotalPossible = (countries.length * 3 * 5) - (countryExclusions * 5);
+  const cityTotalPossible = (cities.length * 3 * 5) - (cityExclusions * 5);
 
-  // Calculate by service type
+  // Calculate by service type (accounting for exclusions)
   const l1EucRates = configuredRates.filter((r: SupplierRate) => r.serviceType === "l1_euc");
   const l1NetworkRates = configuredRates.filter((r: SupplierRate) => r.serviceType === "l1_network");
   const smartHandsRates = configuredRates.filter((r: SupplierRate) => r.serviceType === "smart_hands");
@@ -161,7 +185,14 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
     r.serviceType !== "smart_hands"
   );
   
-  const serviceTotalPossible = totalLocations * 5; // Each service has 5 response times per location
+  // Calculate total possible for each service type (accounting for exclusions)
+  const l1EucExclusions = exclusions.filter((e: any) => e.serviceType === "l1_euc").length;
+  const l1NetworkExclusions = exclusions.filter((e: any) => e.serviceType === "l1_network").length;
+  const smartHandsExclusions = exclusions.filter((e: any) => e.serviceType === "smart_hands").length;
+  
+  const l1EucTotalPossible = (totalLocations * 5) - (l1EucExclusions * 5);
+  const l1NetworkTotalPossible = (totalLocations * 5) - (l1NetworkExclusions * 5);
+  const smartHandsTotalPossible = (totalLocations * 5) - (smartHandsExclusions * 5);
 
   return {
     totalPossible,
@@ -182,19 +213,19 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
     },
     byServiceType: {
       l1_euc: {
-        totalPossible: serviceTotalPossible,
+        totalPossible: l1EucTotalPossible,
         configured: l1EucRates.length,
-        percentage: serviceTotalPossible > 0 ? Math.round((l1EucRates.length / serviceTotalPossible) * 100) : 0,
+        percentage: l1EucTotalPossible > 0 ? Math.round((l1EucRates.length / l1EucTotalPossible) * 100) : 0,
       },
       l1_network: {
-        totalPossible: serviceTotalPossible,
+        totalPossible: l1NetworkTotalPossible,
         configured: l1NetworkRates.length,
-        percentage: serviceTotalPossible > 0 ? Math.round((l1NetworkRates.length / serviceTotalPossible) * 100) : 0,
+        percentage: l1NetworkTotalPossible > 0 ? Math.round((l1NetworkRates.length / l1NetworkTotalPossible) * 100) : 0,
       },
       smart_hands: {
-        totalPossible: serviceTotalPossible,
+        totalPossible: smartHandsTotalPossible,
         configured: smartHandsRates.length,
-        percentage: serviceTotalPossible > 0 ? Math.round((smartHandsRates.length / serviceTotalPossible) * 100) : 0,
+        percentage: smartHandsTotalPossible > 0 ? Math.round((smartHandsRates.length / smartHandsTotalPossible) * 100) : 0,
       },
     },
   };
