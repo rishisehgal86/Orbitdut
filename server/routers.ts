@@ -385,6 +385,46 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    // Response time exclusions - granular control at response time level
+    addResponseTimeExclusion: protectedProcedure
+      .input(
+        z.object({
+          supplierId: z.number(),
+          countryCode: z.string().length(2).optional(),
+          cityId: z.number().optional(),
+          serviceType: z.string(),
+          responseTimeHours: z.number(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { addResponseTimeExclusion } = await import("./responseTimeExclusions");
+        await addResponseTimeExclusion(input);
+        return { success: true };
+      }),
+
+    removeResponseTimeExclusion: protectedProcedure
+      .input(
+        z.object({
+          supplierId: z.number(),
+          countryCode: z.string().length(2).optional(),
+          cityId: z.number().optional(),
+          serviceType: z.string(),
+          responseTimeHours: z.number(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { removeResponseTimeExclusion } = await import("./responseTimeExclusions");
+        await removeResponseTimeExclusion(input);
+        return { success: true };
+      }),
+
+    getResponseTimeExclusions: protectedProcedure
+      .input(z.object({ supplierId: z.number() }))
+      .query(async ({ input }) => {
+        const { getResponseTimeExclusions } = await import("./responseTimeExclusions");
+        return await getResponseTimeExclusions(input.supplierId);
+      }),
+
     // Note: Old upsertRate procedure removed - replaced by new rate management system in server/rates.ts
 
     // Tier 1: Country Coverage

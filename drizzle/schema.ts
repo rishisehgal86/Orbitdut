@@ -1,4 +1,4 @@
-import { decimal, index, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { decimal, foreignKey, index, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -288,3 +288,50 @@ export const supplierServiceExclusions = mysqlTable("supplierServiceExclusions",
 
 export type SupplierServiceExclusion = typeof supplierServiceExclusions.$inferSelect;
 export type InsertSupplierServiceExclusion = typeof supplierServiceExclusions.$inferInsert;
+
+/**
+ * Supplier response time exclusions - allows suppliers to mark specific response times as not offered
+ * for individual service/location combinations. More granular than service-level exclusions.
+ * Example: "We offer L1 EUC in London, but only for 24h+ response times, not 4h"
+ */
+export const supplierResponseTimeExclusions = mysqlTable("supplierResponseTimeExclusions", {
+  id: int("id").autoincrement().primaryKey(),
+  supplierId: int("supplierId").notNull(),
+  
+  // Location: Country OR Priority City (mutually exclusive)
+  countryCode: varchar("countryCode", { length: 2 }), // ISO 3166-1 alpha-2 (null if cityId is set)
+  cityId: int("cityId"), // References supplierPriorityCities (null if countryCode is set)
+  
+  // Service Type: L1_EUC, L1_NETWORK, SMART_HANDS
+  serviceType: varchar("serviceType", { length: 50 }).notNull(),
+  
+  // Response Time Hours: 4, 24, 48, 72, 96
+  responseTimeHours: int("responseTimeHours").notNull(),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => ({
+  // Foreign keys with custom short names
+  supplierFk: foreignKey({
+    name: "rtExcl_supplier_fk",
+    columns: [table.supplierId],
+    foreignColumns: [suppliers.id],
+  }).onDelete("cascade"),
+  cityFk: foreignKey({
+    name: "rtExcl_city_fk",
+    columns: [table.cityId],
+    foreignColumns: [supplierPriorityCities.id],
+  }).onDelete("cascade"),
+  // Index for tenant isolation queries
+  supplierIdIdx: index("rtExcl_supplierId_idx").on(table.supplierId),
+  // Composite unique constraint: prevent duplicate exclusions
+  uniqueExclusion: index("rtExcl_unique").on(
+    table.supplierId,
+    table.countryCode,
+    table.cityId,
+    table.serviceType,
+    table.responseTimeHours
+  ),
+}));
+
+export type SupplierResponseTimeExclusion = typeof supplierResponseTimeExclusions.$inferSelect;
+export type InsertSupplierResponseTimeExclusion = typeof supplierResponseTimeExclusions.$inferInsert;

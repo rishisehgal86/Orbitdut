@@ -577,3 +577,24 @@
 - [x] Replace HTML title attribute with shadcn/ui Tooltip component for validation warnings
 - [x] Show clear explanation of pricing inconsistency on hover
 - [x] Test tooltip hover behavior and readability
+
+## Response Time-Level Exclusions
+- [x] Update database schema to support response time exclusions (supplierResponseTimeExclusions table)
+- [x] Add supplierId, serviceType, countryCode/cityId, responseTimeHours columns
+- [x] Create backend tRPC procedures (addResponseTimeExclusion, removeResponseTimeExclusion, getResponseTimeExclusions)
+- [ ] Add X icon next to each rate input in By Location tab
+- [ ] Implement click handler to toggle exclusion state
+- [ ] Show tooltip "Mark Xh response time as not offered" on hover
+- [ ] Grey out input and show "N/A" when response time is excluded
+- [ ] Update getRates API to filter out excluded response times
+- [ ] Update progress tracking to exclude response time exclusions from totals
+- [ ] Test exclusion toggle with various service/location/response time combinations
+- [ ] Verify visual consistency with service-level exclusions
+
+## Update Exclusion Checking Logic to Query Both Tables
+- [x] Update `getSupplierRates` in server/rates.ts to check both service and response time exclusions
+- [x] Modify WHERE clause to exclude rates if EITHER service OR response time is excluded
+- [ ] Update frontend By Location tab to fetch both exclusion types
+- [ ] Combine service exclusions and response time exclusions in isRateDisabled check
+- [ ] Ensure service-level exclusions take precedence (hide X icon if service excluded)
+- [ ] Test precedence: service exclusion should override response time exclusions

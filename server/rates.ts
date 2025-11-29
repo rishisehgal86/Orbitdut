@@ -82,13 +82,16 @@ export async function bulkUpsertRates(rates: RateInput[]): Promise<void> {
 /**
  * Get all rates for a supplier
  */
-export async function getSupplierRates(supplierId: number): Promise<SupplierRate[]> {
+export async function getSupplierRates(supplierId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const { or } = await import("drizzle-orm");
+  const { or, sql } = await import("drizzle-orm");
+  const { supplierResponseTimeExclusions } = await import("../drizzle/schema");
   
-  // Only return rates where service is available (isServiceable = 1 or null for legacy data)
-  return await db
+  // Get all rates where:
+  // 1. Service is available (isServiceable = 1 or null for legacy data)
+  // 2. Response time is NOT excluded in supplierResponseTimeExclusions
+  const allRates = await db
     .select()
     .from(supplierRates)
     .where(
@@ -100,6 +103,28 @@ export async function getSupplierRates(supplierId: number): Promise<SupplierRate
         )
       )
     );
+
+  // Get all response time exclusions for this supplier
+  const responseTimeExcl = await db
+    .select()
+    .from(supplierResponseTimeExclusions)
+    .where(eq(supplierResponseTimeExclusions.supplierId, supplierId));
+
+  // Filter out rates that match response time exclusions
+  return allRates.filter(rate => {
+    return !responseTimeExcl.some(excl => {
+      // Match on location (country or city)
+      const locationMatch = 
+        (excl.countryCode && excl.countryCode === rate.countryCode) ||
+        (excl.cityId && excl.cityId === rate.cityId);
+      
+      // Match on service type and response time
+      const serviceMatch = excl.serviceType === rate.serviceType;
+      const responseTimeMatch = excl.responseTimeHours === rate.responseTimeHours;
+      
+      return locationMatch && serviceMatch && responseTimeMatch;
+    });
+  });
 }
 
 /**

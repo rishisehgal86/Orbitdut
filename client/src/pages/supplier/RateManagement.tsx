@@ -507,6 +507,7 @@ function ByLocationTab({ supplierId, onSuccess }: { supplierId: number; onSucces
   const { data: cities } = trpc.supplier.getPriorityCities.useQuery({ supplierId });
   const { data: rates } = trpc.supplier.getRates.useQuery({ supplierId });
   const { data: exclusions } = trpc.supplier.getServiceExclusions.useQuery({ supplierId });
+  const { data: responseTimeExclusions } = trpc.supplier.getResponseTimeExclusions.useQuery({ supplierId });
 
   // Group countries by region
   const countryRatesByRegion = useMemo(() => {
@@ -622,6 +623,7 @@ function ByLocationTab({ supplierId, onSuccess }: { supplierId: number; onSucces
               supplierId={supplierId}
               onSuccess={onSuccess}
               exclusions={exclusions || []}
+              responseTimeExclusions={responseTimeExclusions || []}
             />
           </TabsContent>
 
@@ -633,6 +635,7 @@ function ByLocationTab({ supplierId, onSuccess }: { supplierId: number; onSucces
               supplierId={supplierId}
               onSuccess={onSuccess}
               exclusions={exclusions || []}
+              responseTimeExclusions={responseTimeExclusions || []}
             />
           </TabsContent>
 
@@ -644,6 +647,7 @@ function ByLocationTab({ supplierId, onSuccess }: { supplierId: number; onSucces
               supplierId={supplierId}
               onSuccess={onSuccess}
               exclusions={exclusions || []}
+              responseTimeExclusions={responseTimeExclusions || []}
             />
           </TabsContent>
 
@@ -655,6 +659,7 @@ function ByLocationTab({ supplierId, onSuccess }: { supplierId: number; onSucces
               supplierId={supplierId}
               onSuccess={onSuccess}
               exclusions={exclusions || []}
+              responseTimeExclusions={responseTimeExclusions || []}
             />
           </TabsContent>
 
@@ -666,6 +671,7 @@ function ByLocationTab({ supplierId, onSuccess }: { supplierId: number; onSucces
               supplierId={supplierId}
               onSuccess={onSuccess}
               exclusions={exclusions || []}
+              responseTimeExclusions={responseTimeExclusions || []}
             />
           </TabsContent>
 
@@ -677,6 +683,7 @@ function ByLocationTab({ supplierId, onSuccess }: { supplierId: number; onSucces
               supplierId={supplierId}
               onSuccess={onSuccess}
               exclusions={exclusions || []}
+              responseTimeExclusions={responseTimeExclusions || []}
             />
           </TabsContent>
         </Tabs>
@@ -692,22 +699,40 @@ function LocationRatesTable({
   supplierId,
   onSuccess,
   exclusions,
+  responseTimeExclusions,
 }: {
   locations: any[];
   selectedService: string;
   supplierId: number;
   onSuccess: () => void;
   exclusions: any[];
+  responseTimeExclusions: any[];
 }) {
   const [editingRates, setEditingRates] = useState<Record<string, Record<number, string>>>({});
   const [savingStates, setSavingStates] = useState<Record<string, Record<number, 'saving' | 'saved' | 'error'>>>({});
   const [saveTimers, setSaveTimers] = useState<Record<string, Record<number, NodeJS.Timeout>>>({});
 
-  // Helper to check if a service/location combination is excluded
+  // Helper to check if a service/location combination is excluded (service-level)
   const isServiceExcluded = (location: any): boolean => {
     return exclusions.some((exclusion: any) => {
       // Check if service type matches
       if (exclusion.serviceType !== selectedService) return false;
+      
+      // Check if location matches (country or city)
+      if (location.type === "country") {
+        return exclusion.countryCode === location.code;
+      } else {
+        return exclusion.cityId === location.id;
+      }
+    });
+  };
+
+  // Helper to check if a specific response time is excluded (response time-level)
+  const isResponseTimeExcluded = (location: any, responseTimeHours: number): boolean => {
+    return responseTimeExclusions.some((exclusion: any) => {
+      // Check if service type and response time match
+      if (exclusion.serviceType !== selectedService) return false;
+      if (exclusion.responseTimeHours !== responseTimeHours) return false;
       
       // Check if location matches (country or city)
       if (location.type === "country") {
@@ -763,6 +788,50 @@ function LocationRatesTable({
       toast.error(error.message || "Failed to update rate");
     },
   });
+
+  const addResponseTimeExclusionMutation = trpc.supplier.addResponseTimeExclusion.useMutation({
+    onSuccess: () => {
+      toast.success("Response time marked as not offered");
+      onSuccess();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to update exclusion");
+    },
+  });
+
+  const removeResponseTimeExclusionMutation = trpc.supplier.removeResponseTimeExclusion.useMutation({
+    onSuccess: () => {
+      toast.success("Response time enabled");
+      onSuccess();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to update exclusion");
+    },
+  });
+
+  const handleToggleResponseTimeExclusion = (location: any, responseTimeHours: number) => {
+    const isExcluded = isResponseTimeExcluded(location, responseTimeHours);
+    
+    if (isExcluded) {
+      // Remove exclusion (enable this response time)
+      removeResponseTimeExclusionMutation.mutate({
+        supplierId,
+        countryCode: location.type === "country" ? location.code : undefined,
+        cityId: location.type === "city" ? location.id : undefined,
+        serviceType: selectedService,
+        responseTimeHours,
+      });
+    } else {
+      // Add exclusion (disable this response time)
+      addResponseTimeExclusionMutation.mutate({
+        supplierId,
+        countryCode: location.type === "country" ? location.code : undefined,
+        cityId: location.type === "city" ? location.id : undefined,
+        serviceType: selectedService,
+        responseTimeHours,
+      });
+    }
+  };
 
   const handleRateChange = (locationKey: string, responseTimeHours: number, value: string, location: any) => {
     setEditingRates((prev) => ({
@@ -911,29 +980,33 @@ function LocationRatesTable({
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4">
               <div className="grid grid-cols-5 gap-4 mt-2">
-                {RATE_RESPONSE_TIMES.map((rt) => (
+                {RATE_RESPONSE_TIMES.map((rt) => {
+                  // Check if this specific response time is excluded (either service-level OR response time-level)
+                  const isResponseTimeDisabled = isExcluded || isResponseTimeExcluded(location, rt.hours);
+                  
+                  return (
                   <div key={rt.hours} className="space-y-2">
                     <label className="text-sm font-medium text-muted-foreground">
                       {rt.label}
                     </label>
                     <div className="relative">
                       <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-sm ${
-                        isExcluded ? "text-muted-foreground/50" : "text-muted-foreground"
+                        isResponseTimeDisabled ? "text-muted-foreground/50" : "text-muted-foreground"
                       }`}>
                         $
                       </span>
                       <Input
                         type="number"
-                        placeholder={isExcluded ? "Not Offered" : "0.00"}
-                        className={`pl-7 pr-8 ${
-                          isExcluded ? "bg-muted text-muted-foreground cursor-not-allowed" : ""
+                        placeholder={isResponseTimeDisabled ? "Not Offered" : "0.00"}
+                        className={`pl-7 pr-16 ${
+                          isResponseTimeDisabled ? "bg-muted text-muted-foreground cursor-not-allowed" : ""
                         }`}
-                        value={isExcluded ? "" : getRateValue(location, rt.hours)}
-                        onChange={(e) => !isExcluded && handleRateChange(locationKey, rt.hours, e.target.value, location)}
-                        disabled={isExcluded}
+                        value={isResponseTimeDisabled ? "" : getRateValue(location, rt.hours)}
+                        onChange={(e) => !isResponseTimeDisabled && handleRateChange(locationKey, rt.hours, e.target.value, location)}
+                        disabled={isResponseTimeDisabled}
                         min="0"
                         step="0.01"
-                        title={isExcluded ? "This service is not offered in this location" : ""}
+                        title={isResponseTimeDisabled ? "This response time is not offered" : ""}
                       />
                       {!isExcluded && (
                         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
@@ -966,7 +1039,8 @@ function LocationRatesTable({
                       )}
                     </div>
                   </div>
-                ))}
+                );
+                })}
               </div>
             </AccordionContent>
           </AccordionItem>
