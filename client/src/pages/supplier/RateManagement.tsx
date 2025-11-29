@@ -800,23 +800,77 @@ function LocationRatesTable({
     },
   });
 
+  const utils = trpc.useUtils();
+
   const addResponseTimeExclusionMutation = trpc.supplier.addResponseTimeExclusion.useMutation({
+    onMutate: async (newExclusion) => {
+      // Cancel outgoing refetches
+      await utils.supplier.getResponseTimeExclusions.cancel();
+      
+      // Snapshot previous value
+      const previousExclusions = utils.supplier.getResponseTimeExclusions.getData({ supplierId });
+      
+      // Optimistically update
+      utils.supplier.getResponseTimeExclusions.setData({ supplierId }, (old) => {
+        if (!old) return [newExclusion as any];
+        return [...old, newExclusion as any];
+      });
+      
+      return { previousExclusions };
+    },
     onSuccess: () => {
       toast.success("Response time marked as not offered");
       onSuccess();
     },
-    onError: (error) => {
+    onError: (error, _newExclusion, context) => {
+      // Rollback on error
+      if (context?.previousExclusions) {
+        utils.supplier.getResponseTimeExclusions.setData({ supplierId }, context.previousExclusions);
+      }
       toast.error(error.message || "Failed to update exclusion");
+    },
+    onSettled: () => {
+      utils.supplier.getResponseTimeExclusions.invalidate({ supplierId });
     },
   });
 
   const removeResponseTimeExclusionMutation = trpc.supplier.removeResponseTimeExclusion.useMutation({
+    onMutate: async (exclusionToRemove) => {
+      // Cancel outgoing refetches
+      await utils.supplier.getResponseTimeExclusions.cancel();
+      
+      // Snapshot previous value
+      const previousExclusions = utils.supplier.getResponseTimeExclusions.getData({ supplierId });
+      
+      // Optimistically update by removing the exclusion
+      utils.supplier.getResponseTimeExclusions.setData({ supplierId }, (old) => {
+        if (!old) return [];
+        return old.filter((exc) => {
+          const matchesCountry = exclusionToRemove.countryCode && exc.countryCode === exclusionToRemove.countryCode;
+          const matchesCity = exclusionToRemove.cityId && exc.cityId === exclusionToRemove.cityId;
+          const matchesService = exc.serviceType === exclusionToRemove.serviceType;
+          const matchesResponseTime = exc.responseTimeHours === exclusionToRemove.responseTimeHours;
+          
+          // Keep the exclusion if it doesn't match all criteria
+          return !((matchesCountry || matchesCity) && matchesService && matchesResponseTime);
+        });
+      });
+      
+      return { previousExclusions };
+    },
     onSuccess: () => {
       toast.success("Response time enabled");
       onSuccess();
     },
-    onError: (error) => {
+    onError: (error, _exclusionToRemove, context) => {
+      // Rollback on error
+      if (context?.previousExclusions) {
+        utils.supplier.getResponseTimeExclusions.setData({ supplierId }, context.previousExclusions);
+      }
       toast.error(error.message || "Failed to update exclusion");
+    },
+    onSettled: () => {
+      utils.supplier.getResponseTimeExclusions.invalidate({ supplierId });
     },
   });
 

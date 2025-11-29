@@ -598,3 +598,6 @@
 - [ ] Combine service exclusions and response time exclusions in isRateDisabled check
 - [ ] Ensure service-level exclusions take precedence (hide X icon if service excluded)
 - [ ] Test precedence: service exclusion should override response time exclusions
+
+## Bug Fixes - Response Time Exclusions
+- [x] Fix X icon re-enabling behavior to be instant (currently has delay when removing exclusions)
