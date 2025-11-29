@@ -352,22 +352,32 @@ export const appRouter = router({
       .input(
         z.object({
           supplierId: z.number(),
-          countryCode: z.string().length(2).optional(),
-          cityId: z.number().optional(),
-          serviceType: z.string().optional(),
+          exclusions: z.array(
+            z.object({
+              supplierId: z.number(),
+              countryCode: z.string().length(2).optional(),
+              cityId: z.number().optional(),
+              serviceType: z.string(),
+            })
+          ),
         })
       )
       .mutation(async ({ input }) => {
         const { bulkRemoveServiceExclusions, syncRatesWithAvailability } = await import("./serviceExclusions");
-        const { supplierId, ...filters } = input;
-        await bulkRemoveServiceExclusions(supplierId, filters);
         
-        // Sync rates: mark re-enabled services as available (isServiceable = 1)
-        if (filters.countryCode && filters.serviceType) {
+        // Remove each exclusion
+        for (const exclusion of input.exclusions) {
+          await bulkRemoveServiceExclusions(exclusion.supplierId, {
+            countryCode: exclusion.countryCode,
+            cityId: exclusion.cityId,
+            serviceType: exclusion.serviceType,
+          });
+          
+          // Sync rates: mark re-enabled services as available (isServiceable = 1)
           await syncRatesWithAvailability(
-            supplierId,
-            { countryCode: filters.countryCode, cityId: filters.cityId },
-            filters.serviceType,
+            exclusion.supplierId,
+            { countryCode: exclusion.countryCode, cityId: exclusion.cityId },
+            exclusion.serviceType,
             true // now available
           );
         }

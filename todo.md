@@ -554,3 +554,9 @@
 - [x] Fix bulkAddServiceExclusions mutation - supplierId is undefined in exclusions array
 - [x] Ensure each exclusion object includes supplierId when calling bulk save
 - [x] Test service availability changes save successfully
+
+## Fix Service Availability City Checkbox Bug
+- [x] Reproduce bug: checking service for one city checks it for all cities
+- [x] Analyze exclusion key generation logic for cities
+- [x] Fix checkbox state management to properly handle individual cities
+- [x] Test with multiple cities and different services

@@ -63,7 +63,16 @@ export default function ServiceAvailability() {
     },
   });
 
-  const bulkRemoveMutation = trpc.supplier.bulkRemoveServiceExclusions.useMutation();
+  const bulkRemoveMutation = trpc.supplier.bulkRemoveServiceExclusions.useMutation({
+    onSuccess: () => {
+      toast.success("Service exclusions removed successfully");
+      refetchExclusions();
+      setHasChanges(false);
+    },
+    onError: (error) => {
+      toast.error(`Failed to remove exclusions: ${error.message}`);
+    },
+  });
 
   const handleToggleExclusion = (key: string) => {
     const newExclusions = new Set(localExclusions);
