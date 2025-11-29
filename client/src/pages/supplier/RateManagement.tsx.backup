@@ -254,10 +254,10 @@ export default function RateManagement() {
   );
 }
 
-// Quick Setup Tab Component with Regional Tabs
+// Quick Setup Tab Component with Region
 function QuickSetupTab({ supplierId, onSuccess }: { supplierId: number; onSuccess: () => void }) {
-  const [selectedService, setSelectedService] = useState(RATE_SERVICE_TYPES[0].value);
-  const [regionTab, setRegionTab] = useState("africa");
+  const [selectedService, setSelectedService] = useState<string>(RATE_SERVICE_TYPES[0].value);
+  const [regionTab, setRegionTab] = useState<string>("africa");
   const [baseRates, setBaseRates] = useState<Record<number, string>>({});
   const [isApplying, setIsApplying] = useState(false);
 
@@ -602,6 +602,7 @@ function ByLocationTab({ supplierId, onSuccess }: { supplierId: number; onSucces
           <TabsContent value="africa">
             <LocationRatesTable
               locations={filterLocations(countryRatesByRegion.africa || [])}
+              selectedService={selectedService}
               supplierId={supplierId}
               onSuccess={onSuccess}
               exclusions={exclusions || []}
@@ -721,14 +722,13 @@ function LocationRatesTable({
   const upsertMutation = trpc.supplier.upsertRate.useMutation({
     onSuccess: (_, variables) => {
       const locationKey = variables.countryCode || `city-${variables.cityId}`;
-      const stateKey = `${locationKey}-${variables.serviceType}`;
       const responseTimeHours = variables.responseTimeHours;
       
       // Set saved state
       setSavingStates((prev) => ({
         ...prev,
-        [stateKey]: {
-          ...(prev[stateKey] || {}),
+        [locationKey]: {
+          ...(prev[locationKey] || {}),
           [responseTimeHours]: 'saved',
         },
       }));
@@ -737,10 +737,10 @@ function LocationRatesTable({
       setTimeout(() => {
         setSavingStates((prev) => {
           const newState = { ...prev };
-          if (newState[stateKey]?.[responseTimeHours] === 'saved') {
-            delete newState[stateKey][responseTimeHours];
-            if (Object.keys(newState[stateKey] || {}).length === 0) {
-              delete newState[stateKey];
+          if (newState[locationKey]?.[responseTimeHours] === 'saved') {
+            delete newState[locationKey][responseTimeHours];
+            if (Object.keys(newState[locationKey] || {}).length === 0) {
+              delete newState[locationKey];
             }
           }
           return newState;
@@ -751,13 +751,12 @@ function LocationRatesTable({
     },
     onError: (error, variables) => {
       const locationKey = variables.countryCode || `city-${variables.cityId}`;
-      const stateKey = `${locationKey}-${variables.serviceType}`;
       const responseTimeHours = variables.responseTimeHours;
       
       setSavingStates((prev) => ({
         ...prev,
-        [stateKey]: {
-          ...(prev[stateKey] || {}),
+        [locationKey]: {
+          ...(prev[locationKey] || {}),
           [responseTimeHours]: 'error',
         },
       }));
@@ -840,8 +839,8 @@ function LocationRatesTable({
     },
   });
 
-  const handleToggleResponseTimeExclusion = (location: any, serviceType: string, responseTimeHours: number) => {
-    const isExcluded = isResponseTimeExcluded(location, serviceType, responseTimeHours);
+  const handleToggleResponseTimeExclusion = (location: any, responseTimeHours: number) => {
+    const isExcluded = isResponseTimeExcluded(location, responseTimeHours);
     
     if (isExcluded) {
       // Remove exclusion (enable this response time)
@@ -849,7 +848,7 @@ function LocationRatesTable({
         supplierId,
         countryCode: location.type === "country" ? location.code : undefined,
         cityId: location.type === "city" ? location.id : undefined,
-        serviceType,
+        serviceType: selectedService,
         responseTimeHours,
       });
     } else {
@@ -858,50 +857,48 @@ function LocationRatesTable({
         supplierId,
         countryCode: location.type === "country" ? location.code : undefined,
         cityId: location.type === "city" ? location.id : undefined,
-        serviceType,
+        serviceType: selectedService,
         responseTimeHours,
       });
     }
   };
 
-  const handleRateChange = (locationKey: string, serviceType: string, responseTimeHours: number, value: string, location: any) => {
-    const stateKey = `${locationKey}-${serviceType}`;
+  const handleRateChange = (locationKey: string, responseTimeHours: number, value: string, location: any) => {
     setEditingRates((prev) => ({
       ...prev,
-      [stateKey]: {
-        ...(prev[stateKey] || {}),
+      [locationKey]: {
+        ...(prev[locationKey] || {}),
         [responseTimeHours]: value,
       },
     }));
 
     // Clear existing timer for this field
-    if (saveTimers[stateKey]?.[responseTimeHours]) {
-      clearTimeout(saveTimers[stateKey][responseTimeHours]);
+    if (saveTimers[locationKey]?.[responseTimeHours]) {
+      clearTimeout(saveTimers[locationKey][responseTimeHours]);
     }
 
     // Set up debounced auto-save (500ms)
     const timer = setTimeout(() => {
-      handleAutoSave(location, serviceType, responseTimeHours, value);
+      handleAutoSave(location, responseTimeHours, value);
     }, 500);
 
     setSaveTimers((prev) => ({
       ...prev,
-      [stateKey]: {
-        ...(prev[stateKey] || {}),
+      [locationKey]: {
+        ...(prev[locationKey] || {}),
         [responseTimeHours]: timer,
       },
     }));
   };
 
-  const handleAutoSave = async (location: any, serviceType: string, responseTimeHours: number, value: string) => {
+  const handleAutoSave = async (location: any, responseTimeHours: number, value: string) => {
     const locationKey = location.type === "country" ? location.code : `city-${location.id}`;
-    const stateKey = `${locationKey}-${serviceType}`;
     
     // Set saving state
     setSavingStates((prev) => ({
       ...prev,
-      [stateKey]: {
-        ...(prev[stateKey] || {}),
+      [locationKey]: {
+        ...(prev[locationKey] || {}),
         [responseTimeHours]: 'saving',
       },
     }));
@@ -912,7 +909,7 @@ function LocationRatesTable({
       supplierId,
       countryCode: location.type === "country" ? location.code : undefined,
       cityId: location.type === "city" ? location.id : undefined,
-      serviceType,
+      serviceType: selectedService,
       responseTimeHours,
       rateUsdCents,
     });
@@ -920,26 +917,25 @@ function LocationRatesTable({
     // Clear editing state for this field
     setEditingRates((prev) => {
       const newState = { ...prev };
-      if (newState[stateKey]) {
-        delete newState[stateKey][responseTimeHours];
-        if (Object.keys(newState[stateKey]).length === 0) {
-          delete newState[stateKey];
+      if (newState[locationKey]) {
+        delete newState[locationKey][responseTimeHours];
+        if (Object.keys(newState[locationKey]).length === 0) {
+          delete newState[locationKey];
         }
       }
       return newState;
     });
   };
 
-  const getRateValue = (location: any, serviceType: string, responseTimeHours: number): string => {
+  const getRateValue = (location: any, responseTimeHours: number): string => {
     const locationKey = location.type === "country" ? location.code : `city-${location.id}`;
-    const stateKey = `${locationKey}-${serviceType}`;
     
     // Check if we're editing this field
-    const editedValue = editingRates[stateKey]?.[responseTimeHours];
+    const editedValue = editingRates[locationKey]?.[responseTimeHours];
     if (editedValue !== undefined) return editedValue;
 
     // Find existing rate
-    const existingRate = location.rates.find((r: any) => r.serviceType === serviceType && r.responseTimeHours === responseTimeHours);
+    const existingRate = location.rates.find((r: any) => r.responseTimeHours === responseTimeHours);
     if (existingRate && existingRate.rateUsdCents !== null) {
       return (existingRate.rateUsdCents / 100).toFixed(2);
     }
@@ -948,9 +944,9 @@ function LocationRatesTable({
   };
 
   // Check if a rate has pricing inconsistencies
-  const hasValidationWarning = (location: any, serviceType: string, responseTimeHours: number): string | null => {
+  const hasValidationWarning = (location: any, responseTimeHours: number): string | null => {
     const locationKey = location.type === "country" ? location.code : `city-${location.id}`;
-    const currentValue = getRateValue(location, serviceType, responseTimeHours);
+    const currentValue = getRateValue(location, responseTimeHours);
     
     if (!currentValue || parseFloat(currentValue) === 0) return null;
 
@@ -959,7 +955,7 @@ function LocationRatesTable({
     // Check if faster response times are more expensive (as they should be)
     for (const rt of RATE_RESPONSE_TIMES) {
       if (rt.hours < responseTimeHours) {
-        const fasterValue = getRateValue(location, serviceType, rt.hours);
+        const fasterValue = getRateValue(location, rt.hours);
         if (fasterValue && parseFloat(fasterValue) > 0) {
           const fasterRate = parseFloat(fasterValue);
           if (fasterRate < currentRate) {
@@ -984,133 +980,144 @@ function LocationRatesTable({
     <Accordion type="multiple" className="space-y-2">
       {locations.map((location) => {
         const locationKey = location.type === "country" ? location.code : `city-${location.id}`;
+        const isExcluded = isServiceExcluded(location);
+        const configuredCount = RATE_RESPONSE_TIMES.filter(rt => {
+          const val = getRateValue(location, rt.hours);
+          return val !== "" && parseFloat(val) > 0;
+        }).length;
         
         return (
           <AccordionItem key={locationKey} value={locationKey} className="border rounded-lg">
             <AccordionTrigger className="px-4 hover:no-underline">
-              <div className="flex items-center gap-3">
-                <span className="font-medium">{location.name}</span>
-                {location.type === "country" && (
-                  <span className="text-xs text-muted-foreground">{location.code}</span>
+              <div className="flex items-center justify-between w-full pr-4">
+                <div className="flex items-center gap-3">
+                  <span className="font-medium">{location.name}</span>
+                  {location.type === "country" && (
+                    <span className="text-xs text-muted-foreground">{location.code}</span>
+                  )}
+                  {isExcluded && (
+                    <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded">
+                      Not Offered
+                    </span>
+                  )}
+                </div>
+                {!isExcluded && (
+                  <span className="text-sm text-muted-foreground">
+                    {configuredCount} / {RATE_RESPONSE_TIMES.length} rates configured
+                  </span>
                 )}
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4">
-              <div className="space-y-8 mt-4">
-                {RATE_SERVICE_TYPES.map((service) => {
-                  const serviceExcluded = isServiceExcluded(location, service.value);
-                  const stateKey = `${locationKey}-${service.value}`;
-                  const configuredCount = RATE_RESPONSE_TIMES.filter(rt => {
-                    const val = getRateValue(location, service.value, rt.hours);
-                    return val !== "" && parseFloat(val) > 0;
-                  }).length;
-
+              <div className="grid grid-cols-5 gap-4 mt-2">
+                {RATE_RESPONSE_TIMES.map((rt) => {
+                  // Check if this specific response time is excluded (either service-level OR response time-level)
+                  const isResponseTimeDisabled = isExcluded || isResponseTimeExcluded(location, rt.hours);
+                  
                   return (
-                    <div key={service.value} className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-medium text-sm">{service.label}</h4>
-                        {serviceExcluded ? (
-                          <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded">
-                            Not Offered
-                          </span>
-                        ) : (
-                          <span className="text-sm text-muted-foreground">
-                            {configuredCount} / {RATE_RESPONSE_TIMES.length} rates configured
-                          </span>
-                        )}
-                      </div>
-                      
-                      <div className="grid grid-cols-5 gap-4">
-                        {RATE_RESPONSE_TIMES.map((rt) => {
-                          const isResponseTimeDisabled = serviceExcluded || isResponseTimeExcluded(location, service.value, rt.hours);
-                          
-                          return (
-                            <div key={rt.hours} className="space-y-2">
-                              <label className="text-sm font-medium text-muted-foreground">
-                                {rt.label}
-                              </label>
-                              <div className="relative">
-                                <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-sm ${
-                                  isResponseTimeDisabled ? "text-muted-foreground/50" : "text-muted-foreground"
-                                }`}>
-                                  $
-                                </span>
-                                <Input
-                                  type="number"
-                                  placeholder={isResponseTimeDisabled ? "Not Offered" : "0.00"}
-                                  className={`pl-7 pr-16 ${
-                                    isResponseTimeDisabled ? "bg-muted text-muted-foreground cursor-not-allowed" : ""
+                  <div key={rt.hours} className="space-y-2">
+                    <label className="text-sm font-medium text-muted-foreground">
+                      {rt.label}
+                    </label>
+                    <div className="relative">
+                      <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-sm ${
+                        isResponseTimeDisabled ? "text-muted-foreground/50" : "text-muted-foreground"
+                      }`}>
+                        $
+                      </span>
+                      <Input
+                        type="number"
+                        placeholder={isResponseTimeDisabled ? "Not Offered" : "0.00"}
+                        className={`pl-7 pr-16 ${
+                          isResponseTimeDisabled ? "bg-muted text-muted-foreground cursor-not-allowed" : ""
+                        }`}
+                        value={isResponseTimeDisabled ? "" : getRateValue(location, rt.hours)}
+                        onChange={(e) => !isResponseTimeDisabled && handleRateChange(locationKey, rt.hours, e.target.value, location)}
+                        disabled={isResponseTimeDisabled}
+                        min="0"
+                        step="0.01"
+                        title={isResponseTimeDisabled ? "This response time is not offered" : ""}
+                      />
+                      {!isExcluded && (
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                          {/* X icon toggle for response time exclusions */}
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const isCurrentlyExcluded = isResponseTimeExcluded(location, rt.hours);
+                                    if (isCurrentlyExcluded) {
+                                      // Re-enable this response time
+                                      removeResponseTimeExclusionMutation.mutate({
+                                        supplierId,
+                                        serviceType: selectedService,
+                                        responseTimeHours: rt.hours,
+                                        countryCode: location.type === "country" ? location.code : undefined,
+                                        cityId: location.type === "city" ? location.id : undefined,
+                                      });
+                                    } else {
+                                      // Disable this response time
+                                      addResponseTimeExclusionMutation.mutate({
+                                        supplierId,
+                                        serviceType: selectedService,
+                                        responseTimeHours: rt.hours,
+                                        countryCode: location.type === "country" ? location.code : undefined,
+                                        cityId: location.type === "city" ? location.id : undefined,
+                                      });
+                                    }
+                                  }}
+                                  className={`p-0.5 rounded hover:bg-muted transition-colors ${
+                                    isResponseTimeExcluded(location, rt.hours)
+                                      ? "text-green-600 hover:text-green-700"
+                                      : "text-muted-foreground hover:text-destructive"
                                   }`}
-                                  value={isResponseTimeDisabled ? "" : getRateValue(location, service.value, rt.hours)}
-                                  onChange={(e) => !isResponseTimeDisabled && handleRateChange(locationKey, service.value, rt.hours, e.target.value, location)}
-                                  disabled={isResponseTimeDisabled}
-                                  min="0"
-                                  step="0.01"
-                                  title={isResponseTimeDisabled ? "This response time is not offered" : ""}
-                                />
-                                {!serviceExcluded && (
-                                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                                    {/* X icon toggle for response time exclusions */}
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <button
-                                            type="button"
-                                            onClick={() => handleToggleResponseTimeExclusion(location, service.value, rt.hours)}
-                                            className={`p-0.5 rounded hover:bg-muted transition-colors ${
-                                              isResponseTimeExcluded(location, service.value, rt.hours)
-                                                ? "text-green-600 hover:text-green-700"
-                                                : "text-muted-foreground hover:text-destructive"
-                                            }`}
-                                          >
-                                            <X className="h-4 w-4" />
-                                          </button>
-                                        </TooltipTrigger>
-                                        <TooltipContent side="top" className="max-w-xs">
-                                          <p className="text-sm">
-                                            {isResponseTimeExcluded(location, service.value, rt.hours)
-                                              ? "Click to re-enable this response time"
-                                              : "Click to mark this response time as not offered"}
-                                          </p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                    
-                                    {hasValidationWarning(location, service.value, rt.hours) && (
-                                      <TooltipProvider>
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <AlertTriangle className="h-4 w-4 text-amber-500 cursor-help" />
-                                          </TooltipTrigger>
-                                          <TooltipContent side="top" className="max-w-xs">
-                                            <p className="text-sm">{hasValidationWarning(location, service.value, rt.hours)}</p>
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      </TooltipProvider>
-                                    )}
-                                    {savingStates[stateKey]?.[rt.hours] && (
-                                      <>
-                                        {savingStates[stateKey][rt.hours] === 'saving' && (
-                                          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                                        )}
-                                        {savingStates[stateKey][rt.hours] === 'saved' && (
-                                          <Check className="h-4 w-4 text-green-600" />
-                                        )}
-                                        {savingStates[stateKey][rt.hours] === 'error' && (
-                                          <X className="h-4 w-4 text-destructive" />
-                                        )}
-                                      </>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="max-w-xs">
+                                <p className="text-sm">
+                                  {isResponseTimeExcluded(location, rt.hours)
+                                    ? "Click to re-enable this response time"
+                                    : "Click to mark this response time as not offered"}
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          
+                          {hasValidationWarning(location, rt.hours) && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <AlertTriangle className="h-4 w-4 text-amber-500 cursor-help" />
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="max-w-xs">
+                                  <p className="text-sm">{hasValidationWarning(location, rt.hours)}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                          {savingStates[locationKey]?.[rt.hours] && (
+                            <>
+                              {savingStates[locationKey][rt.hours] === 'saving' && (
+                                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                              )}
+                              {savingStates[locationKey][rt.hours] === 'saved' && (
+                                <Check className="h-4 w-4 text-green-600" />
+                              )}
+                              {savingStates[locationKey][rt.hours] === 'error' && (
+                                <X className="h-4 w-4 text-destructive" />
+                              )}
+                            </>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  );
-                })}
+                  </div>
+                );
+              })}
               </div>
             </AccordionContent>
           </AccordionItem>
@@ -1122,6 +1129,15 @@ function LocationRatesTable({
 
 // By Service Tab Component
 function ByServiceTab({ supplierId, onSuccess }: { supplierId: number; onSuccess: () => void }) {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Get covered locations
+  const { data: countries } = trpc.supplier.getCountries.useQuery({ supplierId });
+  const { data: cities } = trpc.supplier.getPriorityCities.useQuery({ supplierId });
+  const { data: rates } = trpc.supplier.getRates.useQuery({ supplierId });
+  const { data: exclusions } = trpc.supplier.getServiceExclusions.useQuery({ supplierId });
+  const { data: responseTimeExclusions } = trpc.supplier.getResponseTimeExclusions.useQuery({ supplierId });
+
   // Group locations by service type
   const locationsByService = useMemo(() => {
     if (!countries || !cities || !rates) return {};

@@ -621,3 +621,12 @@
 - [x] Add search functionality for filtering locations
 - [x] Implement X icon toggle for response time exclusions
 - [x] Test all service type tabs and inline editing
+
+## Rate Management - By Location Tab UI Change
+- [x] Remove service type selector from By Location tab
+- [x] Update LocationRatesTable to show all 3 services for each location
+- [x] Display each service as a separate section with its own rate inputs
+- [x] Update description to reflect new functionality
+
+## Bug Fixes - Rate Management By Location Tab
+- [x] Fix state key to include serviceType so editing one service doesn't affect other services' inputs
