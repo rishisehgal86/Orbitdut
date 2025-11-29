@@ -572,3 +572,8 @@
 - [ ] Test expandable cards with multiple locations
 - [ ] Test auto-save functionality with rapid edits
 - [ ] Test validation warnings with various rate combinations
+
+## Validation Warning Tooltip Enhancement
+- [x] Replace HTML title attribute with shadcn/ui Tooltip component for validation warnings
+- [x] Show clear explanation of pricing inconsistency on hover
+- [x] Test tooltip hover behavior and readability

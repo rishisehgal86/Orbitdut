@@ -7,6 +7,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Loader2, Info, Check, X, AlertTriangle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Link } from "wouter";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import SupplierLayout from "@/components/SupplierLayout";
@@ -937,10 +938,16 @@ function LocationRatesTable({
                       {!isExcluded && (
                         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                           {hasValidationWarning(location, rt.hours) && (
-                            <AlertTriangle 
-                              className="h-4 w-4 text-amber-500" 
-                              title={hasValidationWarning(location, rt.hours) || ""}
-                            />
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <AlertTriangle className="h-4 w-4 text-amber-500 cursor-help" />
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="max-w-xs">
+                                  <p className="text-sm">{hasValidationWarning(location, rt.hours)}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           )}
                           {savingStates[locationKey]?.[rt.hours] && (
                             <>
