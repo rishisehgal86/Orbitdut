@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { RATE_SERVICE_TYPES } from "@/../../shared/rates";
 import { Search, Save, AlertCircle } from "lucide-react";
 
-export default function ServiceExclusions() {
+export default function ServiceAvailability() {
   const { data: profile } = trpc.supplier.getProfile.useQuery();
   const supplierId = profile?.supplier?.id;
 
@@ -171,9 +171,9 @@ export default function ServiceExclusions() {
     <SupplierLayout>
       <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Service Exclusions</h1>
+        <h1 className="text-3xl font-bold">Service Availability</h1>
         <p className="text-muted-foreground mt-2">
-          Manage which services you offer in each location. Uncheck services you don't provide.
+          Manage which services you offer in each location. Check the services you provide.
         </p>
       </div>
 
@@ -181,9 +181,9 @@ export default function ServiceExclusions() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Service Exclusions</CardTitle>
+              <CardTitle>Service Availability by Location</CardTitle>
               <CardDescription>
-                Select which service types you DO NOT offer in each location
+                Check the services you offer in each location. Unchecked services will not be available for booking.
               </CardDescription>
             </div>
             {hasChanges && (
@@ -240,13 +240,14 @@ export default function ServiceExclusions() {
                       {RATE_SERVICE_TYPES.map((service) => {
                         const key = `country-${country.countryCode}-${service.value}`;
                         const isExcluded = localExclusions.has(key);
-                        return (
-                          <div key={service.value} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={key}
-                              checked={!isExcluded}
-                              onCheckedChange={() => handleToggleExclusion(key)}
-                            />
+                          return (
+                            <div key={service.value} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={key}
+                                checked={!isExcluded}
+                                onCheckedChange={() => handleToggleExclusion(key)}
+                                className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
+                              />
                             <Label
                               htmlFor={key}
                               className="text-sm font-normal cursor-pointer"
@@ -277,16 +278,17 @@ export default function ServiceExclusions() {
                           {city.cityName}{city.state && <span className="text-xs text-muted-foreground ml-1">({city.state})</span>}
                         </span>
                       </div>
-                      {RATE_SERVICE_TYPES.map((service) => {
-                        const key = `city-${city.id}-${service.value}`;
-                        const isExcluded = localExclusions.has(key);
-                        return (
-                          <div key={service.value} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={key}
-                              checked={!isExcluded}
-                              onCheckedChange={() => handleToggleExclusion(key)}
-                            />
+                        {RATE_SERVICE_TYPES.map((service) => {
+                          const key = `city-${city.id}-${service.value}`;
+                          const isExcluded = localExclusions.has(key);
+                          return (
+                            <div key={service.value} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={key}
+                                checked={!isExcluded}
+                                onCheckedChange={() => handleToggleExclusion(key)}
+                                className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
+                              />
                             <Label
                               htmlFor={key}
                               className="text-sm font-normal cursor-pointer"

@@ -509,3 +509,16 @@
 - [x] Reduce padding and margins for more compact display (p-3, space-y-1)
 - [x] Test layout responsiveness on different screen sizes
 - [x] Verify all 196 countries fit better on screen with reduced scrolling (now shows ~11 countries vs 3-4 before)
+
+## Service Availability UX Redesign (formerly Service Exclusions)
+- [x] Rename page from "Service Exclusions" to "Service Availability"
+- [x] Flip checkbox logic: checked = service IS available (positive framing maintained)
+- [x] Update page title and description with clear positive wording ("Check the services you provide")
+- [x] Update card title ("Service Availability by Location") and helper text for clarity
+- [x] Rename file from ServiceExclusions.tsx to ServiceAvailability.tsx
+- [x] Update navigation menu item from "Service Exclusions" to "Service Availability"
+- [x] Update route from /supplier/coverage/exclusions to /supplier/coverage/availability
+- [x] Add green styling to checked checkboxes for visual reinforcement
+- [x] Backend logic remains unchanged (still stores exclusions, but UI presents as availability)
+- [x] Test that checkbox states work correctly with new logic
+- [x] Verify data persistence with flipped logic

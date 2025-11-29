@@ -35,7 +35,7 @@ const navItems: NavItem[] = [
     icon: MapPin,
     submenu: [
       { title: "Geographic Coverage", href: "/supplier/coverage" },
-      { title: "Service Exclusions", href: "/supplier/coverage/exclusions" },
+      { title: "Service Availability", href: "/supplier/coverage/availability" },
     ]
   },
   { 
