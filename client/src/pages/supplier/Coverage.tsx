@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import SupplierLayout from "@/components/SupplierLayout";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -162,7 +163,8 @@ export default function Coverage() {
   }
 
   return (
-    <div className="container py-8 space-y-6">
+    <SupplierLayout>
+      <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Coverage Management</h1>
         <p className="text-muted-foreground mt-2">
@@ -316,6 +318,7 @@ export default function Coverage() {
           </Tabs>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </SupplierLayout>
   );
 }

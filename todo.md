@@ -458,3 +458,7 @@
 - [x] Fix the Unicode escape sequence issue causing application crash (template literals had \$ instead of $)
 - [x] Fix SERVICE_TYPES import (changed to RATE_SERVICE_TYPES array)
 - [x] Restart dev server and test Coverage page
+
+## Fix Coverage Management Page Layout
+- [x] Add SupplierLayout wrapper to Coverage.tsx to display left sidebar navigation
+- [x] Test that sidebar navigation appears on Coverage page
