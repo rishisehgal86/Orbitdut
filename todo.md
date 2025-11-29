@@ -434,3 +434,21 @@
 - [ ] Add visual distinction: Missing (amber) vs Not Offered (gray) vs Configured (green)
 - [ ] Show "X rates opted out" stat in progress card
 - [ ] Test service exclusions with various combinations
+
+## Service Exclusion UI Implementation
+- [x] Add tRPC procedures for service exclusions (getExclusions, addExclusion, removeExclusion, bulkAdd, bulkRemove)
+- [x] Create Coverage page at /supplier/coverage
+- [x] Add navigation link to Coverage in SupplierLayout (already exists)
+- [x] Build service exclusion management UI in Coverage page
+- [x] Show list of countries with expandable service type checkboxes
+- [x] Show list of cities with expandable service type checkboxes
+- [x] Add "Save Exclusions" button with optimistic updates
+- [x] Add search functionality for filtering locations
+- [x] Add tabs for Countries and Priority Cities
+- [x] Add unsaved changes warning
+- [ ] Add bulk "Mark as Not Offered" button in Rate Management By Location tab
+- [ ] Add "Mark Region as Not Offered" option in Quick Setup tab
+- [ ] Update getRates to filter out excluded combinations
+- [ ] Update progress tracking to exclude non-serviceable rates
+- [ ] Add visual distinction: Missing (amber) vs Not Offered (gray) vs Configured (green)
+- [ ] Test service exclusions end-to-end

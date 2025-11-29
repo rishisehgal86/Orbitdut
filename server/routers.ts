@@ -268,6 +268,78 @@ export const appRouter = router({
         return await getRateCompletionStats(input.supplierId);
       }),
 
+    // ========== SERVICE EXCLUSIONS ==========
+    
+    // Get all service exclusions for a supplier
+    getServiceExclusions: protectedProcedure
+      .input(z.object({ supplierId: z.number() }))
+      .query(async ({ input }) => {
+        const { getServiceExclusions } = await import("./serviceExclusions");
+        return await getServiceExclusions(input.supplierId);
+      }),
+
+    // Add a single service exclusion
+    addServiceExclusion: protectedProcedure
+      .input(
+        z.object({
+          supplierId: z.number(),
+          countryCode: z.string().length(2).optional(),
+          cityId: z.number().optional(),
+          serviceType: z.string(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { addServiceExclusion } = await import("./serviceExclusions");
+        await addServiceExclusion(input);
+        return { success: true };
+      }),
+
+    // Remove a service exclusion
+    removeServiceExclusion: protectedProcedure
+      .input(z.object({ id: z.number(), supplierId: z.number() }))
+      .mutation(async ({ input }) => {
+        const { removeServiceExclusion } = await import("./serviceExclusions");
+        await removeServiceExclusion(input.id, input.supplierId);
+        return { success: true };
+      }),
+
+    // Bulk add service exclusions
+    bulkAddServiceExclusions: protectedProcedure
+      .input(
+        z.object({
+          exclusions: z.array(
+            z.object({
+              supplierId: z.number(),
+              countryCode: z.string().length(2).optional(),
+              cityId: z.number().optional(),
+              serviceType: z.string(),
+            })
+          ),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { bulkAddServiceExclusions } = await import("./serviceExclusions");
+        await bulkAddServiceExclusions(input.exclusions);
+        return { success: true };
+      }),
+
+    // Bulk remove service exclusions
+    bulkRemoveServiceExclusions: protectedProcedure
+      .input(
+        z.object({
+          supplierId: z.number(),
+          countryCode: z.string().length(2).optional(),
+          cityId: z.number().optional(),
+          serviceType: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { bulkRemoveServiceExclusions } = await import("./serviceExclusions");
+        const { supplierId, ...filters } = input;
+        await bulkRemoveServiceExclusions(supplierId, filters);
+        return { success: true };
+      }),
+
     // OLD: Upsert supplier rate (deprecated - replaced by new rate management system)
     // upsertRate: protectedProcedure
     //   .input(
