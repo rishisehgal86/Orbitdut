@@ -39,6 +39,9 @@ export interface ParseResult {
 export async function parseExcelFile(base64Data: string): Promise<ParseResult> {
   const buffer = Buffer.from(base64Data, "base64");
   const workbook = XLSX.read(buffer, { type: "buffer" });
+  
+  console.log('[Excel Import] Starting parse...');
+  console.log('[Excel Import] Sheet names:', workbook.SheetNames);
 
   const rates: ParsedRate[] = [];
   const errors: ValidationError[] = [];
@@ -78,6 +81,12 @@ export async function parseExcelFile(base64Data: string): Promise<ParseResult> {
 
     const headers = data[0];
     const rateColumnIndices = findRateColumns(headers);
+    
+    console.log(`[Excel Import] Sheet "${sheetName}":`);
+    console.log(`  - Service: ${serviceType}, Location: ${locationType}`);
+    console.log(`  - Headers:`, headers);
+    console.log(`  - Rate columns found:`, rateColumnIndices);
+    console.log(`  - Data rows: ${data.length - 1}`);
 
     // Process data rows (skip header)
     for (let i = 1; i < data.length; i++) {
@@ -98,8 +107,16 @@ export async function parseExcelFile(base64Data: string): Promise<ParseResult> {
           }
 
           // Extract rates for each response time
+          if (rowNumber === 2) { // Only log first data row to avoid spam
+            console.log(`[Row ${rowNumber}] Country: ${row[1]}, Code: ${row[2]}`);
+            console.log(`[Row ${rowNumber}] Full row:`, row);
+            console.log(`[Row ${rowNumber}] Rate column indices:`, rateColumnIndices);
+          }
           for (const [responseTime, colIndex] of Object.entries(rateColumnIndices)) {
             const rateValue = row[colIndex];
+            if (rowNumber === 2) {
+              console.log(`[Row ${rowNumber}] ${responseTime}h rate at col ${colIndex}: ${rateValue}`);
+            }
             
             if (rateValue === null || rateValue === undefined || rateValue === "") {
               continue; // Skip empty rates
@@ -179,13 +196,20 @@ export async function parseExcelFile(base64Data: string): Promise<ParseResult> {
           column: "",
           message: error.message || "Unknown error",
         });
-        summary.byService[serviceType].errors++;
+        if (serviceType && summary.byService[serviceType]) {
+          summary.byService[serviceType].errors++;
+        }
       }
     }
   }
 
   summary.validRows = rates.length;
   summary.errorRows = errors.length;
+  
+  console.log('[Excel Import] Parse complete:');
+  console.log(`  - Total rates found: ${rates.length}`);
+  console.log(`  - Total errors: ${errors.length}`);
+  console.log(`  - Summary:`, summary);
 
   return { rates, errors, summary };
 }
@@ -202,13 +226,13 @@ function parseSheetName(sheetName: string): {
   let serviceType: string | null = null;
   let locationType: "country" | "city" | null = null;
 
-  // Determine service type
+  // Determine service type - must match SERVICE_TYPES from shared/rates.ts
   if (normalized.includes("l1 euc") || normalized.includes("end user computing")) {
-    serviceType = "l1_end_user_computing";
+    serviceType = "L1_EUC";
   } else if (normalized.includes("l1 network") || normalized.includes("network support")) {
-    serviceType = "l1_network_support";
+    serviceType = "L1_NETWORK";
   } else if (normalized.includes("smart hands")) {
-    serviceType = "smart_hands";
+    serviceType = "SMART_HANDS";
   }
 
   // Determine location type
@@ -227,17 +251,23 @@ function parseSheetName(sheetName: string): {
 function findRateColumns(headers: any[]): Record<string, number> {
   const rateColumns: Record<string, number> = {};
 
+  console.log('[findRateColumns] Headers:', headers);
+
   for (let i = 0; i < headers.length; i++) {
     const header = headers[i]?.toString().toLowerCase() || "";
     
     for (const responseTime of RESPONSE_TIMES) {
-      if (header.includes(`${responseTime}h rate`)) {
+      // Use word boundary to match exact response time (e.g., "4h" should not match "24h")
+      const pattern = new RegExp(`\\b${responseTime}h\\s+rate`, 'i');
+      if (pattern.test(header)) {
         rateColumns[responseTime.toString()] = i;
+        console.log(`[findRateColumns] Matched "${responseTime}h rate" at column ${i}`);
         break;
       }
     }
   }
 
+  console.log('[findRateColumns] Final mapping:', rateColumns);
   return rateColumns;
 }
 

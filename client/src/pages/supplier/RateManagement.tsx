@@ -1367,10 +1367,14 @@ function BulkImportExportTab({ supplierId, onSuccess }: { supplierId: number; on
         fileData,
       });
       
+      if (!result || typeof result !== 'object') {
+        throw new Error('Invalid response from server');
+      }
+      
       setPreviewData(result);
       setValidationErrors(result.errors || []);
       
-      if (result.errors.length > 0) {
+      if ((result.errors || []).length > 0) {
         toast.warning(`File uploaded with ${result.errors.length} validation error(s). Review below.`);
       } else {
         toast.success(`File validated successfully! ${result.summary.validRows} rates ready to import.`);
@@ -1514,15 +1518,66 @@ function BulkImportExportTab({ supplierId, onSuccess }: { supplierId: number; on
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="rounded-lg border p-4 bg-muted/50">
-              <p className="text-sm text-muted-foreground">
-                <strong>Preview functionality coming soon.</strong> This will show:
-              </p>
-              <ul className="list-disc list-inside text-sm text-muted-foreground mt-2 ml-2 space-y-1">
-                <li>Summary: X rows valid, Y rows with errors (by service type)</li>
-                <li>Table preview of parsed data grouped by sheet</li>
-                <li>Validation errors with sheet name, row number, and error message</li>
-              </ul>
+            <div className="space-y-4">
+              {/* Summary */}
+              {previewData?.summary && (
+                <div className="bg-muted/50 rounded-lg p-4 border">
+                  <h4 className="font-medium mb-2">Import Summary</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Total Rows:</span>
+                      <span className="ml-2 font-medium">{previewData.summary.totalRows}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Valid Rates:</span>
+                      <span className="ml-2 font-medium text-green-600">{previewData.summary.validRows}</span>
+                    </div>
+                  </div>
+                  
+                  {/* By Service Type */}
+                  {Object.keys(previewData.summary.byService || {}).length > 0 && (
+                    <div className="mt-4">
+                      <h5 className="text-sm font-medium mb-2">By Service Type:</h5>
+                      <div className="space-y-1 text-sm">
+                        {Object.entries(previewData.summary.byService).map(([service, stats]: [string, any]) => (
+                          <div key={service} className="flex justify-between">
+                            <span className="text-muted-foreground capitalize">{service.replace(/_/g, ' ')}</span>
+                            <span>
+                              <span className="text-green-600">{stats.valid} valid</span>
+                              {stats.errors > 0 && <span className="text-red-600 ml-2">{stats.errors} errors</span>}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* Validation Errors */}
+              {validationErrors.length > 0 && (
+                <div className="bg-red-50 dark:bg-red-950/20 rounded-lg p-4 border border-red-200 dark:border-red-900">
+                  <h4 className="font-medium text-red-900 dark:text-red-100 mb-3">Validation Errors ({validationErrors.length})</h4>
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {validationErrors.map((error: any, idx: number) => (
+                      <div key={idx} className="text-sm bg-white dark:bg-gray-900 rounded p-3 border border-red-200 dark:border-red-800">
+                        <div className="flex items-start gap-2">
+                          <span className="text-red-600 dark:text-red-400 font-mono text-xs mt-0.5">⚠</span>
+                          <div className="flex-1">
+                            <div className="font-medium text-red-900 dark:text-red-100">
+                              {error.sheet} {error.row > 0 && `- Row ${error.row}`} {error.column && `- Column "${error.column}"`}
+                            </div>
+                            <div className="text-red-700 dark:text-red-300 mt-1">{error.message}</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-sm text-red-700 dark:text-red-300 mt-3">
+                    Fix these errors in your Excel file and upload again.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="flex gap-2">

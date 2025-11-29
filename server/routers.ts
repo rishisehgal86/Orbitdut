@@ -2,6 +2,7 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 export const appRouter = router({
@@ -283,8 +284,19 @@ export const appRouter = router({
         fileData: z.string() // base64 encoded Excel file
       }))
       .mutation(async ({ input }) => {
-        const { parseExcelFile } = await import("./excelImport");
-        return await parseExcelFile(input.fileData);
+        try {
+          console.log('[parseExcelFile] Starting parse for supplier:', input.supplierId);
+          const { parseExcelFile } = await import("./excelImport");
+          const result = await parseExcelFile(input.fileData);
+          console.log('[parseExcelFile] Parse complete, returning result');
+          return result;
+        } catch (error: any) {
+          console.error('[parseExcelFile] Error:', error);
+          throw new TRPCError({ 
+            code: 'INTERNAL_SERVER_ERROR', 
+            message: error.message || 'Failed to parse Excel file' 
+          });
+        }
       }),
 
     // Import rates from parsed Excel data

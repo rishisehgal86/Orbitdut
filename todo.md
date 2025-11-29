@@ -678,3 +678,24 @@
 - [x] Fix bulkUpsertRates is not a function error
 - [x] Implement bulkUpsertRates function in db.ts to handle bulk rate insertions
 - [x] Test complete import workflow with real Excel file
+
+## Bug Fixes - Excel Import Recognition
+- [ ] Debug why uploaded Excel file shows no rates recognized
+- [ ] Issue is with how parser reads uploaded file and extracts rate values
+- [ ] Parser returns 0 rates even when file contains valid rate data
+- [ ] Add debug logging to parseExcelFile to trace the parsing process
+- [ ] Fix the rate extraction logic in excelImport.ts
+
+## Bug Fixes - Excel Import Column Mapping
+- [ ] Rates are being captured in the wrong response time columns
+- [ ] Debug findRateColumns function to see how it matches headers
+- [ ] Fix the column header matching logic to correctly map response times
+- [ ] Test import with actual data to verify correct column mapping
+
+## Bug Fixes - Excel Import Column Mapping Issue
+- [x] Fix 4h rate reading 24h column value (off-by-one error)
+- [x] Root cause: "24h rate" contains substring "4h rate", causing incorrect match
+- [x] Solution: Use regex with word boundary (\b) to match exact response times
+- [x] Updated findRateColumns to use pattern: \b${responseTime}h\s+rate
+- [x] Verified all response times now map to correct columns
+- [x] Tested with Micronesia data: 4h=299, 24h=289, 48h=279, 72h=269, 96h=259
