@@ -1298,7 +1298,7 @@ function BulkImportExportTab({ supplierId, onSuccess }: { supplierId: number; on
   const [validationErrors, setValidationErrors] = useState<any[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const downloadTemplateMutation = trpc.rates.downloadExcelTemplate.useQuery(
+  const downloadTemplateMutation = trpc.supplier.downloadExcelTemplate.useQuery(
     { supplierId },
     { enabled: false }
   );

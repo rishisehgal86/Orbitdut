@@ -34,7 +34,11 @@ export async function generateExcelTemplate(supplierId: number) {
 
   const coveredCountryCodes = coveredCountries.map((c) => c.countryCode);
 
-  // TODO: Add city coverage query once schema is clarified
+  // Get supplier's priority cities
+  const coveredCities = await db
+    .select()
+    .from(supplierPriorityCities)
+    .where(eq(supplierPriorityCities.supplierId, supplierId));
 
   // Get all current rates for this supplier
   const allRates = await db
@@ -58,17 +62,32 @@ export async function generateExcelTemplate(supplierId: number) {
     // Style fixed columns (first 3 columns)
     styleFixedColumns(countriesSheet, countriesData.length);
     
+    // Excel sheet names must be ≤31 chars
+    // "L1 End User Computing - Countries" = 33 chars (too long)
+    // Shorten to "L1 EUC - Countries" = 20 chars
+    const shortLabel = service.label
+      .replace("End User Computing", "EUC")
+      .replace("Network Support", "Network")
+      .replace("Smart Hands", "Smart Hands");
+    
     XLSX.utils.book_append_sheet(
       workbook,
       countriesSheet,
-      `${service.label} - Countries`
+      `${shortLabel} - Countries`
     );
 
-    // TODO: Add city sheets once schema is clarified
-    // const citiesData = generateCitiesSheet(coveredCities, service.value, allRates);
-    // const citiesSheet = XLSX.utils.aoa_to_sheet(citiesData);
-    // styleFixedColumns(citiesSheet, citiesData.length, 4);
-    // XLSX.utils.book_append_sheet(workbook, citiesSheet, `${service.label} - Cities`);
+    // Cities sheet
+    const citiesData = generateCitiesSheet(coveredCities, service.value, allRates);
+    const citiesSheet = XLSX.utils.aoa_to_sheet(citiesData);
+    
+    // Style fixed columns (first 4 columns for cities: City, State, Country, Code)
+    styleFixedColumns(citiesSheet, citiesData.length, 4);
+    
+    XLSX.utils.book_append_sheet(
+      workbook,
+      citiesSheet,
+      `${shortLabel} - Cities`
+    );
   }
 
   // Generate Excel file as base64
@@ -145,10 +164,10 @@ function generateCountriesSheet(
 
 function generateCitiesSheet(
   coveredCities: Array<{
-    cityId: number;
-    cityName: string | null;
+    id: number;
+    cityName: string;
     stateProvince: string | null;
-    countryCode: string | null;
+    countryCode: string;
   }>,
   serviceType: string,
   allRates: any[]
@@ -189,7 +208,7 @@ function generateCitiesSheet(
     for (const responseTime of RESPONSE_TIMES) {
       const rate = allRates.find(
         (r) =>
-          r.cityId === city.cityId &&
+          r.cityId === city.id &&
           r.serviceType === serviceType &&
           r.responseTimeHours === responseTime &&
           r.rateUsdCents !== null

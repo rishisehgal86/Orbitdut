@@ -632,15 +632,15 @@
 - [x] Fix state key to include serviceType so editing one service doesn't affect other services' inputs
 
 ## Bulk Import/Export Tab - Excel Multi-Sheet Implementation
-- [ ] Install xlsx npm package for Excel file handling
-- [ ] Create backend API to generate Excel template with 6 sheets (3 services × 2 location types)
-- [ ] Sheet structure: Service Name - Countries, Service Name - Cities
-- [ ] Include only covered locations in template (filter by supplier coverage)
-- [ ] Add columns: Region (fixed), Location (fixed), Country Code (fixed), 4h Rate (editable), 24h Rate (editable), 48h Rate (editable), 72h Rate (editable), 96h Rate (editable)
-- [ ] Mark fixed columns with header styling or instructions (Do Not Edit)
+- [x] Install xlsx npm package for Excel file handling
+- [x] Create backend API to generate Excel template with 6 sheets (3 services × 2 location types)
+- [x] Sheet structure: Service Name - Countries, Service Name - Cities
+- [x] Include only covered locations in template (filter by supplier coverage)
+- [x] Add columns: Region (fixed), Location (fixed), Country Code (fixed), 4h Rate (editable), 24h Rate (editable), 48h Rate (editable), 72h Rate (editable), 96h Rate (editable)
+- [x] Mark fixed columns with header styling or instructions (Do Not Edit)
 - [ ] Add data validation: rates must be USD with 2 decimal places (e.g., 150.00)
 - [ ] Include sample row in template showing correct format
-- [ ] Pre-fill template with current rates if they exist
+- [x] Pre-fill template with current rates if they exist
 - [ ] Create backend API to parse uploaded Excel file and validate data
 - [x] Build Bulk Import/Export tab UI with card-based layout
 - [x] Add "Download Excel Template" button
@@ -652,13 +652,14 @@
 - [ ] Test with sample Excel files
 
 ## Bulk Import/Export - Excel Template Generation Implementation
-- [ ] Create tRPC procedure `rates.downloadExcelTemplate` to generate Excel file
-- [ ] Query supplier's covered locations from coverage tables
-- [ ] Query current rates for all service types and response times
-- [ ] Generate 6 sheets using xlsx library (L1 EUC Countries, L1 EUC Cities, L1 Network Countries, L1 Network Cities, Smart Hands Countries, Smart Hands Cities)
-- [ ] Add columns: Region, Location, Country Code, 4h Rate, 24h Rate, 48h Rate, 72h Rate, 96h Rate
-- [ ] Pre-fill with current rates where they exist
-- [ ] Style fixed columns (Region, Location, Country Code) with different background color
-- [ ] Return Excel file as base64 or buffer for download
-- [ ] Connect frontend download button to call the tRPC procedure
-- [ ] Test download with actual supplier data
+- [x] Create tRPC procedure `supplier.downloadExcelTemplate` to generate Excel file
+- [x] Query supplier's covered locations from coverage tables
+- [x] Query current rates for all service types and response times
+- [x] Generate 6 sheets using xlsx library (L1 EUC Countries, L1 EUC Cities, L1 Network Countries, L1 Network Cities, Smart Hands Countries, Smart Hands Cities)
+- [x] Add columns: Region, Location, Country Code, 4h Rate, 24h Rate, 48h Rate, 72h Rate, 96h Rate
+- [x] Pre-fill with current rates where they exist
+- [x] Style fixed columns (Region, Location, Country Code) with different background color
+- [x] Return Excel file as base64 or buffer for download
+- [x] Connect frontend download button to call the tRPC procedure
+- [x] Test download with actual supplier data
+- [x] Fix sheet names to comply with Excel 31-character limit
