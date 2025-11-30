@@ -947,3 +947,12 @@
 - [x] Test: Mark a rate as "Not Offered" and verify Total decreases
 - [x] Verify percentage calculation still works correctly
 - [x] Verified: Total=249 (255-6 excluded), Configured=175, Missing=74, Completion=70%
+
+## Fix Total Rates Not Increasing When Re-enabling Rates
+- [x] Investigate getRateCompletionStats calculation logic
+- [x] Check how exclusions are counted (isServiceable = 0)
+- [x] Verified exclusion removal deletes rows from exclusion tables
+- [x] Fix calculation to count exclusions from exclusion tables instead of rates table
+- [x] Test: Remove an exclusion and verify Total increases (230 → 225 → 230) ✓
+- [x] Test: Add an exclusion and verify Total decreases (worked correctly) ✓
+- [x] Verified: Total now dynamically updates when exclusions are added/removed

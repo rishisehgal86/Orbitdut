@@ -206,8 +206,37 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
   // 6. Configured = coverage rates with prices
   const configured = coverageRates.filter((r: SupplierRate) => r.rateUsdCents !== null).length;
   
-  // 7. Excluded = coverage rates with isServiceable = 0
-  const excluded = coverageRates.filter((r: SupplierRate) => r.isServiceable === 0).length;
+  // 7. Count exclusions from exclusion tables (not from rates table)
+  const { supplierServiceExclusions, supplierResponseTimeExclusions } = await import("../drizzle/schema");
+  
+  // Service exclusions: each excludes 5 response times (entire service/location combo)
+  const serviceExclusions = await db
+    .select()
+    .from(supplierServiceExclusions)
+    .where(eq(supplierServiceExclusions.supplierId, supplierId));
+  
+  // Filter to only exclusions in current coverage
+  const coverageServiceExclusions = serviceExclusions.filter(excl => {
+    if (excl.countryCode && coverageCountryCodes.has(excl.countryCode)) return true;
+    if (excl.cityId && coverageCityIds.has(excl.cityId)) return true;
+    return false;
+  });
+  
+  // Response time exclusions: each excludes 1 specific rate slot
+  const responseTimeExclusions = await db
+    .select()
+    .from(supplierResponseTimeExclusions)
+    .where(eq(supplierResponseTimeExclusions.supplierId, supplierId));
+  
+  // Filter to only exclusions in current coverage
+  const coverageResponseTimeExclusions = responseTimeExclusions.filter(excl => {
+    if (excl.countryCode && coverageCountryCodes.has(excl.countryCode)) return true;
+    if (excl.cityId && coverageCityIds.has(excl.cityId)) return true;
+    return false;
+  });
+  
+  // Total exclusions = (service exclusions × 5) + response time exclusions
+  const excluded = (coverageServiceExclusions.length * 5) + coverageResponseTimeExclusions.length;
   
   // 8. Total = virtual matrix - excluded (only count serviceable rates)
   const total = virtualMatrixSize - excluded;
