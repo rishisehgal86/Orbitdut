@@ -230,28 +230,26 @@ export default function CurrentRates() {
               <CardTitle>Rate Configuration Summary</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
-                  <div className="text-2xl font-bold">{stats.configured}</div>
-                  <div className="text-sm text-muted-foreground">Total Configured</div>
+                  <div className="text-2xl font-bold text-gray-700">{stats.totalPossible.toLocaleString()}</div>
+                  <div className="text-sm text-muted-foreground">Total Rates</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-amber-600">
-                    {stats.totalPossible - stats.configured}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Missing Rates</div>
+                  <div className="text-2xl font-bold text-green-600">{stats.configured.toLocaleString()}</div>
+                  <div className="text-sm text-muted-foreground">Configured</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-green-600">
-                    {Math.round(stats.percentage)}%
+                  <div className="text-2xl font-bold text-orange-600">
+                    {(stats.totalPossible - stats.configured).toLocaleString()}
                   </div>
-                  <div className="text-sm text-muted-foreground">Completion</div>
+                  <div className="text-sm text-muted-foreground">Missing</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-blue-600">
-                    {stats.byLocationType.countries.configured}
+                    {Math.round(stats.percentage)}%
                   </div>
-                  <div className="text-sm text-muted-foreground">Country Rates</div>
+                  <div className="text-sm text-muted-foreground">Completion</div>
                 </div>
               </div>
             </CardContent>

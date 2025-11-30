@@ -798,3 +798,11 @@
 - [x] Each calculation is tenant-specific (per supplierId)
 - [x] Test with real data to verify accuracy
 - [x] Verified: Total 2956, Missing 0, Completion 100% ✅
+
+## Feature - Add Total Rates Card to Summary
+- [x] Add "Total Rates" card showing totalPossible (configured + missing)
+- [x] Update Current Rates page summary to show 4 cards: Total Rates, Configured, Missing, Completion %
+- [x] Update Rate Management page summary to show 4 cards
+- [x] Ensure card order makes sense: Total Rates → Configured → Missing → Completion %
+- [x] Test with real data to verify accuracy
+- [x] Verified: Both pages show Total Rates 2,956, Configured 2,956, Missing 0, Completion 100% ✅

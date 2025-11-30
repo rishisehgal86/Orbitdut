@@ -79,18 +79,22 @@ export default function RateManagement() {
             <CardContent>
               <div className="space-y-6">
                 {/* Overall Status Summary */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-                    <div className="text-2xl font-bold text-green-700 dark:text-green-400">{stats.configured}</div>
-                    <div className="text-xs text-green-600 dark:text-green-500 mt-1">Configured Rates</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-gray-50 dark:bg-gray-950/20 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+                    <div className="text-2xl font-bold text-gray-700 dark:text-gray-400">{stats.totalPossible.toLocaleString()}</div>
+                    <div className="text-xs text-gray-600 dark:text-gray-500 mt-1">Total Rates</div>
                   </div>
-                  <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                    <div className="text-2xl font-bold text-red-700 dark:text-red-400">{stats.totalPossible - stats.configured}</div>
-                    <div className="text-xs text-red-600 dark:text-red-500 mt-1">Missing Rates</div>
+                  <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                    <div className="text-2xl font-bold text-green-700 dark:text-green-400">{stats.configured.toLocaleString()}</div>
+                    <div className="text-xs text-green-600 dark:text-green-500 mt-1">Configured</div>
+                  </div>
+                  <div className="bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
+                    <div className="text-2xl font-bold text-orange-700 dark:text-orange-400">{(stats.totalPossible - stats.configured).toLocaleString()}</div>
+                    <div className="text-xs text-orange-600 dark:text-orange-500 mt-1">Missing</div>
                   </div>
                   <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                     <div className="text-2xl font-bold text-blue-700 dark:text-blue-400">{stats.percentage}%</div>
-                    <div className="text-xs text-blue-600 dark:text-blue-500 mt-1">Completion Rate</div>
+                    <div className="text-xs text-blue-600 dark:text-blue-500 mt-1">Completion</div>
                   </div>
                 </div>
 
