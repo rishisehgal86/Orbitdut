@@ -132,7 +132,9 @@ export async function getSupplierRates(supplierId: number) {
  */
 export async function getRateCompletionStats(supplierId: number): Promise<{
   totalPossible: number;
+  exclusions: number;
   configured: number;
+  missing: number;
   percentage: number;
   byLocationType: {
     countries: { totalPossible: number; configured: number; percentage: number };
@@ -144,62 +146,91 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
     smart_hands: { totalPossible: number; configured: number; percentage: number };
   };
 }> {
-  // Simple database-driven calculation
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const { or, isNull } = await import("drizzle-orm");
+  const { supplierCoverageCountries, supplierPriorityCities, supplierServiceExclusions, supplierResponseTimeExclusions } = await import("../drizzle/schema");
+  const { sql } = await import("drizzle-orm");
   
-  // Get all serviceable rates for this supplier (isServiceable = 1 or null)
-  // This automatically excludes both service and response time exclusions
-  const allRates = await db
+  // 1. Calculate Total Rates from coverage: (Countries + Cities) × 3 services × 5 response times
+  const [countryData] = await db
+    .select({ count: sql<number>`COUNT(DISTINCT \`countryCode\`)` })
+    .from(supplierCoverageCountries)
+    .where(eq(supplierCoverageCountries.supplierId, supplierId));
+  
+  const [cityData] = await db
+    .select({ count: sql<number>`COUNT(DISTINCT \`id\`)` })
+    .from(supplierPriorityCities)
+    .where(eq(supplierPriorityCities.supplierId, supplierId));
+  
+  const locationCount = (Number(countryData?.count) || 0) + (Number(cityData?.count) || 0);
+  const totalPossible = locationCount * 3 * 5; // 3 services × 5 response times
+  
+  // 2. Count Exclusions from both exclusion tables
+  const [serviceExclusionCount] = await db
+    .select({ count: sql<number>`COUNT(*)` })
+    .from(supplierServiceExclusions)
+    .where(eq(supplierServiceExclusions.supplierId, supplierId));
+  
+  const [responseTimeExclusionCount] = await db
+    .select({ count: sql<number>`COUNT(*)` })
+    .from(supplierResponseTimeExclusions)
+    .where(eq(supplierResponseTimeExclusions.supplierId, supplierId));
+  
+  // Service exclusions remove 5 slots each (all response times), response time exclusions remove 1 slot each
+  const exclusions = (Number(serviceExclusionCount?.count) || 0) * 5 + (Number(responseTimeExclusionCount?.count) || 0);
+  
+  // 3. Get all ACTIVE (non-excluded) rates from database
+  const activeRates = await db
     .select()
     .from(supplierRates)
     .where(
       and(
         eq(supplierRates.supplierId, supplierId),
-        or(
-          eq(supplierRates.isServiceable, 1),
-          isNull(supplierRates.isServiceable)
-        )
+        eq(supplierRates.isServiceable, 1)
       )
     );
-
-  // Pure database counts - no filtering by service type
-  // Total = all serviceable rate slots in database (isServiceable handles exclusions)
-  const totalPossible = allRates.length;
   
-  // Configured = serviceable rates with prices filled in
-  const configuredRates = allRates.filter((r: SupplierRate) => r.rateUsdCents !== null);
+  // 4. Configured = active rates with prices
+  const configuredRates = activeRates.filter((r: SupplierRate) => r.rateUsdCents !== null);
   const configured = configuredRates.length;
+  
+  // 5. Missing = active rates without prices
+  const missing = activeRates.filter((r: SupplierRate) => r.rateUsdCents === null).length;
 
-  // Calculate by location type - simple database counts
-  const countryServiceableRates = allRates.filter((r: SupplierRate) => r.countryCode !== null);
-  const cityServiceableRates = allRates.filter((r: SupplierRate) => r.cityId !== null);
+  // Calculate by location type using active rates
+  const countryActiveRates = activeRates.filter((r: SupplierRate) => r.countryCode !== null);
+  const cityActiveRates = activeRates.filter((r: SupplierRate) => r.cityId !== null);
   
   const countryConfiguredRates = configuredRates.filter((r: SupplierRate) => r.countryCode !== null);
   const cityConfiguredRates = configuredRates.filter((r: SupplierRate) => r.cityId !== null);
   
-  const countryTotalPossible = countryServiceableRates.length;
-  const cityTotalPossible = cityServiceableRates.length;
+  const countryTotalPossible = countryActiveRates.length;
+  const cityTotalPossible = cityActiveRates.length;
 
-  // Calculate by service type - simple database counts
-  const l1EucServiceableRates = allRates.filter((r: SupplierRate) => r.serviceType === "L1_EUC");
-  const l1NetworkServiceableRates = allRates.filter((r: SupplierRate) => r.serviceType === "L1_NETWORK");
-  const smartHandsServiceableRates = allRates.filter((r: SupplierRate) => r.serviceType === "SMART_HANDS");
+  // Calculate by service type using active rates
+  const l1EucActiveRates = activeRates.filter((r: SupplierRate) => r.serviceType === "L1_EUC");
+  const l1NetworkActiveRates = activeRates.filter((r: SupplierRate) => r.serviceType === "L1_NETWORK");
+  const smartHandsActiveRates = activeRates.filter((r: SupplierRate) => r.serviceType === "SMART_HANDS");
   
   const l1EucConfiguredRates = configuredRates.filter((r: SupplierRate) => r.serviceType === "L1_EUC");
   const l1NetworkConfiguredRates = configuredRates.filter((r: SupplierRate) => r.serviceType === "L1_NETWORK");
   const smartHandsConfiguredRates = configuredRates.filter((r: SupplierRate) => r.serviceType === "SMART_HANDS");
   
-  const l1EucTotalPossible = l1EucServiceableRates.length;
-  const l1NetworkTotalPossible = l1NetworkServiceableRates.length;
-  const smartHandsTotalPossible = smartHandsServiceableRates.length;
+  const l1EucTotalPossible = l1EucActiveRates.length;
+  const l1NetworkTotalPossible = l1NetworkActiveRates.length;
+  const smartHandsTotalPossible = smartHandsActiveRates.length;
 
+  // 6. Completion % = Configured / (Total - Exclusions)
+  const effectiveTotal = totalPossible - exclusions;
+  const percentage = effectiveTotal > 0 ? Math.round((configured / effectiveTotal) * 100) : 0;
+  
   return {
     totalPossible,
+    exclusions,
     configured,
-    percentage: totalPossible > 0 ? Math.round((configured / totalPossible) * 100) : 0,
+    missing,
+    percentage,
     byLocationType: {
       countries: {
         totalPossible: countryTotalPossible,

@@ -806,3 +806,16 @@
 - [x] Ensure card order makes sense: Total Rates → Configured → Missing → Completion %
 - [x] Test with real data to verify accuracy
 - [x] Verified: Both pages show Total Rates 2,956, Configured 2,956, Missing 0, Completion 100% ✅
+
+## Rewrite - Rate Completion Calculations
+- [x] User requirements clarified
+- [x] Total Rates = (Countries + Cities) × 3 services × 5 response times (from coverage)
+- [x] Exclusions = NEW FIELD - count from both exclusion tables (service excl × 5 + response time excl)
+- [x] Configured = COUNT WHERE rateUsdCents IS NOT NULL AND isServiceable = 1
+- [x] Missing = COUNT WHERE rateUsdCents IS NULL AND isServiceable = 1
+- [x] Completion % = (Configured / (Total Rates - Exclusions)) × 100
+- [x] Update getRateCompletionStats function with new return type
+- [x] Add Exclusions and Missing cards to UI
+- [x] Add Country Rates breakdown field to UI
+- [x] Fix SQL column name issues (countryCode, cityId)
+- [x] Test with supplier 12 (12@supplier.com)
