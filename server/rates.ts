@@ -181,20 +181,46 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
   // Response time exclusions remove 1 slot each (specific service/location/response time)
   const exclusions = (Number(serviceExclusionCount?.count) || 0) * 5 + (Number(responseTimeExclusionCount?.count) || 0);
   
-  // 3. Get ALL rates from database (for configured count)
+  // 3. Get current coverage locations (countries and cities)
+  const coverageCountries = await db
+    .select({ countryCode: supplierCoverageCountries.countryCode })
+    .from(supplierCoverageCountries)
+    .where(eq(supplierCoverageCountries.supplierId, supplierId));
+  
+  const coverageCities = await db
+    .select({ cityId: supplierPriorityCities.id })
+    .from(supplierPriorityCities)
+    .where(eq(supplierPriorityCities.supplierId, supplierId));
+  
+  const coverageCountryCodes = new Set(coverageCountries.map(c => c.countryCode));
+  const coverageCityIds = new Set(coverageCities.map(c => c.cityId));
+  
+  // 4. Get ALL rates from database
   const allRates = await db
     .select()
     .from(supplierRates)
     .where(eq(supplierRates.supplierId, supplierId));
   
-  // 4. Configured = ALL rates with prices (regardless of isServiceable)
-  const configuredRates = allRates.filter((r: SupplierRate) => r.rateUsdCents !== null);
+  // 5. Configured = rates with prices for locations in CURRENT coverage only
+  const configuredRates = allRates.filter((r: SupplierRate) => {
+    if (r.rateUsdCents === null) return false;
+    // Check if rate is for a location in current coverage
+    if (r.countryCode && coverageCountryCodes.has(r.countryCode)) return true;
+    if (r.cityId && coverageCityIds.has(r.cityId)) return true;
+    return false;
+  });
   const configured = configuredRates.length;
   
-  // 5. Get ACTIVE (non-excluded) rates for missing count
-  const activeRates = allRates.filter((r: SupplierRate) => r.isServiceable === 1);
+  // 6. Get ACTIVE (non-excluded) rates for missing count, filtered by current coverage
+  const activeRates = allRates.filter((r: SupplierRate) => {
+    if (r.isServiceable !== 1) return false;
+    // Only count rates for locations in current coverage
+    if (r.countryCode && coverageCountryCodes.has(r.countryCode)) return true;
+    if (r.cityId && coverageCityIds.has(r.cityId)) return true;
+    return false;
+  });
   
-  // 6. Missing = active rates without prices
+  // 7. Missing = active rates without prices (already filtered by coverage)
   const missing = activeRates.filter((r: SupplierRate) => r.rateUsdCents === null).length;
 
   // Calculate by location type using active rates

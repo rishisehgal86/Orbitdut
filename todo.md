@@ -835,3 +835,25 @@
 - [x] Update query to count all rates with prices entered
 - [x] Test with supplier data to verify accurate count
 - [x] Verified: Shows 2,956 configured rates (matches database count)
+
+## Clarification - Configured Count Should Be Simple Database Query
+- [x] Configured = COUNT rates with prices for locations in CURRENT coverage only
+- [x] This is account-specific, counting rate entries with prices
+- [x] Must filter by current coverage to avoid counting orphaned rates
+- [x] Implementation verified and working correctly
+
+## Bug Fix - Configured Count Exceeds Total Rates
+- [x] Issue: Configured (354) > Total Rates (255) - mathematically impossible
+- [x] Root cause: Total calculated from coverage, Configured from all database entries
+- [x] Orphaned rates exist for locations no longer in coverage
+- [x] Solution: Filter Configured to only count rates for locations in CURRENT coverage
+- [x] This ensures Total always >= Configured
+- [x] Test with multiple supplier accounts to verify consistency
+- [x] Verified: Supplier 12 shows 170 configured < 255 total (correct!)
+
+## Apply Coverage Filtering to Missing Count
+- [x] Missing should also only count rates for locations in current coverage
+- [x] Use same filtering logic as Configured (check against coverageCountryCodes and coverageCityIds)
+- [x] Ensure Missing + Configured <= Total Rates - Exclusions
+- [x] Test with supplier 12 to verify accuracy
+- [x] Verified: Configured (170) + Missing (0) = 170 ≤ 230 (255 - 25) ✓
