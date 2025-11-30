@@ -770,3 +770,11 @@
 - [x] Remove coverage-based calculation logic (countries, cities, services multiplication)
 - [x] Test with real data to verify accuracy
 - [x] Verified: Total 0, Configured 0, Missing 0, Completion 0% (correct after legacy deletion)
+
+## CRITICAL BUG - Current Rates Page Shows 0
+- [x] Current Rates page shows "0 Total Configured" but rates exist in table
+- [x] Rate Configuration Summary showing all zeros despite visible rate data
+- [x] Root cause: Service type case mismatch (filtering for lowercase, DB has uppercase)
+- [x] Fixed: Changed filter from "l1_euc" to "L1_EUC" (and others)
+- [x] Test to verify statistics now show correct numbers
+- [x] Verified: Total 2956, Missing 0, Completion 100%, Country Rates 2940 ✅

@@ -1,0 +1,90 @@
+{
+  "query": "SELECT id, companyName FROM suppliers LIMIT 20",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT id, companyName FROM suppliers LIMIT 20",
+  "rows": [
+    {
+      "id": "1",
+      "companyName": "Test Supplier Co"
+    },
+    {
+      "id": "2",
+      "companyName": "Original Name"
+    },
+    {
+      "id": "3",
+      "companyName": "Rate Test Co"
+    },
+    {
+      "id": "4",
+      "companyName": "Coverage Test Co"
+    },
+    {
+      "id": "5",
+      "companyName": "Delete Test Co"
+    },
+    {
+      "id": "6",
+      "companyName": "Test Supplier Co"
+    },
+    {
+      "id": "7",
+      "companyName": "Updated Name"
+    },
+    {
+      "id": "8",
+      "companyName": "Rate Test Co"
+    },
+    {
+      "id": "9",
+      "companyName": "Coverage Test Co"
+    },
+    {
+      "id": "10",
+      "companyName": "Delete Test Co"
+    },
+    {
+      "id": "30001",
+      "companyName": "Test Supplier Co"
+    },
+    {
+      "id": "30002",
+      "companyName": "Updated Name"
+    },
+    {
+      "id": "30003",
+      "companyName": "Rate Test Co"
+    },
+    {
+      "id": "30004",
+      "companyName": "Coverage Test Co"
+    },
+    {
+      "id": "30005",
+      "companyName": "Delete Test Co"
+    },
+    {
+      "id": "60001",
+      "companyName": "Test Supplier Co"
+    },
+    {
+      "id": "60002",
+      "companyName": "Updated Name"
+    },
+    {
+      "id": "60003",
+      "companyName": "Rate Test Co"
+    },
+    {
+      "id": "60004",
+      "companyName": "Coverage Test Co"
+    },
+    {
+      "id": "60005",
+      "companyName": "Delete Test Co"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcompanyName\n1\tTest Supplier Co\n2\tOriginal Name\n3\tRate Test Co\n4\tCoverage Test Co\n5\tDelete Test Co\n6\tTest Supplier Co\n7\tUpdated Name\n8\tRate Test Co\n9\tCoverage Test Co\n10\tDelete Test Co\n30001\tTest Supplier Co\n30002\tUpdated Name\n30003\tRate Test Co\n30004\tCoverage Test Co\n30005\tDelete Test Co\n60001\tTest Supplier Co\n60002\tUpdated Name\n60003\tRate Test Co\n60004\tCoverage Test Co\n60005\tDelete Test Co\n",
+  "stderr": "",
+  "execution_time_ms": 183
+}

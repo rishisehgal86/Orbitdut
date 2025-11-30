@@ -165,9 +165,9 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
       )
     );
 
-  // Only count rates with valid service types
+  // Only count rates with valid service types (uppercase)
   const serviceableRates = allRates.filter((r: SupplierRate) => 
-    r.serviceType === "l1_euc" || r.serviceType === "l1_network" || r.serviceType === "smart_hands"
+    r.serviceType === "L1_EUC" || r.serviceType === "L1_NETWORK" || r.serviceType === "SMART_HANDS"
   );
   
   // Total = all serviceable rate slots in database
@@ -187,14 +187,14 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
   const countryTotalPossible = countryServiceableRates.length;
   const cityTotalPossible = cityServiceableRates.length;
 
-  // Calculate by service type - simple database counts
-  const l1EucServiceableRates = serviceableRates.filter((r: SupplierRate) => r.serviceType === "l1_euc");
-  const l1NetworkServiceableRates = serviceableRates.filter((r: SupplierRate) => r.serviceType === "l1_network");
-  const smartHandsServiceableRates = serviceableRates.filter((r: SupplierRate) => r.serviceType === "smart_hands");
+  // Calculate by service type - simple database counts (uppercase)
+  const l1EucServiceableRates = serviceableRates.filter((r: SupplierRate) => r.serviceType === "L1_EUC");
+  const l1NetworkServiceableRates = serviceableRates.filter((r: SupplierRate) => r.serviceType === "L1_NETWORK");
+  const smartHandsServiceableRates = serviceableRates.filter((r: SupplierRate) => r.serviceType === "SMART_HANDS");
   
-  const l1EucConfiguredRates = configuredRates.filter((r: SupplierRate) => r.serviceType === "l1_euc");
-  const l1NetworkConfiguredRates = configuredRates.filter((r: SupplierRate) => r.serviceType === "l1_network");
-  const smartHandsConfiguredRates = configuredRates.filter((r: SupplierRate) => r.serviceType === "smart_hands");
+  const l1EucConfiguredRates = configuredRates.filter((r: SupplierRate) => r.serviceType === "L1_EUC");
+  const l1NetworkConfiguredRates = configuredRates.filter((r: SupplierRate) => r.serviceType === "L1_NETWORK");
+  const smartHandsConfiguredRates = configuredRates.filter((r: SupplierRate) => r.serviceType === "SMART_HANDS");
   
   const l1EucTotalPossible = l1EucServiceableRates.length;
   const l1NetworkTotalPossible = l1NetworkServiceableRates.length;
