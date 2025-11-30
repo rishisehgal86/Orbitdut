@@ -1,0 +1,8 @@
+{
+  "query": "SELECT id, supplierId, countryCode, cityId, serviceType, responseTimeHours, rateUsdCents, isServiceable FROM supplierRates WHERE supplierId = 12 AND serviceType = 'SMART_HANDS' AND (countryCode = 'FJ' OR cityId IN (SELECT id FROM globalCities WHERE countryCode = 'FJ')) ORDER BY responseTimeHours",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT id, supplierId, countryCode, cityId, serviceType, responseTimeHours, rateUsdCents, isServiceable FROM supplierRates WHERE supplierId = 12 AND serviceType = 'SMART_HANDS' AND (countryCode = 'FJ' OR cityId IN (SELECT id FROM globalCities WHERE countryCode = 'FJ')) ORDER BY responseTimeHours",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1146 (42S02) at line 1: Table '2cukucnz2s5thqplsdbdyn.globalCities' doesn't exist"
+  ]
+}

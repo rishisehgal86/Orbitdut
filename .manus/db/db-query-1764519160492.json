@@ -1,0 +1,15 @@
+{
+  "query": "SELECT COUNT(*) as total_missing, SUM(CASE WHEN isServiceable = 1 THEN 1 ELSE 0 END) as active_missing, SUM(CASE WHEN isServiceable IS NULL THEN 1 ELSE 0 END) as null_serviceable FROM supplierRates WHERE supplierId = 12 AND rateUsdCents IS NULL",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT COUNT(*) as total_missing, SUM(CASE WHEN isServiceable = 1 THEN 1 ELSE 0 END) as active_missing, SUM(CASE WHEN isServiceable IS NULL THEN 1 ELSE 0 END) as null_serviceable FROM supplierRates WHERE supplierId = 12 AND rateUsdCents IS NULL",
+  "rows": [
+    {
+      "total_missing": "0",
+      "active_missing": "NULL",
+      "null_serviceable": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_missing\tactive_missing\tnull_serviceable\n0\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 51
+}

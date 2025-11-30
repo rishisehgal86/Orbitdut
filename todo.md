@@ -857,3 +857,22 @@
 - [x] Ensure Missing + Configured <= Total Rates - Exclusions
 - [x] Test with supplier 12 to verify accuracy
 - [x] Verified: Configured (170) + Missing (0) = 170 ≤ 230 (255 - 25) ✓
+
+## Bug Fix - Missing Count Shows 0 But Should Show Actual Missing Rates
+- [ ] Root cause: getSupplierRates (UI table) shows ALL rates, getRateCompletionStats (statistics) filters by coverage
+- [ ] Solution: Update getSupplierRates to also filter by current coverage
+- [ ] This ensures UI table and statistics use the same data set
+- [ ] Missing count will then accurately reflect what's shown in the table
+- [ ] Test with supplier 12 to verify Fiji rates appear correctly
+
+## Rewrite - Rate Configuration Summary (Simplified)
+- [x] Remove all old complex logic (coverage filtering, exclusion table queries)
+- [x] Total Rates = COUNT(*) FROM supplierRates WHERE supplierId = X
+- [x] Configured = COUNT(*) WHERE rateUsdCents IS NOT NULL
+- [x] Missing = COUNT(*) WHERE rateUsdCents IS NULL AND isServiceable != 1
+- [x] Excluded = COUNT(*) WHERE isServiceable = 0
+- [x] Percentage calculation to be added later (set to 0 for now)
+- [x] Update return type to match new fields
+- [x] Update UI to display new 5-column layout
+- [x] Test with supplier 12 data
+- [x] Verified: Total=354, Configured=354, Missing=0, Excluded=6
