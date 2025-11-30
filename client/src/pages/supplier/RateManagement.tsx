@@ -94,15 +94,7 @@ export default function RateManagement() {
                   </div>
                 </div>
 
-                {/* Legacy Rates Warning */}
-                {stats.legacyRates > 0 && (
-                  <Alert className="bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
-                    <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                    <AlertDescription className="text-amber-900 dark:text-amber-100">
-                      <strong>{stats.legacyRates} legacy rates</strong> need to be reconfigured with service types. Use Quick Setup below to migrate them.
-                    </AlertDescription>
-                  </Alert>
-                )}
+
 
                 {/* Service Type Breakdown with Actions */}
                 <div className="space-y-3">

@@ -134,7 +134,6 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
   totalPossible: number;
   configured: number;
   percentage: number;
-  legacyRates: number;
   byLocationType: {
     countries: { totalPossible: number; configured: number; percentage: number };
     cities: { totalPossible: number; configured: number; percentage: number };
@@ -192,16 +191,12 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
       )
     );
 
-  // Simple logic: if a rate has a price (rateUsdCents is not null), it's configured
-  const configuredRates = rates.filter((r: SupplierRate) => r.rateUsdCents !== null);
-  const configured = configuredRates.length;
-  
-  // Count legacy rates (rates without proper service type) for warning display
-  const legacyRates = configuredRates.filter((r: SupplierRate) => 
-    r.serviceType !== "l1_euc" && 
-    r.serviceType !== "l1_network" && 
-    r.serviceType !== "smart_hands"
+  // Only count rates with valid service types AND prices as configured
+  const configuredRates = rates.filter((r: SupplierRate) => 
+    r.rateUsdCents !== null &&
+    (r.serviceType === "l1_euc" || r.serviceType === "l1_network" || r.serviceType === "smart_hands")
   );
+  const configured = configuredRates.length;
 
   // Calculate by location type (accounting for exclusions)
   const countryRates = configuredRates.filter((r: SupplierRate) => r.countryCode !== null);
@@ -233,7 +228,6 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
     totalPossible,
     configured,
     percentage: totalPossible > 0 ? Math.round((configured / totalPossible) * 100) : 0,
-    legacyRates: legacyRates.length,
     byLocationType: {
       countries: {
         totalPossible: countryTotalPossible,

@@ -750,3 +750,13 @@
 - [x] Response time exclusions: each removes 1 specific rate slot
 - [x] Test with different exclusion scenarios to verify accuracy
 - [x] Verified: Total dropped from 2970 to 2969, Missing from 14 to 13
+
+## CRITICAL BUG - Missing Rates Calculation
+- [x] Missing rates showing negative numbers (-95, -116)
+- [x] Root cause: Legacy rates (without service types) counted in configured but not in totalPossible
+- [x] Delete all legacy rates from database (rates without service types)
+- [x] Update calculation to only count rates WITH service types as configured
+- [x] Remove legacy rate warning from UI
+- [x] Remove legacyRates from return type
+- [x] Test that missing = totalPossible - configured works correctly
+- [x] Verified: Configured 0, Missing 2969, Completion 0% (all correct!)
