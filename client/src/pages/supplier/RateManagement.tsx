@@ -1129,7 +1129,6 @@ function ByServiceTab({ supplierId, onSuccess }: { supplierId: number; onSuccess
             <TabsContent key={service.value} value={service.value}>
               <LocationRatesTable
                 locations={filterLocations(locationsByService[service.value] || [])}
-                selectedService={service.value}
                 supplierId={supplierId}
                 onSuccess={onSuccess}
                 exclusions={exclusions || []}
