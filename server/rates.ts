@@ -181,22 +181,20 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
   // Response time exclusions remove 1 slot each (specific service/location/response time)
   const exclusions = (Number(serviceExclusionCount?.count) || 0) * 5 + (Number(responseTimeExclusionCount?.count) || 0);
   
-  // 3. Get all ACTIVE (non-excluded) rates from database
-  const activeRates = await db
+  // 3. Get ALL rates from database (for configured count)
+  const allRates = await db
     .select()
     .from(supplierRates)
-    .where(
-      and(
-        eq(supplierRates.supplierId, supplierId),
-        eq(supplierRates.isServiceable, 1)
-      )
-    );
+    .where(eq(supplierRates.supplierId, supplierId));
   
-  // 4. Configured = active rates with prices
-  const configuredRates = activeRates.filter((r: SupplierRate) => r.rateUsdCents !== null);
+  // 4. Configured = ALL rates with prices (regardless of isServiceable)
+  const configuredRates = allRates.filter((r: SupplierRate) => r.rateUsdCents !== null);
   const configured = configuredRates.length;
   
-  // 5. Missing = active rates without prices
+  // 5. Get ACTIVE (non-excluded) rates for missing count
+  const activeRates = allRates.filter((r: SupplierRate) => r.isServiceable === 1);
+  
+  // 6. Missing = active rates without prices
   const missing = activeRates.filter((r: SupplierRate) => r.rateUsdCents === null).length;
 
   // Calculate by location type using active rates

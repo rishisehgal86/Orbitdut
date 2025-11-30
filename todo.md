@@ -827,3 +827,11 @@
 - [x] Verify the calculation matches: (service exclusions × 5) + response time exclusions
 - [x] Test with supplier data to confirm accurate count
 - [x] Verified: Shows 1 exclusion correctly (0 service excl × 5 + 1 RT excl = 1)
+
+## Bug Fix - Configured Count Should Read Actual Rate Entries
+- [x] Review configured calculation in getRateCompletionStats
+- [x] Configured should count ALL rates with rateUsdCents IS NOT NULL (regardless of isServiceable)
+- [x] Current logic only counts isServiceable = 1, missing rates that have prices
+- [x] Update query to count all rates with prices entered
+- [x] Test with supplier data to verify accurate count
+- [x] Verified: Shows 2,956 configured rates (matches database count)
