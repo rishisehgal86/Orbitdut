@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Download, ChevronDown, ChevronRight } from "lucide-react";
 import SupplierLayout from "@/components/SupplierLayout";
 import { RATE_SERVICE_TYPES, RESPONSE_TIME_HOURS, formatCurrency } from "@shared/rates";
+import { RateConfigurationSummary } from "@/components/RateConfigurationSummary";
 
 type ServiceType = typeof RATE_SERVICE_TYPES[number]["value"];
 type ResponseTime = typeof RESPONSE_TIME_HOURS[number];
@@ -49,10 +50,6 @@ export default function CurrentRates() {
     { supplierId: supplierId! },
     { enabled: !!supplierId }
   );
-  const { data: stats } = trpc.supplier.getRateCompletionStats.useQuery(
-    { supplierId: supplierId! },
-    { enabled: !!supplierId }
-  );
   const { data: serviceExclusions } = trpc.supplier.getServiceExclusions.useQuery(
     { supplierId: supplierId! },
     { enabled: !!supplierId }
@@ -62,7 +59,7 @@ export default function CurrentRates() {
     { enabled: !!supplierId }
   );
 
-  // Build rate lookup map
+  // Build rate lookup map for table display
   const rateMap = useMemo(() => {
     const map = new Map<string, number>();
     if (!rates) return map;
@@ -224,36 +221,14 @@ export default function CurrentRates() {
         </div>
 
         {/* Progress Summary */}
-        {stats && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Rate Configuration Summary</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div>
-                  <div className="text-2xl font-bold text-gray-700">{stats.total.toLocaleString()}</div>
-                  <div className="text-sm text-muted-foreground">Total Rates</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-green-600">{stats.configured.toLocaleString()}</div>
-                  <div className="text-sm text-muted-foreground">Configured</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-orange-600">
-                    {stats.missing.toLocaleString()}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Missing</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-blue-600">
-                    {Math.round(stats.percentage)}%
-                  </div>
-                  <div className="text-sm text-muted-foreground">Completion</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {countries && cities && rates && serviceExclusions && responseTimeExclusions && (
+          <RateConfigurationSummary
+            countries={countries}
+            cities={cities}
+            rates={rates}
+            serviceExclusions={serviceExclusions}
+            responseTimeExclusions={responseTimeExclusions}
+          />
         )}
 
         {/* Filters and Table */}
