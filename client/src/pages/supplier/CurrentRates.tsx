@@ -230,7 +230,7 @@ export default function CurrentRates() {
               <CardTitle>Rate Configuration Summary</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                   <div className="text-2xl font-bold text-gray-700">{stats.total.toLocaleString()}</div>
                   <div className="text-sm text-muted-foreground">Total Rates</div>
@@ -244,10 +244,6 @@ export default function CurrentRates() {
                     {stats.missing.toLocaleString()}
                   </div>
                   <div className="text-sm text-muted-foreground">Missing</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-red-600">{stats.excluded.toLocaleString()}</div>
-                  <div className="text-sm text-muted-foreground">Excluded</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-blue-600">

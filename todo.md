@@ -901,3 +901,18 @@
 - [x] Test with supplier 12: Total=255 (17 locations × 3 × 5) ✓
 - [x] Verify Missing count includes Fiji Smart Hands 4h (no DB entry) ✓
 - [x] Validation: 170 + 79 + 6 = 255 ✓
+
+## Remove Excluded Field from Display
+- [x] Remove Excluded card from CurrentRates.tsx statistics display
+- [x] Update grid layout from 5 columns to 4 columns (md:grid-cols-2 lg:grid-cols-4)
+- [x] Keep Excluded in backend calculation (still needed for Missing calculation)
+- [x] Test display with supplier 12
+- [x] Verified: Clean 4-column layout showing Total, Configured, Missing, Completion
+
+## Bug Fix - RateManagement Page Error
+- [x] RateManagement.tsx still references stats.excluded field
+- [x] Update RateManagement to remove Excluded from display (same as CurrentRates)
+- [x] Update grid layout to 4 columns
+- [x] Remove "Missing Rates by Service Type" section (uses stats.byServiceType which no longer exists)
+- [x] Test RateManagement page loads without errors
+- [x] Verified: Page displays correctly with Total=255, Configured=170, Missing=79, Completion=0%

@@ -79,14 +79,10 @@ export default function RateManagement() {
             <CardContent>
               <div className="space-y-6">
                 {/* Overall Status Summary */}
-                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="bg-gray-50 dark:bg-gray-950/20 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
-                    <div className="text-2xl font-bold text-gray-700 dark:text-gray-400">{stats.totalPossible.toLocaleString()}</div>
+                    <div className="text-2xl font-bold text-gray-700 dark:text-gray-400">{stats.total.toLocaleString()}</div>
                     <div className="text-xs text-gray-600 dark:text-gray-500 mt-1">Total Rates</div>
-                  </div>
-                  <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                    <div className="text-2xl font-bold text-red-700 dark:text-red-400">{stats.exclusions.toLocaleString()}</div>
-                    <div className="text-xs text-red-600 dark:text-red-500 mt-1">Exclusions</div>
                   </div>
                   <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
                     <div className="text-2xl font-bold text-green-700 dark:text-green-400">{stats.configured.toLocaleString()}</div>
@@ -96,225 +92,15 @@ export default function RateManagement() {
                     <div className="text-2xl font-bold text-orange-700 dark:text-orange-400">{stats.missing.toLocaleString()}</div>
                     <div className="text-xs text-orange-600 dark:text-orange-500 mt-1">Missing</div>
                   </div>
-                  <div className="bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
-                    <div className="text-2xl font-bold text-purple-700 dark:text-purple-400">{stats.byLocationType.countries.configured.toLocaleString()}</div>
-                    <div className="text-xs text-purple-600 dark:text-purple-500 mt-1">Country Rates</div>
-                  </div>
                   <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                    <div className="text-2xl font-bold text-blue-700 dark:text-blue-400">{stats.percentage}%</div>
+                    <div className="text-2xl font-bold text-blue-700 dark:text-blue-400">{Math.round(stats.percentage)}%</div>
                     <div className="text-xs text-blue-600 dark:text-blue-500 mt-1">Completion</div>
                   </div>
                 </div>
 
 
 
-                {/* Service Type Breakdown with Actions */}
-                <div className="space-y-3">
-                  <h4 className="text-sm font-semibold">Missing Rates by Service Type</h4>
-                  
-                  {/* L1 End User Computing */}
-                  <Accordion type="single" collapsible className="w-full">
-                    <AccordionItem value="l1-euc" className="border rounded-lg px-4">
-                      <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center justify-between w-full pr-4">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-2 h-2 rounded-full ${
-                              stats.byServiceType.l1_euc.percentage === 100 ? 'bg-green-500' :
-                              stats.byServiceType.l1_euc.percentage >= 50 ? 'bg-amber-500' :
-                              'bg-red-500'
-                            }`} />
-                            <span className="text-sm font-medium">L1 End User Computing</span>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <span className="text-xs text-muted-foreground">
-                              {stats.byServiceType.l1_euc.configured} / {stats.byServiceType.l1_euc.totalPossible}
-                            </span>
-                            {stats.byServiceType.l1_euc.percentage < 100 && (
-                              <span className="text-xs font-medium text-red-600 dark:text-red-400">
-                                {stats.byServiceType.l1_euc.totalPossible - stats.byServiceType.l1_euc.configured} missing
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        <div className="pt-2 pb-4 space-y-3">
-                          <div className="w-full bg-secondary rounded-full h-2">
-                            <div
-                              className="bg-purple-500 h-2 rounded-full transition-all"
-                              style={{ width: `${stats.byServiceType.l1_euc.percentage}%` }}
-                            />
-                          </div>
-                          {stats.byServiceType.l1_euc.percentage < 100 && (
-                            <div className="space-y-2">
-                              <p className="text-xs text-muted-foreground">
-                                You have {stats.byServiceType.l1_euc.totalPossible - stats.byServiceType.l1_euc.configured} locations without L1 EUC rates.
-                              </p>
-                              <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => setActiveTab('quick-setup')}
-                                  className="text-xs h-8"
-                                >
-                                  Quick Setup
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => setActiveTab('by-location')}
-                                  className="text-xs h-8"
-                                >
-                                  Edit by Location
-                                </Button>
-                              </div>
-                            </div>
-                          )}
-                          {stats.byServiceType.l1_euc.percentage === 100 && (
-                            <div className="flex items-center gap-2 text-xs text-green-600 dark:text-green-400">
-                              <Check className="h-3 w-3" />
-                              <span>All L1 EUC rates configured</span>
-                            </div>
-                          )}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
 
-                    {/* L1 Network Support */}
-                    <AccordionItem value="l1-network" className="border rounded-lg px-4">
-                      <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center justify-between w-full pr-4">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-2 h-2 rounded-full ${
-                              stats.byServiceType.l1_network.percentage === 100 ? 'bg-green-500' :
-                              stats.byServiceType.l1_network.percentage >= 50 ? 'bg-amber-500' :
-                              'bg-red-500'
-                            }`} />
-                            <span className="text-sm font-medium">L1 Network Support</span>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <span className="text-xs text-muted-foreground">
-                              {stats.byServiceType.l1_network.configured} / {stats.byServiceType.l1_network.totalPossible}
-                            </span>
-                            {stats.byServiceType.l1_network.percentage < 100 && (
-                              <span className="text-xs font-medium text-red-600 dark:text-red-400">
-                                {stats.byServiceType.l1_network.totalPossible - stats.byServiceType.l1_network.configured} missing
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        <div className="pt-2 pb-4 space-y-3">
-                          <div className="w-full bg-secondary rounded-full h-2">
-                            <div
-                              className="bg-orange-500 h-2 rounded-full transition-all"
-                              style={{ width: `${stats.byServiceType.l1_network.percentage}%` }}
-                            />
-                          </div>
-                          {stats.byServiceType.l1_network.percentage < 100 && (
-                            <div className="space-y-2">
-                              <p className="text-xs text-muted-foreground">
-                                You have {stats.byServiceType.l1_network.totalPossible - stats.byServiceType.l1_network.configured} locations without L1 Network rates.
-                              </p>
-                              <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => setActiveTab('quick-setup')}
-                                  className="text-xs h-8"
-                                >
-                                  Quick Setup
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => setActiveTab('by-location')}
-                                  className="text-xs h-8"
-                                >
-                                  Edit by Location
-                                </Button>
-                              </div>
-                            </div>
-                          )}
-                          {stats.byServiceType.l1_network.percentage === 100 && (
-                            <div className="flex items-center gap-2 text-xs text-green-600 dark:text-green-400">
-                              <Check className="h-3 w-3" />
-                              <span>All L1 Network rates configured</span>
-                            </div>
-                          )}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-
-                    {/* Smart Hands */}
-                    <AccordionItem value="smart-hands" className="border rounded-lg px-4">
-                      <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center justify-between w-full pr-4">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-2 h-2 rounded-full ${
-                              stats.byServiceType.smart_hands.percentage === 100 ? 'bg-green-500' :
-                              stats.byServiceType.smart_hands.percentage >= 50 ? 'bg-amber-500' :
-                              'bg-red-500'
-                            }`} />
-                            <span className="text-sm font-medium">Smart Hands</span>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <span className="text-xs text-muted-foreground">
-                              {stats.byServiceType.smart_hands.configured} / {stats.byServiceType.smart_hands.totalPossible}
-                            </span>
-                            {stats.byServiceType.smart_hands.percentage < 100 && (
-                              <span className="text-xs font-medium text-red-600 dark:text-red-400">
-                                {stats.byServiceType.smart_hands.totalPossible - stats.byServiceType.smart_hands.configured} missing
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        <div className="pt-2 pb-4 space-y-3">
-                          <div className="w-full bg-secondary rounded-full h-2">
-                            <div
-                              className="bg-cyan-500 h-2 rounded-full transition-all"
-                              style={{ width: `${stats.byServiceType.smart_hands.percentage}%` }}
-                            />
-                          </div>
-                          {stats.byServiceType.smart_hands.percentage < 100 && (
-                            <div className="space-y-2">
-                              <p className="text-xs text-muted-foreground">
-                                You have {stats.byServiceType.smart_hands.totalPossible - stats.byServiceType.smart_hands.configured} locations without Smart Hands rates.
-                              </p>
-                              <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => setActiveTab('quick-setup')}
-                                  className="text-xs h-8"
-                                >
-                                  Quick Setup
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => setActiveTab('by-location')}
-                                  className="text-xs h-8"
-                                >
-                                  Edit by Location
-                                </Button>
-                              </div>
-                            </div>
-                          )}
-                          {stats.byServiceType.smart_hands.percentage === 100 && (
-                            <div className="flex items-center gap-2 text-xs text-green-600 dark:text-green-400">
-                              <Check className="h-3 w-3" />
-                              <span>All Smart Hands rates configured</span>
-                            </div>
-                          )}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                </div>
               </div>
             </CardContent>
           </Card>
