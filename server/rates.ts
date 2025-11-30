@@ -185,8 +185,16 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
       )
     );
 
+  // Simple logic: if a rate has a price (rateUsdCents is not null), it's configured
   const configuredRates = rates.filter((r: SupplierRate) => r.rateUsdCents !== null);
   const configured = configuredRates.length;
+  
+  // Count legacy rates (rates without proper service type) for warning display
+  const legacyRates = configuredRates.filter((r: SupplierRate) => 
+    r.serviceType !== "l1_euc" && 
+    r.serviceType !== "l1_network" && 
+    r.serviceType !== "smart_hands"
+  );
 
   // Calculate by location type (accounting for exclusions)
   const countryRates = configuredRates.filter((r: SupplierRate) => r.countryCode !== null);
@@ -203,12 +211,7 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
   const l1NetworkRates = configuredRates.filter((r: SupplierRate) => r.serviceType === "l1_network");
   const smartHandsRates = configuredRates.filter((r: SupplierRate) => r.serviceType === "smart_hands");
   
-  // Count legacy rates (rates without proper service type)
-  const legacyRates = configuredRates.filter((r: SupplierRate) => 
-    r.serviceType !== "l1_euc" && 
-    r.serviceType !== "l1_network" && 
-    r.serviceType !== "smart_hands"
-  );
+  // Legacy rates already counted above
   
   // Calculate total possible for each service type (accounting for exclusions)
   const l1EucExclusions = exclusions.filter((e: any) => e.serviceType === "l1_euc").length;
