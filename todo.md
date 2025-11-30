@@ -1024,3 +1024,11 @@
 - [x] Fixed "Can't find variable: refetchStats" error - removed refetchStats() calls
 - [x] Verified all map() calls have proper key props
 - [x] Test: Verified console shows no errors - page loads cleanly
+
+## Add 'All' Region Filter to Rate Management By Location Tab
+- [x] Added 'All' tab to region filter in By Location tab
+- [x] Updated filter logic to show all locations when 'All' is selected
+- [x] Test: Verified 'All' shows all countries and cities together ✓
+- [x] Set default regionTab state to 'all' in ByLocationTab
+- [x] Fixed error in ByServiceTab component - added missing tRPC queries
+- [ ] Restructure ByServiceTab to match ByLocationTab structure (region tabs + service-grouped locations)

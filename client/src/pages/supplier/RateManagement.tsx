@@ -359,7 +359,7 @@ function QuickSetupTab({ supplierId, onSuccess }: { supplierId: number; onSucces
 
 // By Location Tab Component
 function ByLocationTab({ supplierId, onSuccess }: { supplierId: number; onSuccess: () => void }) {
-  const [regionTab, setRegionTab] = useState("africa");
+  const [regionTab, setRegionTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Get covered locations
@@ -460,7 +460,8 @@ function ByLocationTab({ supplierId, onSuccess }: { supplierId: number; onSucces
 
         {/* Regional Tabs */}
         <Tabs value={regionTab} onValueChange={setRegionTab}>
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
+            <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value="africa">Africa</TabsTrigger>
             <TabsTrigger value="americas">Americas</TabsTrigger>
             <TabsTrigger value="asia">Asia</TabsTrigger>
@@ -468,6 +469,24 @@ function ByLocationTab({ supplierId, onSuccess }: { supplierId: number; onSucces
             <TabsTrigger value="oceania">Oceania</TabsTrigger>
             <TabsTrigger value="cities">Cities</TabsTrigger>
           </TabsList>
+
+          {/* All Tab */}
+          <TabsContent value="all">
+            <LocationRatesTable
+              locations={filterLocations([
+                ...(countryRatesByRegion.africa || []),
+                ...(countryRatesByRegion.americas || []),
+                ...(countryRatesByRegion.asia || []),
+                ...(countryRatesByRegion.europe || []),
+                ...(countryRatesByRegion.oceania || []),
+                ...cityRates,
+              ])}
+              supplierId={supplierId}
+              onSuccess={onSuccess}
+              exclusions={exclusions || []}
+              responseTimeExclusions={responseTimeExclusions || []}
+            />
+          </TabsContent>
 
           {/* Africa Tab */}
           <TabsContent value="africa">
@@ -1003,6 +1022,13 @@ function LocationRatesTable({
 
 // By Service Tab Component
 function ByServiceTab({ supplierId, onSuccess }: { supplierId: number; onSuccess: () => void }) {
+  // Get covered locations
+  const { data: countries } = trpc.supplier.getCountries.useQuery({ supplierId });
+  const { data: cities } = trpc.supplier.getPriorityCities.useQuery({ supplierId });
+  const { data: rates } = trpc.supplier.getRates.useQuery({ supplierId });
+  const { data: exclusions } = trpc.supplier.getServiceExclusions.useQuery({ supplierId });
+  const { data: responseTimeExclusions } = trpc.supplier.getResponseTimeExclusions.useQuery({ supplierId });
+
   // Group locations by service type
   const locationsByService = useMemo(() => {
     if (!countries || !cities || !rates) return {};
