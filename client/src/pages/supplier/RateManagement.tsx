@@ -22,17 +22,115 @@ export default function RateManagement() {
   const { data: profile } = trpc.supplier.getProfile.useQuery();
   const supplierId = profile?.supplier?.id;
 
-  // Fetch existing rates
+  // Fetch data (same as Current Rates page)
+  const { data: countries } = trpc.supplier.getCountries.useQuery(
+    { supplierId: supplierId! },
+    { enabled: !!supplierId }
+  );
+  const { data: cities } = trpc.supplier.getPriorityCities.useQuery(
+    { supplierId: supplierId! },
+    { enabled: !!supplierId }
+  );
   const { data: rates, isLoading: ratesLoading, refetch: refetchRates } = trpc.supplier.getRates.useQuery(
     { supplierId: supplierId! },
     { enabled: !!supplierId }
   );
-
-  // Fetch rate completion stats
-  const { data: stats, refetch: refetchStats } = trpc.supplier.getRateCompletionStats.useQuery(
+  const { data: serviceExclusions } = trpc.supplier.getServiceExclusions.useQuery(
     { supplierId: supplierId! },
     { enabled: !!supplierId }
   );
+  const { data: responseTimeExclusions } = trpc.supplier.getResponseTimeExclusions.useQuery(
+    { supplierId: supplierId! },
+    { enabled: !!supplierId }
+  );
+
+  // Calculate stats client-side from the same data as Current Rates
+  const stats = useMemo(() => {
+    if (!countries || !cities || !rates || !serviceExclusions || !responseTimeExclusions) {
+      return { total: 0, configured: 0, missing: 0, percentage: 0 };
+    }
+
+    const SERVICE_TYPES = RATE_SERVICE_TYPES.map(s => s.value);
+    const RESPONSE_TIMES = RATE_RESPONSE_TIMES.map(rt => rt.hours);
+
+    // Build rate map (same as Current Rates)
+    const rateMap = new Map<string, number>();
+    rates.forEach((rate) => {
+      const key = `${rate.countryCode || ""}-${rate.cityId || ""}-${rate.serviceType}-${rate.responseTimeHours}`;
+      rateMap.set(key, rate.rateUsdCents || 0);
+    });
+
+    let total = 0;
+    let configured = 0;
+    let missing = 0;
+
+    // Count for countries
+    countries.forEach((country) => {
+      SERVICE_TYPES.forEach((serviceType) => {
+        // Check if service is excluded
+        const serviceExcluded = serviceExclusions.some(
+          (exc) => exc.countryCode === country.countryCode && exc.serviceType === serviceType
+        );
+        if (serviceExcluded) return; // Skip all response times for this service
+
+        RESPONSE_TIMES.forEach((responseTime) => {
+          // Check if response time is excluded
+          const rtExcluded = responseTimeExclusions.some(
+            (exc) =>
+              exc.countryCode === country.countryCode &&
+              exc.serviceType === serviceType &&
+              exc.responseTimeHours === responseTime
+          );
+          if (rtExcluded) return; // Skip this specific rate
+
+          // Count this rate slot
+          total++;
+          const key = `${country.countryCode}--${serviceType}-${responseTime}`;
+          const rateValue = rateMap.get(key);
+          if (rateValue && rateValue > 0) {
+            configured++;
+          } else {
+            missing++;
+          }
+        });
+      });
+    });
+
+    // Count for cities
+    cities.forEach((city) => {
+      SERVICE_TYPES.forEach((serviceType) => {
+        // Check if service is excluded
+        const serviceExcluded = serviceExclusions.some(
+          (exc) => exc.cityId === city.id && exc.serviceType === serviceType
+        );
+        if (serviceExcluded) return;
+
+        RESPONSE_TIMES.forEach((responseTime) => {
+          // Check if response time is excluded
+          const rtExcluded = responseTimeExclusions.some(
+            (exc) =>
+              exc.cityId === city.id &&
+              exc.serviceType === serviceType &&
+              exc.responseTimeHours === responseTime
+          );
+          if (rtExcluded) return;
+
+          // Count this rate slot
+          total++;
+          const key = `-${city.id}-${serviceType}-${responseTime}`;
+          const rateValue = rateMap.get(key);
+          if (rateValue && rateValue > 0) {
+            configured++;
+          } else {
+            missing++;
+          }
+        });
+      });
+    });
+
+    const percentage = total > 0 ? (configured / total) * 100 : 0;
+    return { total, configured, missing, percentage };
+  }, [countries, cities, rates, serviceExclusions, responseTimeExclusions]);
 
   if (!supplierId) {
     return (

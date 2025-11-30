@@ -190,7 +190,7 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
     .from(supplierResponseTimeExclusions)
     .where(eq(supplierResponseTimeExclusions.supplierId, supplierId));
   
-  // 4. Build virtual table: all possible rate slots
+  // 4. Build virtual table: all possible rate slots with their data
   const SERVICE_TYPES = ['L1 End User Computing', 'L1 Network Support', 'Smart Hands'];
   const RESPONSE_TIMES = [4, 24, 48, 72, 96];
   
@@ -198,16 +198,25 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
     location: { type: 'country', code: string } | { type: 'city', id: number };
     serviceType: string;
     responseTimeHours: number;
+    rate: typeof allRates[0] | undefined;
   }> = [];
   
   // Add country slots
   for (const country of coverageCountries) {
     for (const serviceType of SERVICE_TYPES) {
       for (const responseTimeHours of RESPONSE_TIMES) {
+        // Find matching rate from database
+        const rate = allRates.find(r => 
+          r.countryCode === country.countryCode && 
+          r.serviceType === serviceType && 
+          r.responseTimeHours === responseTimeHours
+        );
+        
         virtualTable.push({
           location: { type: 'country', code: country.countryCode },
           serviceType,
           responseTimeHours,
+          rate,
         });
       }
     }
@@ -217,10 +226,18 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
   for (const city of coverageCities) {
     for (const serviceType of SERVICE_TYPES) {
       for (const responseTimeHours of RESPONSE_TIMES) {
+        // Find matching rate from database
+        const rate = allRates.find(r => 
+          r.cityId === city.id && 
+          r.serviceType === serviceType && 
+          r.responseTimeHours === responseTimeHours
+        );
+        
         virtualTable.push({
           location: { type: 'city', id: city.id },
           serviceType,
           responseTimeHours,
+          rate,
         });
       }
     }
@@ -261,15 +278,8 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
       continue;
     }
     
-    // Find rate for this slot
-    const rate = allRates.find(r => {
-      if (isCountry && r.countryCode === locationId && r.serviceType === slot.serviceType && r.responseTimeHours === slot.responseTimeHours) return true;
-      if (!isCountry && r.cityId === locationId && r.serviceType === slot.serviceType && r.responseTimeHours === slot.responseTimeHours) return true;
-      return false;
-    });
-    
     // Check if rate is configured (exists and > 0)
-    if (rate && rate.rateUsdCents !== null && rate.rateUsdCents > 0) {
+    if (slot.rate && slot.rate.rateUsdCents !== null && slot.rate.rateUsdCents > 0) {
       configured++;
     } else {
       missing++;

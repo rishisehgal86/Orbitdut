@@ -993,3 +993,14 @@
 - [x] Count rates > 0 as Configured
 - [x] Simplified logic - exclusions handled naturally in virtual table iteration
 - [x] Test: Verified - Total=15, Configured=0, Missing=15 (correct for supplier with no valid rates)
+
+## Fix Virtual Table Rate Lookup Not Finding Configured Rates
+- [x] Debugged rate lookup logic - was doing lookup inside iteration instead of during table build
+- [x] Fixed: Now populate virtual table with rate data during construction
+- [x] Each slot now includes its rate object (if exists) for direct access
+- [x] Simplified slot checking - just check slot.rate instead of searching allRates
+- [x] NEW APPROACH: Calculate stats client-side from Current Rates data
+- [x] Updated Rate Management to fetch same data as Current Rates (countries, cities, rates, exclusions)
+- [x] Calculate stats client-side using same logic as Current Rates page
+- [x] Test: Verified - Total=12, Configured=7, Missing=5, Completion=58% ✓
+- [x] Stats now match Current Rates table exactly
