@@ -876,3 +876,28 @@
 - [x] Update UI to display new 5-column layout
 - [x] Test with supplier 12 data
 - [x] Verified: Total=354, Configured=354, Missing=0, Excluded=6
+
+## Investigation - UI Virtual Rate Matrix Logic
+- [x] Analyze how CurrentRates.tsx generates the location list (from coverage)
+- [x] Understand how it creates the virtual rate matrix (locations × services × response times)
+- [x] Identify why database has 354 entries but UI shows different combinations
+- [x] Findings:
+  * UI builds location list from coverage tables (14 countries + 3 cities = 17 locations)
+  * Virtual matrix = 17 × 3 services × 5 response times = 255 cells
+  * Database has 354 actual entries (includes 99 orphaned rates for old coverage)
+  * UI displays virtual matrix and looks up prices from database
+  * Fiji Smart Hands 4h has NO database entry (shows as "—" in UI)
+- [ ] Decision needed: Should statistics count database entries (354) OR virtual matrix (255)?
+- [ ] Option A: Match UI (coverage-based) - Total=255, Missing=cells without DB entries
+- [ ] Option B: Match database (entry-based) - Total=354, Missing=entries without prices
+
+## Implement Option A - Coverage-Based Statistics
+- [x] Rewrite getRateCompletionStats to use coverage-based virtual matrix
+- [x] Total = (Countries + Cities) × 3 services × 5 response times
+- [x] Build virtual matrix of all possible rate combinations from coverage
+- [x] Configured = Count virtual matrix cells that have prices in database
+- [x] Missing = Total - Configured - Excluded (includes cells without DB entries)
+- [x] Excluded = Count rates with isServiceable = 0 for current coverage
+- [x] Test with supplier 12: Total=255 (17 locations × 3 × 5) ✓
+- [x] Verify Missing count includes Fiji Smart Hands 4h (no DB entry) ✓
+- [x] Validation: 170 + 79 + 6 = 255 ✓

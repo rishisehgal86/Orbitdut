@@ -157,27 +157,63 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  // Simple database counts - no coverage filtering or complex calculations
+  const { supplierCoverageCountries, supplierPriorityCities } = await import("../drizzle/schema");
+  const { sql } = await import("drizzle-orm");
+  
+  // 1. Get coverage locations (countries + cities)
+  const [countryData] = await db
+    .select({ count: sql<number>`COUNT(*)` })
+    .from(supplierCoverageCountries)
+    .where(eq(supplierCoverageCountries.supplierId, supplierId));
+  
+  const [cityData] = await db
+    .select({ count: sql<number>`COUNT(*)` })
+    .from(supplierPriorityCities)
+    .where(eq(supplierPriorityCities.supplierId, supplierId));
+  
+  const locationCount = (Number(countryData?.count) || 0) + (Number(cityData?.count) || 0);
+  
+  // 2. Total = virtual matrix size (locations × 3 services × 5 response times)
+  const total = locationCount * 3 * 5;
+  
+  // 3. Get coverage location IDs for filtering
+  const coverageCountries = await db
+    .select({ countryCode: supplierCoverageCountries.countryCode })
+    .from(supplierCoverageCountries)
+    .where(eq(supplierCoverageCountries.supplierId, supplierId));
+  
+  const coverageCities = await db
+    .select({ cityId: supplierPriorityCities.id })
+    .from(supplierPriorityCities)
+    .where(eq(supplierPriorityCities.supplierId, supplierId));
+  
+  const coverageCountryCodes = new Set(coverageCountries.map(c => c.countryCode));
+  const coverageCityIds = new Set(coverageCities.map(c => c.cityId));
+  
+  // 4. Get all rates for this supplier
   const allRates = await db
     .select()
     .from(supplierRates)
     .where(eq(supplierRates.supplierId, supplierId));
   
-  // 1. Total = all rates for this supplier
-  const total = allRates.length;
+  // 5. Filter rates to only those in current coverage
+  const coverageRates = allRates.filter((r: SupplierRate) => {
+    if (r.countryCode && coverageCountryCodes.has(r.countryCode)) return true;
+    if (r.cityId && coverageCityIds.has(r.cityId)) return true;
+    return false;
+  });
   
-  // 2. Configured = rates with prices
-  const configured = allRates.filter((r: SupplierRate) => r.rateUsdCents !== null).length;
+  // 6. Configured = coverage rates with prices
+  const configured = coverageRates.filter((r: SupplierRate) => r.rateUsdCents !== null).length;
   
-  // 3. Missing = rates without prices AND not explicitly configured (isServiceable != 1)
-  const missing = allRates.filter((r: SupplierRate) => 
-    r.rateUsdCents === null && r.isServiceable !== 1
-  ).length;
+  // 7. Excluded = coverage rates with isServiceable = 0
+  const excluded = coverageRates.filter((r: SupplierRate) => r.isServiceable === 0).length;
   
-  // 4. Excluded = rates marked as not serviceable
-  const excluded = allRates.filter((r: SupplierRate) => r.isServiceable === 0).length;
+  // 8. Missing = virtual matrix cells without rates OR without prices
+  // Missing = Total - (Configured + Excluded)
+  const missing = total - configured - excluded;
   
-  // 5. Percentage = placeholder (to be calculated later)
+  // 9. Percentage = placeholder (to be calculated later)
   const percentage = 0;
   
   return {
