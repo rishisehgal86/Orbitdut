@@ -938,3 +938,12 @@
 - [x] Test with supplier 12 data (173 / 255 = 67.8% ≈ 68%)
 - [x] Verify percentage displays correctly on both Current Rates and Rate Management pages
 - [x] Both pages show Completion: 68% correctly
+
+## Update Total Rates to Exclude "Not Offered" Rates
+- [x] Change Total calculation from: Virtual matrix size (locations × 3 × 5)
+- [x] To: Virtual matrix size - Excluded rates
+- [x] This makes Total dynamic (decreases when rates marked as Not Offered)
+- [x] Update getRateCompletionStats to subtract excluded count from total
+- [x] Test: Mark a rate as "Not Offered" and verify Total decreases
+- [x] Verify percentage calculation still works correctly
+- [x] Verified: Total=249 (255-6 excluded), Configured=175, Missing=74, Completion=70%

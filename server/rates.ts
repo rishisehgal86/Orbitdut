@@ -173,8 +173,8 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
   
   const locationCount = (Number(countryData?.count) || 0) + (Number(cityData?.count) || 0);
   
-  // 2. Total = virtual matrix size (locations × 3 services × 5 response times)
-  const total = locationCount * 3 * 5;
+  // 2. Virtual matrix size (locations × 3 services × 5 response times)
+  const virtualMatrixSize = locationCount * 3 * 5;
   
   // 3. Get coverage location IDs for filtering
   const coverageCountries = await db
@@ -209,11 +209,13 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
   // 7. Excluded = coverage rates with isServiceable = 0
   const excluded = coverageRates.filter((r: SupplierRate) => r.isServiceable === 0).length;
   
-  // 8. Missing = virtual matrix cells without rates OR without prices
-  // Missing = Total - (Configured + Excluded)
-  const missing = total - configured - excluded;
+  // 8. Total = virtual matrix - excluded (only count serviceable rates)
+  const total = virtualMatrixSize - excluded;
   
-  // 9. Calculate completion percentage: (Configured / Total) × 100
+  // 9. Missing = Total - Configured
+  const missing = total - configured;
+  
+  // 10. Calculate completion percentage: (Configured / Total) × 100
   // Round to 1 decimal place for display
   const percentage = total > 0 ? Math.round((configured / total) * 1000) / 10 : 0;
   
