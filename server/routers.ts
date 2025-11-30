@@ -269,6 +269,15 @@ export const appRouter = router({
         return await getRateCompletionStats(input.supplierId);
       }),
 
+    // Clean up orphaned rates (manual cleanup script)
+    cleanupOrphanedRates: protectedProcedure
+      .input(z.object({ supplierId: z.number() }))
+      .mutation(async ({ input }) => {
+        const { cleanupOrphanedRates } = await import("./rates");
+        const deletedCount = await cleanupOrphanedRates(input.supplierId);
+        return { success: true, deletedCount };
+      }),
+
     // Download Excel template with current rates
     downloadExcelTemplate: protectedProcedure
       .input(z.object({ supplierId: z.number() }))
@@ -397,6 +406,11 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const { addServiceExclusion } = await import("./serviceExclusions");
         await addServiceExclusion(input);
+        
+        // Automatic cleanup: Remove orphaned rates after service exclusion
+        const { cleanupOrphanedRates } = await import("./rates");
+        await cleanupOrphanedRates(input.supplierId);
+        
         return { success: true };
       }),
 
@@ -505,6 +519,11 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const { addResponseTimeExclusion } = await import("./responseTimeExclusions");
         await addResponseTimeExclusion(input);
+        
+        // Automatic cleanup: Remove orphaned rates after response time exclusion
+        const { cleanupOrphanedRates } = await import("./rates");
+        await cleanupOrphanedRates(input.supplierId);
+        
         return { success: true };
       }),
 
@@ -552,6 +571,11 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const { upsertSupplierCountries } = await import("./db");
         await upsertSupplierCountries(input.supplierId, input.countryCodes, input.isExcluded);
+        
+        // Automatic cleanup: Remove orphaned rates after coverage change
+        const { cleanupOrphanedRates } = await import("./rates");
+        await cleanupOrphanedRates(input.supplierId);
+        
         return { success: true };
       }),
 
@@ -587,6 +611,11 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const { deleteSupplierPriorityCity } = await import("./db");
         await deleteSupplierPriorityCity(input.id, input.supplierId);
+        
+        // Automatic cleanup: Remove orphaned rates after city removal
+        const { cleanupOrphanedRates } = await import("./rates");
+        await cleanupOrphanedRates(input.supplierId);
+        
         return { success: true };
       }),
 

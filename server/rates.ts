@@ -238,3 +238,66 @@ export async function deleteRate(rateId: number, supplierId: number): Promise<vo
     )
   );
 }
+
+/**
+ * Clean up orphaned rates - rates that exist in the database but are no longer in coverage
+ * or have been excluded. Returns the number of rates deleted.
+ */
+export async function cleanupOrphanedRates(supplierId: number): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { supplierCoverageCountries, supplierPriorityCities } = await import("../drizzle/schema");
+  const { sql } = await import("drizzle-orm");
+  
+  // Get current coverage
+  const coverageCountries = await db
+    .select({ countryCode: supplierCoverageCountries.countryCode })
+    .from(supplierCoverageCountries)
+    .where(eq(supplierCoverageCountries.supplierId, supplierId));
+  
+  const coverageCities = await db
+    .select({ cityId: supplierPriorityCities.id })
+    .from(supplierPriorityCities)
+    .where(eq(supplierPriorityCities.supplierId, supplierId));
+  
+  const coverageCountryCodes = new Set(coverageCountries.map(c => c.countryCode));
+  const coverageCityIds = new Set(coverageCities.map(c => c.cityId));
+  
+  // Get all rates for this supplier
+  const allRates = await db
+    .select()
+    .from(supplierRates)
+    .where(eq(supplierRates.supplierId, supplierId));
+  
+  // Find orphaned rates (not in current coverage)
+  const orphanedRateIds: number[] = [];
+  
+  for (const rate of allRates) {
+    const isOrphaned = 
+      (rate.countryCode && !coverageCountryCodes.has(rate.countryCode)) ||
+      (rate.cityId && !coverageCityIds.has(rate.cityId));
+    
+    if (isOrphaned && rate.id) {
+      orphanedRateIds.push(rate.id);
+    }
+  }
+  
+  // Delete orphaned rates in batches
+  if (orphanedRateIds.length > 0) {
+    // Delete in batches of 100 to avoid SQL query limits
+    for (let i = 0; i < orphanedRateIds.length; i += 100) {
+      const batch = orphanedRateIds.slice(i, i + 100);
+      await db
+        .delete(supplierRates)
+        .where(
+          and(
+            eq(supplierRates.supplierId, supplierId),
+            sql`${supplierRates.id} IN (${sql.join(batch.map(id => sql`${id}`), sql`, `)})`
+          )
+        );
+    }
+  }
+  
+  return orphanedRateIds.length;
+}

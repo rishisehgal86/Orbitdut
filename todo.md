@@ -916,3 +916,17 @@
 - [x] Remove "Missing Rates by Service Type" section (uses stats.byServiceType which no longer exists)
 - [x] Test RateManagement page loads without errors
 - [x] Verified: Page displays correctly with Total=255, Configured=170, Missing=79, Completion=0%
+
+## Implement Orphaned Rates Cleanup
+- [x] Create manual cleanup script (Option B) to delete orphaned rates
+- [x] Script should find rates where location not in current coverage
+- [x] Script should find rates where service/response time is excluded
+- [x] Add tRPC procedure to expose cleanup script to admin/supplier (cleanupOrphanedRates)
+- [x] Implement automatic cleanup (Option A) in coverage removal logic
+- [x] Add cleanup to updateCountries procedure (runs after coverage changes)
+- [x] Add cleanup to deletePriorityCity procedure (runs after city removal)
+- [x] Add cleanup to addServiceExclusion procedure
+- [x] Add cleanup to addResponseTimeExclusion procedure
+- [x] Test with supplier 12 data (cleanup found 0 orphaned rates - all entries match coverage)
+- [x] Verify statistics update correctly after cleanup (Total=255, Configured=170, Missing=79)
+- [x] Created vitest test for cleanup functionality (server/cleanup.test.ts)
