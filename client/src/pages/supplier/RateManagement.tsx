@@ -102,22 +102,22 @@ export default function RateManagement() {
 
           {/* Quick Setup Tab */}
           <TabsContent value="quick-setup" className="space-y-6">
-            <QuickSetupTab supplierId={supplierId} onSuccess={() => { refetchRates(); refetchStats(); }} />
+            <QuickSetupTab supplierId={supplierId} onSuccess={() => { refetchRates(); }} />
           </TabsContent>
 
           {/* By Location Tab */}
           <TabsContent value="by-location" className="space-y-6">
-            <ByLocationTab supplierId={supplierId} onSuccess={() => { refetchRates(); refetchStats(); }} />
+            <ByLocationTab supplierId={supplierId} onSuccess={() => { refetchRates(); }} />
           </TabsContent>
 
           {/* By Service Tab */}
           <TabsContent value="by-service">
-            <ByServiceTab supplierId={supplierId} onSuccess={() => { refetchRates(); refetchStats(); }} />
+            <ByServiceTab supplierId={supplierId} onSuccess={() => { refetchRates(); }} />
           </TabsContent>
 
           {/* Bulk Import/Export Tab */}
           <TabsContent value="bulk">
-            <BulkImportExportTab supplierId={supplierId} onSuccess={() => { refetchRates(); refetchStats(); }} />
+            <BulkImportExportTab supplierId={supplierId} onSuccess={() => { refetchRates(); }} />
           </TabsContent>
         </Tabs>
       </div>
