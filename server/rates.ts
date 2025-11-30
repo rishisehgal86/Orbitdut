@@ -177,7 +177,8 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
     .from(supplierResponseTimeExclusions)
     .where(eq(supplierResponseTimeExclusions.supplierId, supplierId));
   
-  // Service exclusions remove 5 slots each (all response times), response time exclusions remove 1 slot each
+  // Service exclusions remove 5 slots each (all response times for that service/location)
+  // Response time exclusions remove 1 slot each (specific service/location/response time)
   const exclusions = (Number(serviceExclusionCount?.count) || 0) * 5 + (Number(responseTimeExclusionCount?.count) || 0);
   
   // 3. Get all ACTIVE (non-excluded) rates from database

@@ -819,3 +819,11 @@
 - [x] Add Country Rates breakdown field to UI
 - [x] Fix SQL column name issues (countryCode, cityId)
 - [x] Test with supplier 12 (12@supplier.com)
+
+## Bug Fix - Exclusions Count Not Accurate
+- [x] Review exclusions calculation in getRateCompletionStats
+- [x] Each service exclusion should count ALL response times excluded (5 per service exclusion)
+- [x] Response time exclusions should count individually (1 per exclusion)
+- [x] Verify the calculation matches: (service exclusions × 5) + response time exclusions
+- [x] Test with supplier data to confirm accurate count
+- [x] Verified: Shows 1 exclusion correctly (0 service excl × 5 + 1 RT excl = 1)
