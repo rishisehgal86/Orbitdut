@@ -778,3 +778,23 @@
 - [x] Fixed: Changed filter from "l1_euc" to "L1_EUC" (and others)
 - [x] Test to verify statistics now show correct numbers
 - [x] Verified: Total 2956, Missing 0, Completion 100%, Country Rates 2940 ✅
+
+## CRITICAL - Simplify Rate Calculation (Pure Database Counts)
+- [ ] Remove ALL complex logic (service type filtering, coverage calculations, etc.)
+- [ ] Total = COUNT(*) FROM supplierRates WHERE supplierId = X
+- [ ] Configured = COUNT(*) WHERE supplierId = X AND rateUsdCents IS NOT NULL
+- [ ] Missing = Total - Configured
+- [ ] Completion % = (Configured / Total) × 100
+- [ ] Each calculation must be tenant-specific (per supplierId)
+- [ ] Test with real data to verify accuracy
+
+## CRITICAL - Simplify Rate Calculation (Pure Database Counts)
+- [x] Remove ALL complex logic (service type filtering from total count)
+- [x] Total = COUNT(*) WHERE supplierId = X AND (isServiceable = 1 OR isServiceable IS NULL)
+- [x] Configured = COUNT(*) WHERE supplierId = X AND rateUsdCents IS NOT NULL AND (isServiceable = 1 OR isServiceable IS NULL)
+- [x] Missing = Total - Configured (calculated in frontend)
+- [x] Completion % = (Configured / Total) × 100
+- [x] isServiceable flag handles both service exclusions and response time exclusions
+- [x] Each calculation is tenant-specific (per supplierId)
+- [x] Test with real data to verify accuracy
+- [x] Verified: Total 2956, Missing 0, Completion 100% ✅
