@@ -742,3 +742,11 @@
 - [x] Verify all statistics (configured, missing, totalPossible) are calculated correctly
 - [x] Test with different data scenarios to confirm accuracy
 - [x] Now shows: Configured 2956, Missing 14, Completion 100%
+
+## Bug Fix - Subtract Rate Exclusions from Total
+- [x] Investigate if there's a rate exclusions table or mechanism (supplierResponseTimeExclusions)
+- [x] Update completion calculation to subtract both service exclusions AND response time exclusions
+- [x] Service exclusions: each removes 5 response times (entire service/location combo)
+- [x] Response time exclusions: each removes 1 specific rate slot
+- [x] Test with different exclusion scenarios to verify accuracy
+- [x] Verified: Total dropped from 2970 to 2969, Missing from 14 to 13

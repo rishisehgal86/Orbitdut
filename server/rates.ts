@@ -150,23 +150,30 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
   const countries = await getSupplierCountries(supplierId);
   const cities = await getSupplierPriorityCities(supplierId);
 
-  // Get service exclusions to calculate actual serviceable combinations
+  // Get service exclusions and response time exclusions
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const { supplierServiceExclusions } = await import("../drizzle/schema");
-  const exclusions = await db
+  const { supplierServiceExclusions, supplierResponseTimeExclusions } = await import("../drizzle/schema");
+  const serviceExclusions = await db
     .select()
     .from(supplierServiceExclusions)
     .where(eq(supplierServiceExclusions.supplierId, supplierId));
+  
+  const responseTimeExclusions = await db
+    .select()
+    .from(supplierResponseTimeExclusions)
+    .where(eq(supplierResponseTimeExclusions.supplierId, supplierId));
 
-  // Calculate total possible rates accounting for service exclusions
+  // Calculate total possible rates accounting for BOTH exclusion types
   // Base: (countries + cities) × 3 services × 5 response times
-  // Subtract: excluded service/location combinations × 5 response times
+  // Subtract: service exclusions (entire service/location combos × 5 response times)
+  // Subtract: response time exclusions (individual rate slots)
   const totalLocations = countries.length + cities.length;
   const baseTotal = totalLocations * 3 * 5;
-  const excludedCombinations = exclusions.length; // Each exclusion is one service/location combo
-  const totalPossible = baseTotal - (excludedCombinations * 5); // Each combo has 5 response times
+  const serviceExclusionCount = serviceExclusions.length * 5; // Each service exclusion removes 5 response times
+  const responseTimeExclusionCount = responseTimeExclusions.length; // Each is one specific rate slot
+  const totalPossible = baseTotal - serviceExclusionCount - responseTimeExclusionCount;
 
   // Get all rates for this supplier (db already initialized above)
   
@@ -200,8 +207,8 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
   const countryRates = configuredRates.filter((r: SupplierRate) => r.countryCode !== null);
   const cityRates = configuredRates.filter((r: SupplierRate) => r.cityId !== null);
   
-  const countryExclusions = exclusions.filter((e: any) => e.countryCode !== null).length;
-  const cityExclusions = exclusions.filter((e: any) => e.cityId !== null).length;
+  const countryExclusions = serviceExclusions.filter((e: any) => e.countryCode !== null).length;
+  const cityExclusions = serviceExclusions.filter((e: any) => e.cityId !== null).length;
   
   const countryTotalPossible = (countries.length * 3 * 5) - (countryExclusions * 5);
   const cityTotalPossible = (cities.length * 3 * 5) - (cityExclusions * 5);
@@ -214,9 +221,9 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
   // Legacy rates already counted above
   
   // Calculate total possible for each service type (accounting for exclusions)
-  const l1EucExclusions = exclusions.filter((e: any) => e.serviceType === "l1_euc").length;
-  const l1NetworkExclusions = exclusions.filter((e: any) => e.serviceType === "l1_network").length;
-  const smartHandsExclusions = exclusions.filter((e: any) => e.serviceType === "smart_hands").length;
+  const l1EucExclusions = serviceExclusions.filter((e: any) => e.serviceType === "l1_euc").length;
+  const l1NetworkExclusions = serviceExclusions.filter((e: any) => e.serviceType === "l1_network").length;
+  const smartHandsExclusions = serviceExclusions.filter((e: any) => e.serviceType === "smart_hands").length;
   
   const l1EucTotalPossible = (totalLocations * 5) - (l1EucExclusions * 5);
   const l1NetworkTotalPossible = (totalLocations * 5) - (l1NetworkExclusions * 5);
