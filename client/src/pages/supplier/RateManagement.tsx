@@ -1022,6 +1022,8 @@ function LocationRatesTable({
 
 // By Service Tab Component
 function ByServiceTab({ supplierId, onSuccess }: { supplierId: number; onSuccess: () => void }) {
+  const [searchQuery, setSearchQuery] = useState("");
+  
   // Get covered locations
   const { data: countries } = trpc.supplier.getCountries.useQuery({ supplierId });
   const { data: cities } = trpc.supplier.getPriorityCities.useQuery({ supplierId });

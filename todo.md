@@ -1033,3 +1033,8 @@
 - [x] Fixed error in ByServiceTab component - added missing tRPC queries
 - [x] ByServiceTab already has correct structure (service type filters + location list)
 - [x] Fixed error in ByServiceTab - removed invalid selectedService prop
+
+## Fix Persistent ByServiceTab Error at Line 1473
+- [x] Investigated - missing searchQuery state variable
+- [x] Added useState for searchQuery in ByServiceTab
+- [x] Test: Verified ByServiceTab loads and works correctly ✓
