@@ -760,3 +760,13 @@
 - [x] Remove legacyRates from return type
 - [x] Test that missing = totalPossible - configured works correctly
 - [x] Verified: Configured 0, Missing 2969, Completion 0% (all correct!)
+
+## Fix - Simplify Rate Completion Calculation
+- [x] Replace complex theoretical calculation with simple database counts
+- [x] Total = COUNT rows WHERE isServiceable = 1 (excludes both exclusion types)
+- [x] Configured = COUNT rows WHERE rateUsdCents IS NOT NULL AND isServiceable = 1
+- [x] Missing = Total - Configured (calculated in frontend)
+- [x] Percentage = (Configured / Total) × 100
+- [x] Remove coverage-based calculation logic (countries, cities, services multiplication)
+- [x] Test with real data to verify accuracy
+- [x] Verified: Total 0, Configured 0, Missing 0, Completion 0% (correct after legacy deletion)

@@ -144,41 +144,15 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
     smart_hands: { totalPossible: number; configured: number; percentage: number };
   };
 }> {
-  // Get supplier's covered countries and priority cities
-  const { getSupplierCountries, getSupplierPriorityCities } = await import("./db");
-  const countries = await getSupplierCountries(supplierId);
-  const cities = await getSupplierPriorityCities(supplierId);
-
-  // Get service exclusions and response time exclusions
+  // Simple database-driven calculation
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const { supplierServiceExclusions, supplierResponseTimeExclusions } = await import("../drizzle/schema");
-  const serviceExclusions = await db
-    .select()
-    .from(supplierServiceExclusions)
-    .where(eq(supplierServiceExclusions.supplierId, supplierId));
-  
-  const responseTimeExclusions = await db
-    .select()
-    .from(supplierResponseTimeExclusions)
-    .where(eq(supplierResponseTimeExclusions.supplierId, supplierId));
-
-  // Calculate total possible rates accounting for BOTH exclusion types
-  // Base: (countries + cities) × 3 services × 5 response times
-  // Subtract: service exclusions (entire service/location combos × 5 response times)
-  // Subtract: response time exclusions (individual rate slots)
-  const totalLocations = countries.length + cities.length;
-  const baseTotal = totalLocations * 3 * 5;
-  const serviceExclusionCount = serviceExclusions.length * 5; // Each service exclusion removes 5 response times
-  const responseTimeExclusionCount = responseTimeExclusions.length; // Each is one specific rate slot
-  const totalPossible = baseTotal - serviceExclusionCount - responseTimeExclusionCount;
-
-  // Get all rates for this supplier (db already initialized above)
-  
-  // Only count rates where service is available (isServiceable = 1 or null for legacy data)
   const { or, isNull } = await import("drizzle-orm");
-  const rates = await db
+  
+  // Get all serviceable rates for this supplier (isServiceable = 1 or null)
+  // This automatically excludes both service and response time exclusions
+  const allRates = await db
     .select()
     .from(supplierRates)
     .where(
@@ -191,38 +165,40 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
       )
     );
 
-  // Only count rates with valid service types AND prices as configured
-  const configuredRates = rates.filter((r: SupplierRate) => 
-    r.rateUsdCents !== null &&
-    (r.serviceType === "l1_euc" || r.serviceType === "l1_network" || r.serviceType === "smart_hands")
+  // Only count rates with valid service types
+  const serviceableRates = allRates.filter((r: SupplierRate) => 
+    r.serviceType === "l1_euc" || r.serviceType === "l1_network" || r.serviceType === "smart_hands"
   );
+  
+  // Total = all serviceable rate slots in database
+  const totalPossible = serviceableRates.length;
+  
+  // Configured = serviceable rates with prices filled in
+  const configuredRates = serviceableRates.filter((r: SupplierRate) => r.rateUsdCents !== null);
   const configured = configuredRates.length;
 
-  // Calculate by location type (accounting for exclusions)
-  const countryRates = configuredRates.filter((r: SupplierRate) => r.countryCode !== null);
-  const cityRates = configuredRates.filter((r: SupplierRate) => r.cityId !== null);
+  // Calculate by location type - simple database counts
+  const countryServiceableRates = serviceableRates.filter((r: SupplierRate) => r.countryCode !== null);
+  const cityServiceableRates = serviceableRates.filter((r: SupplierRate) => r.cityId !== null);
   
-  const countryExclusions = serviceExclusions.filter((e: any) => e.countryCode !== null).length;
-  const cityExclusions = serviceExclusions.filter((e: any) => e.cityId !== null).length;
+  const countryConfiguredRates = configuredRates.filter((r: SupplierRate) => r.countryCode !== null);
+  const cityConfiguredRates = configuredRates.filter((r: SupplierRate) => r.cityId !== null);
   
-  const countryTotalPossible = (countries.length * 3 * 5) - (countryExclusions * 5);
-  const cityTotalPossible = (cities.length * 3 * 5) - (cityExclusions * 5);
+  const countryTotalPossible = countryServiceableRates.length;
+  const cityTotalPossible = cityServiceableRates.length;
 
-  // Calculate by service type (accounting for exclusions)
-  const l1EucRates = configuredRates.filter((r: SupplierRate) => r.serviceType === "l1_euc");
-  const l1NetworkRates = configuredRates.filter((r: SupplierRate) => r.serviceType === "l1_network");
-  const smartHandsRates = configuredRates.filter((r: SupplierRate) => r.serviceType === "smart_hands");
+  // Calculate by service type - simple database counts
+  const l1EucServiceableRates = serviceableRates.filter((r: SupplierRate) => r.serviceType === "l1_euc");
+  const l1NetworkServiceableRates = serviceableRates.filter((r: SupplierRate) => r.serviceType === "l1_network");
+  const smartHandsServiceableRates = serviceableRates.filter((r: SupplierRate) => r.serviceType === "smart_hands");
   
-  // Legacy rates already counted above
+  const l1EucConfiguredRates = configuredRates.filter((r: SupplierRate) => r.serviceType === "l1_euc");
+  const l1NetworkConfiguredRates = configuredRates.filter((r: SupplierRate) => r.serviceType === "l1_network");
+  const smartHandsConfiguredRates = configuredRates.filter((r: SupplierRate) => r.serviceType === "smart_hands");
   
-  // Calculate total possible for each service type (accounting for exclusions)
-  const l1EucExclusions = serviceExclusions.filter((e: any) => e.serviceType === "l1_euc").length;
-  const l1NetworkExclusions = serviceExclusions.filter((e: any) => e.serviceType === "l1_network").length;
-  const smartHandsExclusions = serviceExclusions.filter((e: any) => e.serviceType === "smart_hands").length;
-  
-  const l1EucTotalPossible = (totalLocations * 5) - (l1EucExclusions * 5);
-  const l1NetworkTotalPossible = (totalLocations * 5) - (l1NetworkExclusions * 5);
-  const smartHandsTotalPossible = (totalLocations * 5) - (smartHandsExclusions * 5);
+  const l1EucTotalPossible = l1EucServiceableRates.length;
+  const l1NetworkTotalPossible = l1NetworkServiceableRates.length;
+  const smartHandsTotalPossible = smartHandsServiceableRates.length;
 
   return {
     totalPossible,
@@ -231,30 +207,30 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
     byLocationType: {
       countries: {
         totalPossible: countryTotalPossible,
-        configured: countryRates.length,
-        percentage: countryTotalPossible > 0 ? Math.round((countryRates.length / countryTotalPossible) * 100) : 0,
+        configured: countryConfiguredRates.length,
+        percentage: countryTotalPossible > 0 ? Math.round((countryConfiguredRates.length / countryTotalPossible) * 100) : 0,
       },
       cities: {
         totalPossible: cityTotalPossible,
-        configured: cityRates.length,
-        percentage: cityTotalPossible > 0 ? Math.round((cityRates.length / cityTotalPossible) * 100) : 0,
+        configured: cityConfiguredRates.length,
+        percentage: cityTotalPossible > 0 ? Math.round((cityConfiguredRates.length / cityTotalPossible) * 100) : 0,
       },
     },
     byServiceType: {
       l1_euc: {
         totalPossible: l1EucTotalPossible,
-        configured: l1EucRates.length,
-        percentage: l1EucTotalPossible > 0 ? Math.round((l1EucRates.length / l1EucTotalPossible) * 100) : 0,
+        configured: l1EucConfiguredRates.length,
+        percentage: l1EucTotalPossible > 0 ? Math.round((l1EucConfiguredRates.length / l1EucTotalPossible) * 100) : 0,
       },
       l1_network: {
         totalPossible: l1NetworkTotalPossible,
-        configured: l1NetworkRates.length,
-        percentage: l1NetworkTotalPossible > 0 ? Math.round((l1NetworkRates.length / l1NetworkTotalPossible) * 100) : 0,
+        configured: l1NetworkConfiguredRates.length,
+        percentage: l1NetworkTotalPossible > 0 ? Math.round((l1NetworkConfiguredRates.length / l1NetworkTotalPossible) * 100) : 0,
       },
       smart_hands: {
         totalPossible: smartHandsTotalPossible,
-        configured: smartHandsRates.length,
-        percentage: smartHandsTotalPossible > 0 ? Math.round((smartHandsRates.length / smartHandsTotalPossible) * 100) : 0,
+        configured: smartHandsConfiguredRates.length,
+        percentage: smartHandsTotalPossible > 0 ? Math.round((smartHandsConfiguredRates.length / smartHandsTotalPossible) * 100) : 0,
       },
     },
   };
