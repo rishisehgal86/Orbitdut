@@ -1,0 +1,91 @@
+{
+  "query": "SELECT * FROM supplierResponseTimeExclusions WHERE countryCode = 'AU'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT * FROM supplierResponseTimeExclusions WHERE countryCode = 'AU'",
+  "rows": [
+    {
+      "id": "17",
+      "supplierId": "240001",
+      "countryCode": "AU",
+      "cityId": "NULL",
+      "serviceType": "L1_EUC",
+      "responseTimeHours": "72",
+      "createdAt": "2025-11-29 10:25:59"
+    },
+    {
+      "id": "30002",
+      "supplierId": "240001",
+      "countryCode": "AU",
+      "cityId": "NULL",
+      "serviceType": "L1_EUC",
+      "responseTimeHours": "24",
+      "createdAt": "2025-11-29 10:44:36"
+    },
+    {
+      "id": "30003",
+      "supplierId": "240001",
+      "countryCode": "AU",
+      "cityId": "NULL",
+      "serviceType": "SMART_HANDS",
+      "responseTimeHours": "4",
+      "createdAt": "2025-11-29 10:45:08"
+    },
+    {
+      "id": "30004",
+      "supplierId": "240001",
+      "countryCode": "AU",
+      "cityId": "NULL",
+      "serviceType": "SMART_HANDS",
+      "responseTimeHours": "24",
+      "createdAt": "2025-11-29 10:45:09"
+    },
+    {
+      "id": "30005",
+      "supplierId": "240001",
+      "countryCode": "AU",
+      "cityId": "NULL",
+      "serviceType": "SMART_HANDS",
+      "responseTimeHours": "48",
+      "createdAt": "2025-11-29 10:45:10"
+    },
+    {
+      "id": "30006",
+      "supplierId": "240001",
+      "countryCode": "AU",
+      "cityId": "NULL",
+      "serviceType": "SMART_HANDS",
+      "responseTimeHours": "72",
+      "createdAt": "2025-11-29 10:45:11"
+    },
+    {
+      "id": "30007",
+      "supplierId": "240001",
+      "countryCode": "AU",
+      "cityId": "NULL",
+      "serviceType": "SMART_HANDS",
+      "responseTimeHours": "96",
+      "createdAt": "2025-11-29 10:45:12"
+    },
+    {
+      "id": "60001",
+      "supplierId": "240001",
+      "countryCode": "AU",
+      "cityId": "NULL",
+      "serviceType": "L1_EUC",
+      "responseTimeHours": "48",
+      "createdAt": "2025-11-30 11:10:33"
+    },
+    {
+      "id": "60002",
+      "supplierId": "240001",
+      "countryCode": "AU",
+      "cityId": "NULL",
+      "serviceType": "L1_EUC",
+      "responseTimeHours": "4",
+      "createdAt": "2025-11-30 11:10:40"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tsupplierId\tcountryCode\tcityId\tserviceType\tresponseTimeHours\tcreatedAt\n17\t240001\tAU\tNULL\tL1_EUC\t72\t2025-11-29 10:25:59\n30002\t240001\tAU\tNULL\tL1_EUC\t24\t2025-11-29 10:44:36\n30003\t240001\tAU\tNULL\tSMART_HANDS\t4\t2025-11-29 10:45:08\n30004\t240001\tAU\tNULL\tSMART_HANDS\t24\t2025-11-29 10:45:09\n30005\t240001\tAU\tNULL\tSMART_HANDS\t48\t2025-11-29 10:45:10\n30006\t240001\tAU\tNULL\tSMART_HANDS\t72\t2025-11-29 10:45:11\n30007\t240001\tAU\tNULL\tSMART_HANDS\t96\t2025-11-29 10:45:12\n60001\t240001\tAU\tNULL\tL1_EUC\t48\t2025-11-30 11:10:33\n60002\t240001\tAU\tNULL\tL1_EUC\t4\t2025-11-30 11:10:40\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

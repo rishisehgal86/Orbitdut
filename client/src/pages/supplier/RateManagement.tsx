@@ -886,10 +886,20 @@ function LocationRatesTable({
                 {RATE_SERVICE_TYPES.map((service) => {
                   const serviceExcluded = isServiceExcluded(location, service.value);
                   const stateKey = `${locationKey}-${service.value}`;
+                  
+                  // Count configured rates (valid prices > 0)
                   const configuredCount = RATE_RESPONSE_TIMES.filter(rt => {
                     const val = getRateValue(location, service.value, rt.hours);
                     return val !== "" && parseFloat(val) > 0;
                   }).length;
+                  
+                  // Count excluded response times for this service/location
+                  const excludedCount = RATE_RESPONSE_TIMES.filter(rt => 
+                    isResponseTimeExcluded(location, service.value, rt.hours)
+                  ).length;
+                  
+                  // Total possible rates = 5 - excluded
+                  const totalPossibleRates = RATE_RESPONSE_TIMES.length - excludedCount;
 
                   return (
                     <div key={service.value} className="space-y-3">
@@ -901,7 +911,7 @@ function LocationRatesTable({
                           </span>
                         ) : (
                           <span className="text-sm text-muted-foreground">
-                            {configuredCount} / {RATE_RESPONSE_TIMES.length} rates configured
+                            {configuredCount} / {totalPossibleRates} rates configured
                           </span>
                         )}
                       </div>

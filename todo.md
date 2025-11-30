@@ -956,3 +956,40 @@
 - [x] Test: Remove an exclusion and verify Total increases (230 → 225 → 230) ✓
 - [x] Test: Add an exclusion and verify Total decreases (worked correctly) ✓
 - [x] Verified: Total now dynamically updates when exclusions are added/removed
+
+## Fix Geographic Coverage Country Removal Not Persisting
+- [ ] Investigate Geographic Coverage page removal logic
+- [ ] Check backend removeCountry mutation
+- [ ] Verify database deletion is working
+- [ ] Fix the persistence issue
+- [ ] Test: Remove a country and refresh page to verify it stays removed
+
+## Fix Geographic Coverage Country Removal Not Persisting
+- [ ] Investigate Geographic Coverage page country removal logic
+- [ ] Check backend removeCountry mutation (cities work, countries don't)
+- [ ] Verify database deletion query for countries
+- [ ] Fix the country removal persistence issue
+- [ ] Test: Remove a country and refresh page to verify it stays removed
+
+## Fix Current Rates Showing Incorrect Exclusions
+- [x] Investigated: Response-time exclusions exist in database (9 records for AU)
+- [x] Verified: Service Availability manages service-level, Rate Management manages response-time-level
+- [x] Confirmed: System working correctly, no bug
+
+## Fix Rate Configuration Summary Counting $0.00 as Configured
+- [x] Investigated getRateCompletionStats logic for counting rates
+- [x] Found: $0.00 rates (rateUsdCents=0) were counted as configured
+- [x] Fixed: Changed filter to require rateUsdCents > 0 (not just !== null)
+- [x] Test: Verified missing count now shows correctly
+
+## Fix Rate Management Inline Counter Not Accounting for Exclusions
+- [x] Investigated "X/5 rates configured" counter in Rate Management
+- [x] Fixed to show "X/Y" where Y = 5 - excluded response times
+- [ ] Test: Verify counter shows correct denominator when response times are excluded
+
+## Refactor getRateCompletionStats to Use Virtual Table Approach
+- [x] Refactored to build virtual table of all possible rate slots
+- [x] Count NULL or 0 rates as Missing
+- [x] Count rates > 0 as Configured
+- [x] Simplified logic - exclusions handled naturally in virtual table iteration
+- [x] Test: Verified - Total=15, Configured=0, Missing=15 (correct for supplier with no valid rates)

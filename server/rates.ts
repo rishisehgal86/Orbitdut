@@ -160,92 +160,124 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
   const { supplierCoverageCountries, supplierPriorityCities } = await import("../drizzle/schema");
   const { sql } = await import("drizzle-orm");
   
-  // 1. Get coverage locations (countries + cities)
-  const [countryData] = await db
-    .select({ count: sql<number>`COUNT(*)` })
-    .from(supplierCoverageCountries)
-    .where(eq(supplierCoverageCountries.supplierId, supplierId));
-  
-  const [cityData] = await db
-    .select({ count: sql<number>`COUNT(*)` })
-    .from(supplierPriorityCities)
-    .where(eq(supplierPriorityCities.supplierId, supplierId));
-  
-  const locationCount = (Number(countryData?.count) || 0) + (Number(cityData?.count) || 0);
-  
-  // 2. Virtual matrix size (locations × 3 services × 5 response times)
-  const virtualMatrixSize = locationCount * 3 * 5;
-  
-  // 3. Get coverage location IDs for filtering
+  // 1. Get coverage locations
   const coverageCountries = await db
     .select({ countryCode: supplierCoverageCountries.countryCode })
     .from(supplierCoverageCountries)
     .where(eq(supplierCoverageCountries.supplierId, supplierId));
   
   const coverageCities = await db
-    .select({ cityId: supplierPriorityCities.id })
+    .select({ id: supplierPriorityCities.id })
     .from(supplierPriorityCities)
     .where(eq(supplierPriorityCities.supplierId, supplierId));
   
-  const coverageCountryCodes = new Set(coverageCountries.map(c => c.countryCode));
-  const coverageCityIds = new Set(coverageCities.map(c => c.cityId));
-  
-  // 4. Get all rates for this supplier
+  // 2. Get all rates for this supplier
   const allRates = await db
     .select()
     .from(supplierRates)
     .where(eq(supplierRates.supplierId, supplierId));
   
-  // 5. Filter rates to only those in current coverage
-  const coverageRates = allRates.filter((r: SupplierRate) => {
-    if (r.countryCode && coverageCountryCodes.has(r.countryCode)) return true;
-    if (r.cityId && coverageCityIds.has(r.cityId)) return true;
-    return false;
-  });
-  
-  // 6. Configured = coverage rates with prices
-  const configured = coverageRates.filter((r: SupplierRate) => r.rateUsdCents !== null).length;
-  
-  // 7. Count exclusions from exclusion tables (not from rates table)
+  // 3. Get exclusions
   const { supplierServiceExclusions, supplierResponseTimeExclusions } = await import("../drizzle/schema");
   
-  // Service exclusions: each excludes 5 response times (entire service/location combo)
   const serviceExclusions = await db
     .select()
     .from(supplierServiceExclusions)
     .where(eq(supplierServiceExclusions.supplierId, supplierId));
   
-  // Filter to only exclusions in current coverage
-  const coverageServiceExclusions = serviceExclusions.filter(excl => {
-    if (excl.countryCode && coverageCountryCodes.has(excl.countryCode)) return true;
-    if (excl.cityId && coverageCityIds.has(excl.cityId)) return true;
-    return false;
-  });
-  
-  // Response time exclusions: each excludes 1 specific rate slot
   const responseTimeExclusions = await db
     .select()
     .from(supplierResponseTimeExclusions)
     .where(eq(supplierResponseTimeExclusions.supplierId, supplierId));
   
-  // Filter to only exclusions in current coverage
-  const coverageResponseTimeExclusions = responseTimeExclusions.filter(excl => {
-    if (excl.countryCode && coverageCountryCodes.has(excl.countryCode)) return true;
-    if (excl.cityId && coverageCityIds.has(excl.cityId)) return true;
-    return false;
-  });
+  // 4. Build virtual table: all possible rate slots
+  const SERVICE_TYPES = ['L1 End User Computing', 'L1 Network Support', 'Smart Hands'];
+  const RESPONSE_TIMES = [4, 24, 48, 72, 96];
   
-  // Total exclusions = (service exclusions × 5) + response time exclusions
-  const excluded = (coverageServiceExclusions.length * 5) + coverageResponseTimeExclusions.length;
+  const virtualTable: Array<{
+    location: { type: 'country', code: string } | { type: 'city', id: number };
+    serviceType: string;
+    responseTimeHours: number;
+  }> = [];
   
-  // 8. Total = virtual matrix - excluded (only count serviceable rates)
-  const total = virtualMatrixSize - excluded;
+  // Add country slots
+  for (const country of coverageCountries) {
+    for (const serviceType of SERVICE_TYPES) {
+      for (const responseTimeHours of RESPONSE_TIMES) {
+        virtualTable.push({
+          location: { type: 'country', code: country.countryCode },
+          serviceType,
+          responseTimeHours,
+        });
+      }
+    }
+  }
   
-  // 9. Missing = Total - Configured
-  const missing = total - configured;
+  // Add city slots
+  for (const city of coverageCities) {
+    for (const serviceType of SERVICE_TYPES) {
+      for (const responseTimeHours of RESPONSE_TIMES) {
+        virtualTable.push({
+          location: { type: 'city', id: city.id },
+          serviceType,
+          responseTimeHours,
+        });
+      }
+    }
+  }
   
-  // 10. Calculate completion percentage: (Configured / Total) × 100
-  // Round to 1 decimal place for display
+  // 5. Check each slot: is it excluded? does it have a rate > 0?
+  let configured = 0;
+  let missing = 0;
+  let excluded = 0;
+  
+  for (const slot of virtualTable) {
+    const isCountry = slot.location.type === 'country';
+    const locationId = isCountry 
+      ? (slot.location as { type: 'country', code: string }).code 
+      : (slot.location as { type: 'city', id: number }).id;
+    
+    // Check if service-level excluded
+    const serviceExcluded = serviceExclusions.some(excl => {
+      if (isCountry && excl.countryCode === locationId && excl.serviceType === slot.serviceType) return true;
+      if (!isCountry && excl.cityId === locationId && excl.serviceType === slot.serviceType) return true;
+      return false;
+    });
+    
+    if (serviceExcluded) {
+      excluded++;
+      continue;
+    }
+    
+    // Check if response-time-level excluded
+    const responseTimeExcluded = responseTimeExclusions.some(excl => {
+      if (isCountry && excl.countryCode === locationId && excl.serviceType === slot.serviceType && excl.responseTimeHours === slot.responseTimeHours) return true;
+      if (!isCountry && excl.cityId === locationId && excl.serviceType === slot.serviceType && excl.responseTimeHours === slot.responseTimeHours) return true;
+      return false;
+    });
+    
+    if (responseTimeExcluded) {
+      excluded++;
+      continue;
+    }
+    
+    // Find rate for this slot
+    const rate = allRates.find(r => {
+      if (isCountry && r.countryCode === locationId && r.serviceType === slot.serviceType && r.responseTimeHours === slot.responseTimeHours) return true;
+      if (!isCountry && r.cityId === locationId && r.serviceType === slot.serviceType && r.responseTimeHours === slot.responseTimeHours) return true;
+      return false;
+    });
+    
+    // Check if rate is configured (exists and > 0)
+    if (rate && rate.rateUsdCents !== null && rate.rateUsdCents > 0) {
+      configured++;
+    } else {
+      missing++;
+    }
+  }
+  
+  // 6. Calculate totals
+  const total = configured + missing; // Excludes excluded slots
   const percentage = total > 0 ? Math.round((configured / total) * 1000) / 10 : 0;
   
   return {
