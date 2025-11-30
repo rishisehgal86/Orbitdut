@@ -213,8 +213,9 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
   // Missing = Total - (Configured + Excluded)
   const missing = total - configured - excluded;
   
-  // 9. Percentage = placeholder (to be calculated later)
-  const percentage = 0;
+  // 9. Calculate completion percentage: (Configured / Total) × 100
+  // Round to 1 decimal place for display
+  const percentage = total > 0 ? Math.round((configured / total) * 1000) / 10 : 0;
   
   return {
     total,
