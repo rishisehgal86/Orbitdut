@@ -141,6 +141,99 @@ export const appRouter = router({
         };
       }),
 
+    // Request password reset - generates token and sends email
+    requestPasswordReset: publicProcedure
+      .input(z.object({ email: z.string().email() }))
+      .mutation(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { users, passwordResetTokens } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        const { sendPasswordResetEmail } = await import("./_core/email");
+        const crypto = await import("crypto");
+
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
+        // Find user by email
+        const [user] = await db.select().from(users).where(eq(users.email, input.email)).limit(1);
+        
+        // Always return success to prevent email enumeration
+        if (!user) {
+          return { success: true, message: "If an account exists, a reset email has been sent" };
+        }
+
+        // Generate secure random token
+        const token = crypto.randomBytes(32).toString("hex");
+        const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+        // Delete any existing tokens for this user
+        await db.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, user.id));
+
+        // Store token
+        await db.insert(passwordResetTokens).values({
+          userId: user.id,
+          token,
+          expiresAt,
+        });
+
+        // Send email
+        await sendPasswordResetEmail(user.email, user.name || "User", token);
+
+        return { success: true, message: "If an account exists, a reset email has been sent" };
+      }),
+
+    // Reset password using token
+    resetPassword: publicProcedure
+      .input(
+        z.object({
+          token: z.string(),
+          newPassword: z.string().min(8),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { users, passwordResetTokens } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        const { hashPassword } = await import("./auth");
+
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
+        // Find token
+        const [resetToken] = await db
+          .select()
+          .from(passwordResetTokens)
+          .where(eq(passwordResetTokens.token, input.token))
+          .limit(1);
+
+        if (!resetToken) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Invalid or expired reset token",
+          });
+        }
+
+        // Check if token is expired
+        if (new Date() > new Date(resetToken.expiresAt)) {
+          await db.delete(passwordResetTokens).where(eq(passwordResetTokens.id, resetToken.id));
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Reset token has expired",
+          });
+        }
+
+        // Hash new password
+        const passwordHash = await hashPassword(input.newPassword);
+
+        // Update user password
+        await db.update(users).set({ passwordHash }).where(eq(users.id, resetToken.userId));
+
+        // Delete used token
+        await db.delete(passwordResetTokens).where(eq(passwordResetTokens.id, resetToken.id));
+
+        return { success: true, message: "Password reset successfully" };
+      }),
+
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
@@ -1059,6 +1152,31 @@ export const appRouter = router({
           })
           .where(eq(jobs.id, input.jobId));
 
+        // Send email notification to customer
+        if (job.customerId) {
+          const { users } = await import("../drizzle/schema");
+          const [customer] = await db
+            .select()
+            .from(users)
+            .where(eq(users.id, job.customerId))
+            .limit(1);
+
+          if (customer) {
+            const { sendJobStatusEmail } = await import("./_core/email");
+            // Fire and forget - don't wait for email
+            sendJobStatusEmail(
+              customer.email,
+              customer.name,
+              job.id,
+              job.serviceType,
+              "pending_supplier_acceptance",
+              "assigned_to_supplier"
+            ).catch((error) => {
+              console.error("Failed to send job acceptance email:", error);
+            });
+          }
+        }
+
         return { success: true };
       }),
 
@@ -1123,6 +1241,7 @@ export const appRouter = router({
         }
 
         // Update status
+        const oldStatus = job.status;
         const updateData: any = { status: input.status };
         if (input.status === "completed") {
           updateData.completedAt = new Date();
@@ -1132,6 +1251,31 @@ export const appRouter = router({
           .update(jobs)
           .set(updateData)
           .where(eq(jobs.id, input.jobId));
+
+        // Send email notification to customer
+        if (job.customerId) {
+          const { users } = await import("../drizzle/schema");
+          const [customer] = await db
+            .select()
+            .from(users)
+            .where(eq(users.id, job.customerId))
+            .limit(1);
+
+          if (customer) {
+            const { sendJobStatusEmail } = await import("./_core/email");
+            // Fire and forget - don't wait for email
+            sendJobStatusEmail(
+              customer.email,
+              customer.name,
+              job.id,
+              job.serviceType,
+              oldStatus,
+              input.status
+            ).catch((error) => {
+              console.error("Failed to send job status email:", error);
+            });
+          }
+        }
 
         return { success: true };
       }),

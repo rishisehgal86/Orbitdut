@@ -8,6 +8,8 @@ import Home from "./pages/Home";
 import Login from "./pages/auth/Login";
 import CustomerSignup from "./pages/auth/CustomerSignup";
 import SupplierSignup from "./pages/auth/SupplierSignup";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
 import SupplierDashboard from "./pages/supplier/Dashboard";
 import SupplierSettings from "./pages/supplier/Settings";
 import CurrentRates from "./pages/supplier/CurrentRates";
@@ -33,6 +35,8 @@ function Router() {
     <Switch>
       <Route path={"/"} component={Home} />
       <Route path="/login" component={Login} />
+      <Route path="/auth/forgot-password" component={ForgotPassword} />
+      <Route path="/auth/reset-password/:token" component={ResetPassword} />
       <Route path="/auth/customer-signup" component={CustomerSignup} />
       <Route path="/auth/supplier-signup" component={SupplierSignup} />
       {/* Legacy routes for backward compatibility */}

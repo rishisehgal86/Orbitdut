@@ -1493,10 +1493,12 @@
 ## Email Functionality Implementation
 
 ### Email Service Infrastructure
-- [ ] Check available email service (Resend, SendGrid, or built-in Manus email API)
-- [ ] Create email service helper in server/_core/email.ts
-- [ ] Design email templates (password reset, job status updates, supplier messages)
-- [ ] Add email template rendering utility
+- [x] Check available email service (Gmail SMTP required)
+- [x] Install Nodemailer package for Gmail SMTP
+- [x] Create email service helper in server/_core/email.ts with Gmail configuration
+- [x] Design email templates (password reset, job status updates, supplier messages)
+- [x] Add email template rendering utility
+- [ ] Configure Gmail App Password (GMAIL_USER and GMAIL_APP_PASSWORD env vars)
 
 ### Password Reset Flow
 - [ ] Create passwordResetTokens table (userId, token, expiresAt)
@@ -1527,3 +1529,17 @@
 - [ ] Test job status notification emails
 - [ ] Test message notification emails
 - [ ] Verify email preferences are respected
+
+## Email Notification System
+- [x] Setup Gmail SMTP with nodemailer
+- [x] Create email service with password reset, job status, and message notification templates
+- [x] Test email service with vitest
+- [x] Create ForgotPassword.tsx page with email input form (already existed)
+- [x] Create ResetPassword.tsx page with token validation and new password form
+- [x] Add forgot password link to login page
+- [x] Add password reset routes to App.tsx
+- [x] Implement job status change email notifications (trigger on status update)
+- [x] Add email notification when supplier accepts job
+- [ ] Test complete password reset flow end-to-end
+- [ ] Test job status email notifications end-to-end
+- [ ] Create messaging system (deferred - waiting for supplier assignment logic)

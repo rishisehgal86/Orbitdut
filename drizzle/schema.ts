@@ -49,8 +49,22 @@ export const userPreferences = mysqlTable("userPreferences", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
-export type UserPreferences = typeof userPreferences.$inferSelect;
-export type InsertUserPreferences = typeof userPreferences.$inferInsert;
+export type UserPreference = typeof userPreferences.$inferSelect;
+export type InsertUserPreference = typeof userPreferences.$inferInsert;
+
+/**
+ * Password reset tokens table - stores temporary tokens for password reset flow
+ */
+export const passwordResetTokens = mysqlTable("passwordResetTokens", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  token: varchar("token", { length: 255 }).notNull().unique(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+export type InsertPasswordResetToken = typeof passwordResetTokens.$inferInsert;
 
 /**
  * Supplier companies table - stores business information for service providers
@@ -437,3 +451,4 @@ export const supplierResponseTimeExclusions = mysqlTable("supplierResponseTimeEx
 
 export type SupplierResponseTimeExclusion = typeof supplierResponseTimeExclusions.$inferSelect;
 export type InsertSupplierResponseTimeExclusion = typeof supplierResponseTimeExclusions.$inferInsert;
+
