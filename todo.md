@@ -34,12 +34,12 @@
 - [x] Add automatic timestamp tracking on status changes
 
 ### Phase 4: GPS Tracking
-- [ ] Implement browser geolocation API in engineer page
-- [ ] Auto-track location when status is "en_route" or "on_site"
-- [ ] Save GPS coordinates to jobLocations table
-- [ ] Create real-time map view for customers
-- [ ] Calculate and display ETA based on GPS data
-- [ ] Add location tracking indicator to engineer page
+- [x] Implement browser geolocation API in engineer page
+- [x] Auto-track location when status is "en_route" or "on_site"
+- [x] Save GPS coordinates to jobLocations table
+- [x] Create real-time map view for customers
+- [ ] Calculate and display ETA based on GPS data (deferred)
+- [x] Add location tracking indicator to engineer page
 
 ### Phase 5: Site Visit Reports
 - [ ] Create site visit report form component

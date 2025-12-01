@@ -3,12 +3,15 @@ import { useRoute } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, MapPin, Clock, CheckCircle2, Navigation, XCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, MapPin, Clock, CheckCircle2, Navigation, XCircle, Radio } from "lucide-react";
 import { toast } from "sonner";
 
 export default function EngineerJobPage() {
   const [, params] = useRoute<{ token: string }>("/engineer/job/:token");
   const token = params?.token;
+  const [isTracking, setIsTracking] = useState(false);
+  const [watchId, setWatchId] = useState<number | null>(null);
 
   const { data: job, isLoading, refetch } = trpc.jobs.getByEngineerToken.useQuery(
     { token: token || "" },
@@ -25,10 +28,114 @@ export default function EngineerJobPage() {
     },
   });
 
+  const addLocationMutation = trpc.jobs.addLocationByToken.useMutation({
+    onError: (error) => {
+      console.error("Failed to save location:", error);
+    },
+  });
+
+  // Capture current location once (for milestones)
+  const captureCurrentLocation = (milestone: string) => {
+    if (!navigator.geolocation || !token) {
+      console.warn("Geolocation not supported or no token");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        addLocationMutation.mutate({
+          token,
+          latitude: position.coords.latitude.toString(),
+          longitude: position.coords.longitude.toString(),
+          accuracy: position.coords.accuracy.toString(),
+          trackingType: "milestone",
+        });
+        console.log(`Location captured for: ${milestone}`);
+      },
+      (error) => {
+        console.error("Failed to capture location:", error);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
+    );
+  };
+
+  // Start continuous GPS tracking
+  const startTracking = (trackingType: "en_route" | "on_site") => {
+    if (!navigator.geolocation || !token) {
+      toast.error("Geolocation is not supported by your browser");
+      return;
+    }
+
+    const id = navigator.geolocation.watchPosition(
+      (position) => {
+        addLocationMutation.mutate({
+          token,
+          latitude: position.coords.latitude.toString(),
+          longitude: position.coords.longitude.toString(),
+          accuracy: position.coords.accuracy.toString(),
+          trackingType,
+        });
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: 5000,
+      }
+    );
+
+    setWatchId(id);
+    setIsTracking(true);
+    toast.success("GPS tracking started");
+  };
+
+  // Stop GPS tracking
+  const stopTracking = () => {
+    if (watchId !== null) {
+      navigator.geolocation.clearWatch(watchId);
+      setWatchId(null);
+      setIsTracking(false);
+      toast.info("GPS tracking stopped");
+    }
+  };
+
   const handleStatusUpdate = (status: "accepted" | "declined" | "en_route" | "on_site" | "completed") => {
     if (!token) return;
+
+    // Capture location at milestone
+    if (status === "accepted") {
+      captureCurrentLocation("Job accepted");
+    } else if (status === "en_route") {
+      captureCurrentLocation("En route to site");
+      // Start continuous tracking when en route
+      setTimeout(() => startTracking("en_route"), 1000);
+    } else if (status === "on_site") {
+      captureCurrentLocation("Arrived on site");
+      // Stop en_route tracking, start on_site tracking
+      stopTracking();
+      setTimeout(() => startTracking("on_site"), 1000);
+    } else if (status === "completed") {
+      captureCurrentLocation("Job completed");
+      stopTracking();
+    }
+
     updateStatusMutation.mutate({ token, status });
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+    };
+  }, [watchId]);
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
@@ -43,8 +150,18 @@ export default function EngineerJobPage() {
       <div className="max-w-3xl mx-auto">
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">Job #{job.id}: {job.serviceType}</CardTitle>
-            <CardDescription>{job.siteName} - {job.address}</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-2xl">Job #{job.id}: {job.serviceType}</CardTitle>
+                <CardDescription>{job.siteName} - {job.siteAddress}</CardDescription>
+              </div>
+              {isTracking && (
+                <Badge variant="default" className="flex items-center gap-2">
+                  <Radio className="h-3 w-3 animate-pulse" />
+                  Tracking
+                </Badge>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -65,7 +182,7 @@ export default function EngineerJobPage() {
             </div>
 
             <div className="space-y-4">
-              <h3 className="font-semibold">Job Status: <span className="font-normal text-primary">{job.status.replace(/_/g, ' ')}</span></h3>
+              <h3 className="font-semibold">Job Status: <span className="font-normal text-primary">{job.status.replace(/_/g, ' ').toUpperCase()}</span></h3>
               
               {job.status === "sent_to_engineer" && (
                 <div className="flex gap-4">
@@ -101,4 +218,4 @@ export default function EngineerJobPage() {
       </div>
     </div>
   );
-};
+}

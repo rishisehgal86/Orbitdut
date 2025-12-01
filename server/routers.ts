@@ -1485,6 +1485,102 @@ export const appRouter = router({
 
         return { success: true };
       }),
+
+    // Add GPS location by engineer token (no auth required)
+    addLocationByToken: publicProcedure
+      .input(z.object({
+        token: z.string(),
+        latitude: z.string(),
+        longitude: z.string(),
+        accuracy: z.string(),
+        trackingType: z.enum(["milestone", "en_route", "on_site"]),
+      }))
+      .mutation(async ({ input }) => {
+        const { getJobByEngineerToken } = await import("./db");
+        const { getDb } = await import("./db");
+        const { jobLocations } = await import("../drizzle/schema");
+
+        const job = await getJobByEngineerToken(input.token);
+        if (!job) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Job not found' });
+        }
+
+        const db = await getDb();
+        if (!db) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        }
+
+        await db.insert(jobLocations).values({
+          jobId: job.id,
+          latitude: input.latitude,
+          longitude: input.longitude,
+          accuracy: input.accuracy,
+          trackingType: input.trackingType,
+          timestamp: new Date(),
+        });
+
+        return { success: true };
+      }),
+
+    // Get latest location for a job by token
+    getLatestLocationByToken: publicProcedure
+      .input(z.object({ token: z.string() }))
+      .query(async ({ input }) => {
+        const { getJobByEngineerToken } = await import("./db");
+        const { getDb } = await import("./db");
+        const { jobLocations } = await import("../drizzle/schema");
+        const { eq, desc } = await import("drizzle-orm");
+
+        const job = await getJobByEngineerToken(input.token);
+        if (!job) return null;
+
+        const db = await getDb();
+        if (!db) return null;
+
+        const [latestLocation] = await db
+          .select()
+          .from(jobLocations)
+          .where(eq(jobLocations.jobId, job.id))
+          .orderBy(desc(jobLocations.timestamp))
+          .limit(1);
+
+        return latestLocation || null;
+      }),
+
+    // Get latest location for a job by job ID (for customers)
+    getLatestLocationByJobId: protectedProcedure
+      .input(z.object({ jobId: z.number() }))
+      .query(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { jobs, jobLocations } = await import("../drizzle/schema");
+        const { eq, desc, and } = await import("drizzle-orm");
+
+        const db = await getDb();
+        if (!db) return null;
+
+        // Verify the job belongs to the current user (customer)
+        const [job] = await db
+          .select()
+          .from(jobs)
+          .where(and(
+            eq(jobs.id, input.jobId),
+            eq(jobs.customerId, ctx.user.id)
+          ))
+          .limit(1);
+
+        if (!job) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied' });
+        }
+
+        const [latestLocation] = await db
+          .select()
+          .from(jobLocations)
+          .where(eq(jobLocations.jobId, input.jobId))
+          .orderBy(desc(jobLocations.timestamp))
+          .limit(1);
+
+        return latestLocation || null;
+      }),
   }),
 });
 
