@@ -21,6 +21,7 @@ import RequestService from "./pages/RequestService";
 import JobConfirmation from "./pages/JobConfirmation";
 import CustomerDashboard from "./pages/customer/Dashboard";
 import CustomerRequestService from "./pages/customer/RequestService";
+import CustomerRequestServicePricing from "./pages/customer/RequestServicePricing";
 import CustomerJobs from "./pages/customer/Jobs";
 import CustomerJobDetail from "./pages/customer/JobDetail";
 
@@ -41,6 +42,7 @@ function Router() {
       <Route path={"/job-confirmation/:id"} component={JobConfirmation} />
       <Route path={"/customer/dashboard"} component={CustomerDashboard} />
       <Route path={"/customer/request-service"} component={CustomerRequestService} />
+      <Route path={"/customer/request-service/pricing"} component={CustomerRequestServicePricing} />
       <Route path={"/customer/jobs"} component={CustomerJobs} />
       <Route path={"/customer/jobs/:id"} component={CustomerJobDetail} />
       <Route path={"/supplier/dashboard"} component={SupplierDashboard} />

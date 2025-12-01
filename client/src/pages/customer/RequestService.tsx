@@ -29,21 +29,50 @@ export default function RequestService() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [formData, setFormData] = useState({
+    // Contact Information
     customerName: user?.name || "",
     customerEmail: user?.email || "",
     customerPhone: "",
+    
+    // Service Details
     serviceType: "",
     description: "",
+    estimatedDuration: "120",
+    bookingType: "hourly" as "full_day" | "hourly" | "multi_day",
+    downTime: false,
+    
+    // Site Location
+    siteName: "",
     address: "",
     city: "",
+    siteState: "",
     country: "US",
     postalCode: "",
     latitude: "",
     longitude: "",
     timezone: "",
+    
+    // Site Contact
+    siteContactName: "",
+    siteContactNumber: "",
+    
+    // Site Access & Requirements
+    accessInstructions: "",
+    specialRequirements: "",
+    equipmentNeeded: "",
+    
+    // Scheduling
     scheduledDate: "",
     scheduledTime: "",
-    estimatedDuration: "120",
+    
+    // Project/Ticket Information
+    projectName: "",
+    changeNumber: "",
+    incidentNumber: "",
+    
+    // Communication
+    videoConferenceLink: "",
+    notes: "",
   });
 
   const [mapReady, setMapReady] = useState(false);
@@ -101,6 +130,7 @@ export default function RequestService() {
 
         // Extract address components
         let city = "";
+        let siteState = "";
         let country = "";
         let postalCode = "";
 
@@ -108,6 +138,9 @@ export default function RequestService() {
           const types = component.types;
           if (types.includes("locality")) {
             city = component.long_name;
+          }
+          if (types.includes("administrative_area_level_1")) {
+            siteState = component.long_name;
           }
           if (types.includes("country")) {
             country = component.short_name;
@@ -122,6 +155,7 @@ export default function RequestService() {
           ...prev,
           address: place.formatted_address || "",
           city,
+          siteState,
           country,
           postalCode,
           latitude: lat.toString(),
@@ -311,6 +345,42 @@ export default function RequestService() {
                   rows={4}
                 />
               </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="bookingType">Booking Type</Label>
+                  <Select
+                    value={formData.bookingType}
+                    onValueChange={(value: "full_day" | "hourly" | "multi_day") =>
+                      setFormData({ ...formData, bookingType: value })
+                    }
+                  >
+                    <SelectTrigger id="bookingType">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="hourly">Hourly</SelectItem>
+                      <SelectItem value="full_day">Full Day</SelectItem>
+                      <SelectItem value="multi_day">Multi-Day</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center space-x-2 pt-8">
+                  <input
+                    type="checkbox"
+                    id="downTime"
+                    checked={formData.downTime}
+                    onChange={(e) =>
+                      setFormData({ ...formData, downTime: e.target.checked })
+                    }
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  <Label htmlFor="downTime" className="cursor-pointer">
+                    🚨 Urgent - Causing Downtime
+                  </Label>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -321,6 +391,18 @@ export default function RequestService() {
               <CardDescription>Where do you need the engineer?</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="siteName">Site Name</Label>
+                <Input
+                  id="siteName"
+                  value={formData.siteName}
+                  onChange={(e) =>
+                    setFormData({ ...formData, siteName: e.target.value })
+                  }
+                  placeholder="e.g., Main Data Center, Building A"
+                />
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="address-input">
                   Site Address <span className="text-destructive">*</span>
@@ -351,10 +433,159 @@ export default function RequestService() {
               {formData.latitude && formData.longitude && (
                 <div className="rounded-lg bg-muted p-3 text-sm">
                   <p><strong>City:</strong> {formData.city}</p>
+                  {formData.siteState && <p><strong>State:</strong> {formData.siteState}</p>}
                   <p><strong>Postal Code:</strong> {formData.postalCode}</p>
                   <p><strong>Timezone:</strong> {formData.timezone}</p>
                 </div>
               )}
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="siteContactName">On-Site Contact Name</Label>
+                  <Input
+                    id="siteContactName"
+                    value={formData.siteContactName}
+                    onChange={(e) =>
+                      setFormData({ ...formData, siteContactName: e.target.value })
+                    }
+                    placeholder="Person to contact at the site"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="siteContactNumber">On-Site Contact Number</Label>
+                  <Input
+                    id="siteContactNumber"
+                    type="tel"
+                    value={formData.siteContactNumber}
+                    onChange={(e) =>
+                      setFormData({ ...formData, siteContactNumber: e.target.value })
+                    }
+                    placeholder="Phone number"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Site Access & Requirements */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Site Access & Requirements</CardTitle>
+              <CardDescription>Help the engineer prepare for the visit</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="accessInstructions">Access Instructions</Label>
+                <Textarea
+                  id="accessInstructions"
+                  value={formData.accessInstructions}
+                  onChange={(e) =>
+                    setFormData({ ...formData, accessInstructions: e.target.value })
+                  }
+                  placeholder="Gate codes, building entry procedures, parking instructions, etc."
+                  rows={3}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="specialRequirements">Special Requirements</Label>
+                <Textarea
+                  id="specialRequirements"
+                  value={formData.specialRequirements}
+                  onChange={(e) =>
+                    setFormData({ ...formData, specialRequirements: e.target.value })
+                  }
+                  placeholder="Safety requirements, dress code, certifications needed, etc."
+                  rows={3}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="equipmentNeeded">Equipment/Tools Needed</Label>
+                <Textarea
+                  id="equipmentNeeded"
+                  value={formData.equipmentNeeded}
+                  onChange={(e) =>
+                    setFormData({ ...formData, equipmentNeeded: e.target.value })
+                  }
+                  placeholder="Specific tools, equipment, or materials the engineer should bring"
+                  rows={3}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Project/Ticket Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Project & Ticket Information</CardTitle>
+              <CardDescription>Optional - Link this job to your project or ticket system</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="space-y-2">
+                  <Label htmlFor="projectName">Project Name</Label>
+                  <Input
+                    id="projectName"
+                    value={formData.projectName}
+                    onChange={(e) =>
+                      setFormData({ ...formData, projectName: e.target.value })
+                    }
+                    placeholder="e.g., Q4 Migration"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="changeNumber">Change Number</Label>
+                  <Input
+                    id="changeNumber"
+                    value={formData.changeNumber}
+                    onChange={(e) =>
+                      setFormData({ ...formData, changeNumber: e.target.value })
+                    }
+                    placeholder="e.g., CHG0012345"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="incidentNumber">Incident Number</Label>
+                  <Input
+                    id="incidentNumber"
+                    value={formData.incidentNumber}
+                    onChange={(e) =>
+                      setFormData({ ...formData, incidentNumber: e.target.value })
+                    }
+                    placeholder="e.g., INC0012345"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="videoConferenceLink">Video Conference Link</Label>
+                <Input
+                  id="videoConferenceLink"
+                  type="url"
+                  value={formData.videoConferenceLink}
+                  onChange={(e) =>
+                    setFormData({ ...formData, videoConferenceLink: e.target.value })
+                  }
+                  placeholder="Zoom, Teams, or other video call link for remote coordination"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="notes">Additional Notes</Label>
+                <Textarea
+                  id="notes"
+                  value={formData.notes}
+                  onChange={(e) =>
+                    setFormData({ ...formData, notes: e.target.value })
+                  }
+                  placeholder="Any other information the engineer should know"
+                  rows={3}
+                />
+              </div>
             </CardContent>
           </Card>
 

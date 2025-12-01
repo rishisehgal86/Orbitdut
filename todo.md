@@ -1365,3 +1365,20 @@
 - [ ] Implement time negotiation workflow
 - [ ] Add engineer assignment workflow
 - [ ] Build GPS tracking interface for suppliers
+
+## FSM RequestService Form Enhancement
+- [x] Add Site Information section (siteName, siteState, siteContactName, siteContactNumber)
+- [x] Add Site Access & Requirements section (accessInstructions, specialRequirements, equipmentNeeded)
+- [x] Add Booking Type selection (full_day, hourly, multi_day)
+- [x] Add Project/Ticket Information section (projectName, changeNumber, incidentNumber)
+- [x] Add Communication fields (videoConferenceLink, notes)
+- [x] Add downTime urgent flag checkbox
+- [x] Update backend createJob API to accept all FSM fields
+- [x] Create RequestServicePricing page to review and submit job
+- [x] Add pricing route to App.tsx
+- [x] Update schema.ts with missing FSM fields (siteState, projectName, accessInstructions, specialRequirements, equipmentNeeded)
+- [x] Resolve all TypeScript compilation errors
+- [x] Test complete form submission with FSM fields
+- [x] Verify FSM data persists to database correctly
+- [x] Create vitest tests for FSM job creation
+- [x] All tests passing - FSM integration complete

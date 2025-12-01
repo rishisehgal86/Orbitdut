@@ -660,20 +660,52 @@ export const appRouter = router({
     create: publicProcedure
       .input(
         z.object({
+          // Basic job info
           jobToken: z.string(),
           customerName: z.string(),
           customerEmail: z.string().email(),
           customerPhone: z.string(),
+          
+          // Service details
           serviceType: z.string(),
           description: z.string().optional(),
+          estimatedDuration: z.number().min(120, "Duration must be at least 2 hours (120 minutes)").max(960, "Duration must not exceed 16 hours (960 minutes)"),
+          bookingType: z.enum(["full_day", "hourly", "multi_day"]).optional(),
+          downTime: z.boolean().optional(),
+          
+          // Site location
+          siteName: z.string().optional(),
           siteAddress: z.string(),
           city: z.string(),
+          siteState: z.string().optional(),
           country: z.string().length(2),
           postalCode: z.string().optional(),
           siteLatitude: z.string(),
           siteLongitude: z.string(),
+          timezone: z.string().optional(),
+          
+          // Site contact
+          siteContactName: z.string().optional(),
+          siteContactNumber: z.string().optional(),
+          
+          // Site access & requirements
+          accessInstructions: z.string().optional(),
+          specialRequirements: z.string().optional(),
+          equipmentNeeded: z.string().optional(),
+          
+          // Scheduling
           scheduledDateTime: z.string(),
-          estimatedDuration: z.number().min(120, "Duration must be at least 2 hours (120 minutes)").max(960, "Duration must not exceed 16 hours (960 minutes)"),
+          
+          // Project/Ticket info
+          projectName: z.string().optional(),
+          changeNumber: z.string().optional(),
+          incidentNumber: z.string().optional(),
+          
+          // Communication
+          videoConferenceLink: z.string().optional(),
+          notes: z.string().optional(),
+          
+          // Pricing
           calculatedPrice: z.number(),
           currency: z.string().length(3),
           isOutOfHours: z.boolean(),
@@ -686,20 +718,52 @@ export const appRouter = router({
         if (!db) throw new Error("Database not available");
 
         const [result] = await db.insert(jobs).values({
+          // Basic job info
           jobToken: input.jobToken,
           customerName: input.customerName,
           customerEmail: input.customerEmail,
           customerPhone: input.customerPhone,
+          
+          // Service details
           serviceType: input.serviceType,
           description: input.description,
+          estimatedDuration: input.estimatedDuration,
+          bookingType: input.bookingType,
+          downTime: input.downTime,
+          
+          // Site location
+          siteName: input.siteName,
           siteAddress: input.siteAddress,
           city: input.city,
+          siteState: input.siteState,
           country: input.country,
           postalCode: input.postalCode,
           siteLatitude: input.siteLatitude,
           siteLongitude: input.siteLongitude,
+          timezone: input.timezone,
+          
+          // Site contact
+          siteContactName: input.siteContactName,
+          siteContactNumber: input.siteContactNumber,
+          
+          // Site access & requirements
+          accessInstructions: input.accessInstructions,
+          specialRequirements: input.specialRequirements,
+          equipmentNeeded: input.equipmentNeeded,
+          
+          // Scheduling
           scheduledDateTime: new Date(input.scheduledDateTime),
-          estimatedDuration: input.estimatedDuration,
+          
+          // Project/Ticket info
+          projectName: input.projectName,
+          changeNumber: input.changeNumber,
+          incidentNumber: input.incidentNumber,
+          
+          // Communication
+          videoConferenceLink: input.videoConferenceLink,
+          notes: input.notes,
+          
+          // Pricing
           calculatedPrice: input.calculatedPrice,
           currency: input.currency,
           isOutOfHours: input.isOutOfHours ? 1 : 0,

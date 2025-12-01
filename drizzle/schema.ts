@@ -195,6 +195,7 @@ export const jobs = mysqlTable("jobs", {
   siteLatitude: varchar("siteLatitude", { length: 50 }),
   siteLongitude: varchar("siteLongitude", { length: 50 }),
   city: varchar("city", { length: 100 }),
+  siteState: varchar("siteState", { length: 100 }),
   country: varchar("country", { length: 2 }).notNull(),
   postalCode: varchar("postalCode", { length: 20 }),
   
@@ -209,6 +210,7 @@ export const jobs = mysqlTable("jobs", {
   scopeOfWork: text("scopeOfWork"),
   
   // Job Reference Numbers
+  projectName: varchar("projectName", { length: 255 }),
   changeNumber: varchar("changeNumber", { length: 100 }),
   incidentNumber: varchar("incidentNumber", { length: 100 }),
   
@@ -216,6 +218,9 @@ export const jobs = mysqlTable("jobs", {
   toolsRequired: text("toolsRequired"),
   deviceDetails: text("deviceDetails"),
   downTime: boolean("downTime").default(false),
+  accessInstructions: text("accessInstructions"),
+  specialRequirements: text("specialRequirements"),
+  equipmentNeeded: text("equipmentNeeded"),
   
   // Scheduling
   scheduledDateTime: timestamp("scheduledDateTime"),
