@@ -1341,3 +1341,27 @@
 - [ ] Implement work order creation on acceptance
 - [ ] Test marketplace → FSM transition
 
+
+## FSM (Field Service Management) Integration - Phase 1
+- [x] Extend jobs table with 40+ FSM fields from FieldPulse
+- [x] Update field names for consistency (address→siteAddress, scheduledStart→scheduledDateTime, latitude→siteLatitude, longitude→siteLongitude)
+- [x] Add site information fields (siteName, siteState, siteContactName, siteContactNumber)
+- [x] Add technical requirement fields (accessInstructions, specialRequirements, equipmentNeeded)
+- [x] Add booking type fields (bookingType, estimatedHours, estimatedDays)
+- [x] Add time negotiation fields (requestedStartDate, proposedStartDate, confirmedStartDate, timeNegotiationNotes)
+- [x] Add project/ticket fields (projectName, changeNumber, incidentNumber, siteId)
+- [x] Add communication fields (videoConferenceLink, notes, downTime)
+- [x] Add engineer tracking fields (engineerName, engineerEmail, engineerPhone)
+- [x] Add GPS timestamp fields (enRouteAt, arrivedAt, completedAt, cancelledAt)
+- [x] Add completion tracking fields (cancellationReason, cancelledBy)
+- [x] Run database migration (pnpm db:push)
+- [x] Fix all TypeScript errors from schema changes
+- [x] Update all frontend pages to use new field names
+- [x] Add null safety checks for all nullable fields
+- [ ] Migrate FieldPulse RequestService form with all FSM fields
+- [ ] Add FSM fields to customer request service form
+- [ ] Test end-to-end job creation with FSM fields
+- [ ] Update supplier job detail page to show FSM fields
+- [ ] Implement time negotiation workflow
+- [ ] Add engineer assignment workflow
+- [ ] Build GPS tracking interface for suppliers

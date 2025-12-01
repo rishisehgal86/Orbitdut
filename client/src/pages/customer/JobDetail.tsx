@@ -164,7 +164,7 @@ export default function CustomerJobDetail() {
                 <div>
                   <p className="text-sm font-medium">Scheduled Date & Time</p>
                   <p className="text-sm text-muted-foreground">
-                    {new Date(job.scheduledStart).toLocaleString()}
+                    {job.scheduledDateTime ? new Date(job.scheduledDateTime).toLocaleString() : "Not scheduled"}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     Local time at service location
@@ -176,7 +176,7 @@ export default function CustomerJobDetail() {
                 <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div>
                   <p className="text-sm font-medium">Estimated Duration</p>
-                  <p className="text-sm text-muted-foreground">{job.estimatedDuration} hours</p>
+                  <p className="text-sm text-muted-foreground">{job.estimatedDuration ?? 0} hours</p>
                 </div>
               </div>
               {job.description && (
@@ -201,7 +201,7 @@ export default function CustomerJobDetail() {
                 <div className="flex items-start gap-3">
                   <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium">{job.address}</p>
+                    <p className="text-sm font-medium">{job.siteAddress}</p>
                     <p className="text-sm text-muted-foreground">
                       {job.city}, {job.country}
                     </p>
@@ -221,12 +221,12 @@ export default function CustomerJobDetail() {
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Hourly Rate</span>
                   <span className="text-sm font-medium">
-                    {job.currency} {((job.calculatedPrice / 100) / job.estimatedDuration).toFixed(2)}
+                    {job.currency ?? "USD"} {(((job.calculatedPrice ?? 0) / 100) / (job.estimatedDuration ?? 1)).toFixed(2)}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Duration</span>
-                  <span className="text-sm font-medium">{job.estimatedDuration} hours</span>
+                  <span className="text-sm font-medium">{job.estimatedDuration ?? 0} hours</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between items-center">
@@ -235,7 +235,7 @@ export default function CustomerJobDetail() {
                     <span className="font-semibold">Total Price</span>
                   </div>
                   <span className="text-lg font-bold text-primary">
-                    {job.currency} {(job.calculatedPrice / 100).toFixed(2)}
+                    {job.currency} {(job.calculatedPrice ?? 0 / 100).toFixed(2)}
                   </span>
                 </div>
               </CardContent>

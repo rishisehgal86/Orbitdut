@@ -260,7 +260,7 @@ export default function Coverage() {
       // Delete custom setting to use default
       const existing = responseTimes?.find(rt => rt.countryCode === countryCode && !rt.cityName);
       if (existing) {
-        deleteResponseTime.mutate({ id: existing.id });
+        deleteResponseTime.mutate({ id: existing.id, supplierId: profile.supplier.id });
       }
     } else {
       updateResponseTime.mutate({
@@ -280,7 +280,7 @@ export default function Coverage() {
       // Delete custom setting to use country/default
       const existing = responseTimes?.find(rt => rt.countryCode === countryCode && rt.cityName === cityName);
       if (existing) {
-        deleteResponseTime.mutate({ id: existing.id });
+        deleteResponseTime.mutate({ id: existing.id, supplierId: profile.supplier.id });
       }
     } else {
       updateResponseTime.mutate({

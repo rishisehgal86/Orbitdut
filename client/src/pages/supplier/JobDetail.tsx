@@ -119,7 +119,7 @@ export default function SupplierJobDetail() {
           </div>
           <div className="text-right">
             <div className="text-2xl font-bold text-primary">
-              {formatCurrency(job.calculatedPrice, job.currency)}
+              {formatCurrency(job.calculatedPrice ?? 0, job.currency ?? "USD")}
             </div>
             {job.isOutOfHours === 1 && (
               <Badge variant="secondary" className="mt-1">
@@ -244,17 +244,17 @@ export default function SupplierJobDetail() {
               <div className="flex items-start gap-3">
                 <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="font-medium">{job.address}</p>
+                  <p className="font-medium">{job.siteAddress}</p>
                   <p className="text-sm text-muted-foreground">
                     {job.city}, {job.postalCode}
                   </p>
                 </div>
               </div>
 
-              {job.latitude && job.longitude && (
+              {job.siteLatitude && job.siteLongitude && (
                 <Button variant="outline" className="w-full" asChild>
                   <a
-                    href={`https://www.google.com/maps/dir/?api=1&destination=${job.latitude},${job.longitude}`}
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${job.siteLatitude},${job.siteLongitude}`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -275,9 +275,9 @@ export default function SupplierJobDetail() {
               <div className="flex items-start gap-3">
                 <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="font-medium">{formatDate(job.scheduledStart)}</p>
+                  <p className="font-medium">{job.scheduledDateTime ? formatDate(job.scheduledDateTime) : "Not scheduled"}</p>
                   <p className="text-sm text-muted-foreground">
-                    {formatTime(job.scheduledStart)}
+                    {job.scheduledDateTime ? formatTime(job.scheduledDateTime) : ""}
                   </p>
                 </div>
               </div>
@@ -287,7 +287,7 @@ export default function SupplierJobDetail() {
                 <div>
                   <p className="font-medium">Duration</p>
                   <p className="text-sm text-muted-foreground">
-                    {job.estimatedDuration} minutes
+                    {job.estimatedDuration ?? 0} minutes
                   </p>
                 </div>
               </div>
@@ -305,7 +305,7 @@ export default function SupplierJobDetail() {
                 <div className="flex-1">
                   <p className="font-medium">Total Amount</p>
                   <p className="text-2xl font-bold text-primary">
-                    {formatCurrency(job.calculatedPrice, job.currency)}
+                    {formatCurrency(job.calculatedPrice ?? 0, job.currency ?? "USD")}
                   </p>
                 </div>
               </div>

@@ -131,12 +131,12 @@ export default function CustomerDashboard() {
                       <div className="space-y-1">
                         <p className="font-medium">{job.serviceType}</p>
                         <p className="text-sm text-muted-foreground">
-                          {job.address} • {formatDate(job.scheduledStart)}
+                          {job.siteAddress} • {job.scheduledDateTime ? formatDate(job.scheduledDateTime) : "Not scheduled"}
                         </p>
                       </div>
                       <div className="text-right space-y-1">
                         <p className="font-semibold">
-                          {formatCurrency(job.calculatedPrice, job.currency)}
+                          {formatCurrency(job.calculatedPrice ?? 0, job.currency ?? "USD")}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {getStatusBadge(job.status)}

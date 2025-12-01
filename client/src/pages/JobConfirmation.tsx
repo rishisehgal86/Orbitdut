@@ -177,7 +177,7 @@ export default function JobConfirmation() {
                   <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
                     <p className="font-medium">Service Location</p>
-                    <p className="text-sm text-muted-foreground">{job.address}</p>
+                    <p className="text-sm text-muted-foreground">{job.siteAddress}</p>
                     <p className="text-sm text-muted-foreground">
                       {job.city}, {job.postalCode}
                     </p>
@@ -191,7 +191,7 @@ export default function JobConfirmation() {
                   <div>
                     <p className="font-medium">Scheduled Time</p>
                     <p className="text-sm text-muted-foreground">
-                      {formatDate(job.scheduledStart)} at {formatTime(job.scheduledStart)}
+                      {job.scheduledDateTime ? formatDate(job.scheduledDateTime) : "Not scheduled"} at {job.scheduledDateTime ? formatTime(job.scheduledDateTime) : ""}
                     </p>
                   </div>
                 </div>
@@ -222,7 +222,7 @@ export default function JobConfirmation() {
                 <div className="flex justify-between items-center">
                   <span className="text-lg font-semibold">Total Amount</span>
                   <span className="text-2xl font-bold text-primary">
-                    {formatCurrency(job.calculatedPrice, job.currency)}
+                    {formatCurrency(job.calculatedPrice ?? 0, job.currency ?? "USD")}
                   </span>
                 </div>
 
