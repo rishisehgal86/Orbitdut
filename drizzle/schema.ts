@@ -30,6 +30,29 @@ export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
 /**
+ * User preferences table - stores customer/supplier preferences and settings
+ */
+export const userPreferences = mysqlTable("userPreferences", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  
+  // Notification preferences
+  emailNotifications: int("emailNotifications", { unsigned: true }).default(1).notNull(), // 1 = enabled, 0 = disabled
+  jobStatusUpdates: int("jobStatusUpdates", { unsigned: true }).default(1).notNull(),
+  supplierMessages: int("supplierMessages", { unsigned: true }).default(1).notNull(),
+  
+  // Display preferences
+  timezone: varchar("timezone", { length: 100 }).default("UTC"),
+  language: varchar("language", { length: 10 }).default("en"),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UserPreferences = typeof userPreferences.$inferSelect;
+export type InsertUserPreferences = typeof userPreferences.$inferInsert;
+
+/**
  * Supplier companies table - stores business information for service providers
  */
 export const suppliers = mysqlTable("suppliers", {

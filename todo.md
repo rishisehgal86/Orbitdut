@@ -1454,3 +1454,38 @@
 - [x] Update customer/Dashboard.tsx status logic
 - [x] Update customer/JobDetail.tsx status display
 - [x] All customer pages now use consistent, user-friendly status labels
+
+## Customer Profile & Settings Pages Implementation
+
+### Backend APIs
+- [x] Create user_preferences table in schema (notification settings, timezone, language)
+- [x] Add updateProfile API endpoint (name, email)
+- [x] Add changePassword API endpoint
+- [x] Add updatePreferences API endpoint
+- [x] Add getPreferences API endpoint
+
+### Profile Page (/customer/profile)
+- [ ] Create Profile.tsx page component
+- [ ] Display current user information (name, email, phone, account type)
+- [ ] Add edit profile form with validation
+- [ ] Add change password section
+- [ ] Add profile update success/error handling
+- [ ] Add route to App.tsx
+
+### Settings Page (/customer/settings)
+- [ ] Create Settings.tsx page component
+- [ ] Add notification preferences section (email notifications for job updates)
+- [ ] Add timezone selector
+- [ ] Add language preference (future-ready)
+- [ ] Add settings update success/error handling
+- [ ] Add route to App.tsx
+
+### Testing
+- [ ] Test profile update functionality
+- [ ] Test password change functionality
+- [ ] Test settings persistence
+- [ ] Verify navigation from CustomerLayout works
+
+- [x] Profile and Settings pages created and routed
+- [x] All import paths fixed
+- [x] Pages ready for testing

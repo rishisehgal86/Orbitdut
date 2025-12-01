@@ -150,6 +150,186 @@ export const appRouter = router({
     }),
   }),
 
+  user: router({    // Update user profile
+    updateProfile: protectedProcedure
+      .input(
+        z.object({
+          name: z.string().min(1).optional(),
+          email: z.string().email().optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const { getDb } = await import("./db");
+        const { users } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+
+        const db = await getDb();
+        if (!db) {
+          throw new Error("Database not available");
+        }
+
+        // Check if email is already taken by another user
+        if (input.email) {
+          const existing = await db
+            .select()
+            .from(users)
+            .where(eq(users.email, input.email))
+            .limit(1);
+          if (existing.length > 0 && existing[0].id !== ctx.user.id) {
+            throw new Error("Email already in use");
+          }
+        }
+
+        // Update user
+        await db
+          .update(users)
+          .set({
+            ...input,
+            updatedAt: new Date(),
+          })
+          .where(eq(users.id, ctx.user.id));
+
+        return { success: true };
+      }),
+
+    // Change password
+    changePassword: protectedProcedure
+      .input(
+        z.object({
+          currentPassword: z.string(),
+          newPassword: z.string().min(8),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const { hashPassword, verifyPassword } = await import("./auth");
+        const { getDb } = await import("./db");
+        const { users } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+
+        const db = await getDb();
+        if (!db) {
+          throw new Error("Database not available");
+        }
+
+        // Get current user
+        const result = await db
+          .select()
+          .from(users)
+          .where(eq(users.id, ctx.user.id))
+          .limit(1);
+        if (result.length === 0) {
+          throw new Error("User not found");
+        }
+
+        const user = result[0];
+
+        // Verify current password
+        if (!user.passwordHash) {
+          throw new Error("No password set for this account");
+        }
+
+        const isValid = await verifyPassword(input.currentPassword, user.passwordHash);
+        if (!isValid) {
+          throw new Error("Current password is incorrect");
+        }
+
+        // Hash new password
+        const newPasswordHash = await hashPassword(input.newPassword);
+
+        // Update password
+        await db
+          .update(users)
+          .set({
+            passwordHash: newPasswordHash,
+            updatedAt: new Date(),
+          })
+          .where(eq(users.id, ctx.user.id));
+
+        return { success: true };
+      }),
+
+    // Get user preferences
+    getPreferences: protectedProcedure.query(async ({ ctx }) => {
+      const { getDb } = await import("./db");
+      const { userPreferences } = await import("../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+
+      const db = await getDb();
+      if (!db) {
+        throw new Error("Database not available");
+      }
+
+      // Get or create preferences
+      let prefs = await db
+        .select()
+        .from(userPreferences)
+        .where(eq(userPreferences.userId, ctx.user.id))
+        .limit(1);
+
+      if (prefs.length === 0) {
+        // Create default preferences
+        await db.insert(userPreferences).values({
+          userId: ctx.user.id,
+        });
+        prefs = await db
+          .select()
+          .from(userPreferences)
+          .where(eq(userPreferences.userId, ctx.user.id))
+          .limit(1);
+      }
+
+      return prefs[0];
+    }),
+
+    // Update user preferences
+    updatePreferences: protectedProcedure
+      .input(
+        z.object({
+          emailNotifications: z.number().min(0).max(1).optional(),
+          jobStatusUpdates: z.number().min(0).max(1).optional(),
+          supplierMessages: z.number().min(0).max(1).optional(),
+          timezone: z.string().optional(),
+          language: z.string().optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const { getDb } = await import("./db");
+        const { userPreferences } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+
+        const db = await getDb();
+        if (!db) {
+          throw new Error("Database not available");
+        }
+
+        // Check if preferences exist
+        const existing = await db
+          .select()
+          .from(userPreferences)
+          .where(eq(userPreferences.userId, ctx.user.id))
+          .limit(1);
+
+        if (existing.length === 0) {
+          // Create new preferences
+          await db.insert(userPreferences).values({
+            userId: ctx.user.id,
+            ...input,
+          });
+        } else {
+          // Update existing preferences
+          await db
+            .update(userPreferences)
+            .set({
+              ...input,
+              updatedAt: new Date(),
+            })
+            .where(eq(userPreferences.userId, ctx.user.id));
+        }
+
+        return { success: true };
+      }),
+  }),
+
   supplier: router({
     // Get current supplier profile for logged-in user
     getProfile: protectedProcedure.query(async ({ ctx }) => {
@@ -711,7 +891,7 @@ export const appRouter = router({
           isOutOfHours: z.boolean(),
         })
       )
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         const { getDb } = await import("./db");
         const { jobs } = await import("../drizzle/schema");
         const db = await getDb();

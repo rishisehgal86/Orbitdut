@@ -24,6 +24,8 @@ import CustomerRequestService from "./pages/customer/RequestService";
 import CustomerRequestServicePricing from "./pages/customer/RequestServicePricing";
 import CustomerJobs from "./pages/customer/Jobs";
 import CustomerJobDetail from "./pages/customer/JobDetail";
+import CustomerProfile from "./pages/customer/Profile";
+import CustomerSettings from "./pages/customer/Settings";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -45,6 +47,8 @@ function Router() {
       <Route path={"/customer/request-service/pricing"} component={CustomerRequestServicePricing} />
       <Route path={"/customer/jobs"} component={CustomerJobs} />
       <Route path={"/customer/jobs/:id"} component={CustomerJobDetail} />
+      <Route path={"/customer/profile"} component={CustomerProfile} />
+      <Route path={"/customer/settings"} component={CustomerSettings} />
       <Route path={"/supplier/dashboard"} component={SupplierDashboard} />
       <Route path={"/supplier/settings"} component={SupplierSettings} />
       <Route path={"/supplier/rates/current"} component={CurrentRates} />
