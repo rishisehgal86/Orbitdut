@@ -1390,7 +1390,8 @@ export const appRouter = router({
       }),
 
     // Get customer's jobs
-    getCustomerJobs: protectedProcedure      .query(async ({ ctx }) => {
+    getCustomerJobs: protectedProcedure
+      .query(async ({ ctx }) => {
         const { getDb } = await import("./db");
         const { jobs } = await import("../drizzle/schema");
         const { eq, desc, or } = await import("drizzle-orm");

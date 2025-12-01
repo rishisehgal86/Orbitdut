@@ -1,0 +1,87 @@
+{
+  "query": "SELECT id, email, name, role, createdAt \nFROM users \nWHERE email LIKE '%12%'\nORDER BY createdAt DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT id, email, name, role, createdAt \nFROM users \nWHERE email LIKE '%12%'\nORDER BY createdAt DESC;",
+  "rows": [
+    {
+      "id": "180001",
+      "email": "12@customer.com",
+      "name": "Tester",
+      "role": "user",
+      "createdAt": "2025-12-01 16:46:47"
+    },
+    {
+      "id": "90059",
+      "email": "supplier-1764340112369@test.com",
+      "name": "Test Supplier",
+      "role": "user",
+      "createdAt": "2025-11-28 14:28:32"
+    },
+    {
+      "id": "90060",
+      "email": "duplicate-1764340112475@test.com",
+      "name": "First User",
+      "role": "user",
+      "createdAt": "2025-11-28 14:28:32"
+    },
+    {
+      "id": "90061",
+      "email": "login-test-1764340112599@test.com",
+      "name": "Login Test",
+      "role": "user",
+      "createdAt": "2025-11-28 14:28:32"
+    },
+    {
+      "id": "90062",
+      "email": "invalid-password-1764340112823@test.com",
+      "name": "Test User",
+      "role": "user",
+      "createdAt": "2025-11-28 14:28:32"
+    },
+    {
+      "id": "90049",
+      "email": "12@supplier.com",
+      "name": "test",
+      "role": "user",
+      "createdAt": "2025-11-28 14:22:35"
+    },
+    {
+      "id": "90040",
+      "email": "invalid-password-1764339612946@test.com",
+      "name": "Test User",
+      "role": "user",
+      "createdAt": "2025-11-28 14:20:13"
+    },
+    {
+      "id": "90037",
+      "email": "supplier-1764339612486@test.com",
+      "name": "Test Supplier",
+      "role": "user",
+      "createdAt": "2025-11-28 14:20:12"
+    },
+    {
+      "id": "90038",
+      "email": "duplicate-1764339612600@test.com",
+      "name": "First User",
+      "role": "user",
+      "createdAt": "2025-11-28 14:20:12"
+    },
+    {
+      "id": "90039",
+      "email": "login-test-1764339612731@test.com",
+      "name": "Login Test",
+      "role": "user",
+      "createdAt": "2025-11-28 14:20:12"
+    },
+    {
+      "id": "60006",
+      "email": "invalid-password-1764338745121@test.com",
+      "name": "Test User",
+      "role": "user",
+      "createdAt": "2025-11-28 14:05:45"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temail\tname\trole\tcreatedAt\n180001\t12@customer.com\tTester\tuser\t2025-12-01 16:46:47\n90059\tsupplier-1764340112369@test.com\tTest Supplier\tuser\t2025-11-28 14:28:32\n90060\tduplicate-1764340112475@test.com\tFirst User\tuser\t2025-11-28 14:28:32\n90061\tlogin-test-1764340112599@test.com\tLogin Test\tuser\t2025-11-28 14:28:32\n90062\tinvalid-password-1764340112823@test.com\tTest User\tuser\t2025-11-28 14:28:32\n90049\t12@supplier.com\ttest\tuser\t2025-11-28 14:22:35\n90040\tinvalid-password-1764339612946@test.com\tTest User\tuser\t2025-11-28 14:20:13\n90037\tsupplier-1764339612486@test.com\tTest Supplier\tuser\t2025-11-28 14:20:12\n90038\tduplicate-1764339612600@test.com\tFirst User\tuser\t2025-11-28 14:20:12\n90039\tlogin-test-1764339612731@test.com\tLogin Test\tuser\t2025-11-28 14:20:12\n60006\tinvalid-password-1764338745121@test.com\tTest User\tuser\t2025-11-28 14:05:45\n",
+  "stderr": "",
+  "execution_time_ms": 97
+}
