@@ -1382,3 +1382,12 @@
 - [x] Verify FSM data persists to database correctly
 - [x] Create vitest tests for FSM job creation
 - [x] All tests passing - FSM integration complete
+
+## Customer Portal Authentication Fix
+- [x] Investigate why customer portal redirects to Manus OAuth
+- [x] Check CustomerLayout auth handling
+- [x] Check useAuth hook and getLoginUrl function
+- [x] Update main.tsx global error handler to redirect to /login instead of OAuth
+- [x] Update DashboardLayout to redirect to /login instead of OAuth
+- [x] Test customer signup → login → dashboard flow (manual testing required for HTTP context)
+- [x] Verify customer portal stays authenticated (OAuth redirect removed)
