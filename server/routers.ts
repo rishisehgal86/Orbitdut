@@ -1347,8 +1347,8 @@ export const appRouter = router({
     // Get timezone from coordinates using Google Maps API
     getTimezone: publicProcedure
       .input(z.object({
-        latitude: z.number(),
-        longitude: z.number(),
+        latitude: z.union([z.number(), z.string().transform(Number)]),
+        longitude: z.union([z.number(), z.string().transform(Number)]),
         timestamp: z.number().optional(),
       }))
       .query(async ({ input }) => {

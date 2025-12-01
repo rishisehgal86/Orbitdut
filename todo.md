@@ -92,3 +92,26 @@
 - [x] Fix 500 error in getCustomerJobs query (database column issue)
 - [x] Add missing engineerToken column to database
 - [x] Fix getCustomerJobs query to work with existing database schema
+
+## Phase 7: End-to-End Workflow Testing
+- [ ] Fix timezone API 400 error (deferred - needs Google Maps API investigation)
+- [ ] Build pricing page to complete job creation flow (deferred)
+- [x] Create test job manually in database (workaround)
+- [x] Create fresh supplier account (testsupplier@example.com)
+- [x] Link supplier to company via supplierUsers table
+- [x] Assign test job to supplier
+- [x] Document comprehensive gap analysis
+- [ ] Login as supplier and verify job appears in dashboard
+- [ ] Assign engineer to job
+- [ ] Test engineer acceptance via token link
+- [ ] Test GPS tracking (en route, arrived)
+- [ ] Complete job with site visit report and signature
+- [ ] Verify timeline shows all status changes
+- [ ] Check all emails and notifications sent
+- [ ] Verify data integrity across all tables
+
+## Known Bugs to Fix
+- [ ] Timezone API returning 400 error - Google Maps timezone endpoint not working through Manus proxy
+  - Impact: Blocks form submission even with valid address selection
+  - Workaround: Manually create jobs in database with timezone field
+  - Root cause: Needs investigation of Google Maps API integration and tRPC parameter passing

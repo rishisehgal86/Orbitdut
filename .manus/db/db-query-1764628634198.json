@@ -1,0 +1,14 @@
+{
+  "query": "SELECT \n  (SELECT id FROM suppliers WHERE contactEmail = 'testsupplier@example.com') as supplierId,\n  (SELECT id FROM users WHERE email = 'testsupplier@example.com') as userId",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT \n  (SELECT id FROM suppliers WHERE contactEmail = 'testsupplier@example.com') as supplierId,\n  (SELECT id FROM users WHERE email = 'testsupplier@example.com') as userId",
+  "rows": [
+    {
+      "supplierId": "270001",
+      "userId": "240001"
+    }
+  ],
+  "messages": [],
+  "stdout": "supplierId\tuserId\n270001\t240001\n",
+  "stderr": "",
+  "execution_time_ms": 195
+}

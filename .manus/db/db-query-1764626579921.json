@@ -1,0 +1,16 @@
+{
+  "query": "SELECT s.id as supplierId, s.companyName, u.id as userId, u.email \nFROM suppliers s, users u \nWHERE s.id IN (SELECT id FROM suppliers LIMIT 10) \nAND u.email = '12@supplier.com'\nLIMIT 1",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT s.id as supplierId, s.companyName, u.id as userId, u.email \nFROM suppliers s, users u \nWHERE s.id IN (SELECT id FROM suppliers LIMIT 10) \nAND u.email = '12@supplier.com'\nLIMIT 1",
+  "rows": [
+    {
+      "supplierId": "1",
+      "companyName": "Test Supplier Co",
+      "userId": "90049",
+      "email": "12@supplier.com"
+    }
+  ],
+  "messages": [],
+  "stdout": "supplierId\tcompanyName\tuserId\temail\n1\tTest Supplier Co\t90049\t12@supplier.com\n",
+  "stderr": "",
+  "execution_time_ms": 51
+}
