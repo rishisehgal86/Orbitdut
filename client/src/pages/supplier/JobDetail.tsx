@@ -19,6 +19,7 @@ import {
 import { useEffect, useState } from "react";
 import { useRoute } from "wouter";
 import { toast } from "sonner";
+import { AssignEngineerDialog } from "@/components/AssignEngineerDialog";
 
 const STATUS_FLOW = [
   { key: "assigned_to_supplier", label: "Assigned", icon: CheckCircle },
@@ -30,6 +31,7 @@ const STATUS_FLOW = [
 export default function SupplierJobDetail() {
   const [, params] = useRoute("/supplier/jobs/:id");
   const jobId = params?.id ? parseInt(params.id) : 0;
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
 
   const { data: job, isLoading, refetch } = trpc.jobs.getById.useQuery(
     { id: jobId },
@@ -117,7 +119,7 @@ export default function SupplierJobDetail() {
             <h1 className="text-3xl font-bold tracking-tight">{job.serviceType}</h1>
             <p className="text-muted-foreground">Job #{job.id}</p>
           </div>
-          <div className="text-right">
+          <div className="text-right space-y-2">
             <div className="text-2xl font-bold text-primary">
               {formatCurrency(job.calculatedPrice ?? 0, job.currency ?? "USD")}
             </div>
@@ -126,8 +128,22 @@ export default function SupplierJobDetail() {
                 Out of Hours
               </Badge>
             )}
+            {!job.engineerName && job.status === "assigned_to_supplier" && (
+              <Button onClick={() => setAssignDialogOpen(true)} size="sm">
+                <User className="mr-2 h-4 w-4" />
+                Assign Engineer
+              </Button>
+            )}
           </div>
         </div>
+
+        {/* Assign Engineer Dialog */}
+        <AssignEngineerDialog
+          jobId={jobId}
+          open={assignDialogOpen}
+          onOpenChange={setAssignDialogOpen}
+          onSuccess={() => refetch()}
+        />
 
         {/* Status Progress */}
         <Card>

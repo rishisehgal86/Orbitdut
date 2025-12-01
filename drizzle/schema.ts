@@ -452,3 +452,108 @@ export const supplierResponseTimeExclusions = mysqlTable("supplierResponseTimeEx
 export type SupplierResponseTimeExclusion = typeof supplierResponseTimeExclusions.$inferSelect;
 export type InsertSupplierResponseTimeExclusion = typeof supplierResponseTimeExclusions.$inferInsert;
 
+/**
+ * Job Status History - audit trail for status changes
+ * Tracks every status transition with timestamp and optional GPS location
+ */
+export const jobStatusHistory = mysqlTable("jobStatusHistory", {
+  id: int("id").autoincrement().primaryKey(),
+  jobId: int("jobId").notNull().references(() => jobs.id, { onDelete: "cascade" }),
+  
+  status: varchar("status", { length: 50 }).notNull(),
+  notes: text("notes"),
+  
+  // Location at time of status change (optional)
+  latitude: varchar("latitude", { length: 50 }),
+  longitude: varchar("longitude", { length: 50 }),
+  
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+}, (table) => ({
+  jobIdIdx: index("jobStatusHistory_jobId_idx").on(table.jobId),
+}));
+
+export type JobStatusHistory = typeof jobStatusHistory.$inferSelect;
+export type InsertJobStatusHistory = typeof jobStatusHistory.$inferInsert;
+
+/**
+ * Job Locations - stores GPS tracking data
+ * Tracks engineer location during travel and on-site work
+ */
+export const jobLocations = mysqlTable("jobLocations", {
+  id: int("id").autoincrement().primaryKey(),
+  jobId: int("jobId").notNull().references(() => jobs.id, { onDelete: "cascade" }),
+  
+  // GPS Coordinates
+  latitude: varchar("latitude", { length: 50 }).notNull(),
+  longitude: varchar("longitude", { length: 50 }).notNull(),
+  accuracy: varchar("accuracy", { length: 50 }), // in meters
+  
+  // Tracking context
+  trackingType: mysqlEnum("trackingType", ["en_route", "on_site", "milestone"]).notNull(),
+  
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+}, (table) => ({
+  jobIdIdx: index("jobLocations_jobId_idx").on(table.jobId),
+}));
+
+export type JobLocation = typeof jobLocations.$inferSelect;
+export type InsertJobLocation = typeof jobLocations.$inferInsert;
+
+/**
+ * Site Visit Reports - stores engineer completion reports
+ * Includes work details, client sign-off, and digital signature
+ */
+export const siteVisitReports = mysqlTable("siteVisitReports", {
+  id: int("id").autoincrement().primaryKey(),
+  jobId: int("jobId").notNull().unique().references(() => jobs.id, { onDelete: "cascade" }),
+  
+  // Visit Details
+  visitDate: timestamp("visitDate").notNull(),
+  ticketNumbers: text("ticketNumbers"),
+  engineerName: varchar("engineerName", { length: 255 }).notNull(),
+  onsiteContact: varchar("onsiteContact", { length: 255 }),
+  timeOnsite: varchar("timeOnsite", { length: 50 }),
+  timeLeftSite: varchar("timeLeftSite", { length: 50 }),
+  
+  // Work Details
+  issueFault: text("issueFault"),
+  actionsPerformed: text("actionsPerformed"),
+  issueResolved: boolean("issueResolved").default(false),
+  contactAgreed: boolean("contactAgreed").default(false),
+  
+  // Client Sign-off
+  clientSignatory: varchar("clientSignatory", { length: 255 }),
+  clientSignatureData: text("clientSignatureData"), // Base64 signature image
+  signedAt: timestamp("signedAt"),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  jobIdIdx: index("siteVisitReports_jobId_idx").on(table.jobId),
+}));
+
+export type SiteVisitReport = typeof siteVisitReports.$inferSelect;
+export type InsertSiteVisitReport = typeof siteVisitReports.$inferInsert;
+
+/**
+ * SVR Media Files - stores photos and videos attached to site visit reports
+ */
+export const svrMediaFiles = mysqlTable("svrMediaFiles", {
+  id: int("id").autoincrement().primaryKey(),
+  svrId: int("svrId").notNull().references(() => siteVisitReports.id, { onDelete: "cascade" }),
+  
+  // File Information
+  fileKey: varchar("fileKey", { length: 500 }).notNull(), // S3 key
+  fileUrl: varchar("fileUrl", { length: 1000 }).notNull(), // S3 URL
+  fileName: varchar("fileName", { length: 255 }).notNull(),
+  fileType: mysqlEnum("fileType", ["image", "video"]).notNull(),
+  mimeType: varchar("mimeType", { length: 100 }).notNull(),
+  fileSize: int("fileSize").notNull(), // in bytes
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => ({
+  svrIdIdx: index("svrMediaFiles_svrId_idx").on(table.svrId),
+}));
+
+export type SvrMediaFile = typeof svrMediaFiles.$inferSelect;
+export type InsertSvrMediaFile = typeof svrMediaFiles.$inferInsert;

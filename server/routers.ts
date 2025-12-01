@@ -1240,11 +1240,18 @@ export const appRouter = router({
           throw new Error("Job not found or not assigned to you");
         }
 
-        // Update status
+        // Update status with automatic timestamp tracking
         const oldStatus = job.status;
         const updateData: any = { status: input.status };
-        if (input.status === "completed") {
-          updateData.completedAt = new Date();
+        
+        // Set timestamps based on status
+        const now = new Date();
+        if (input.status === "en_route") {
+          updateData.enRouteAt = now;
+        } else if (input.status === "on_site") {
+          updateData.arrivedAt = now;
+        } else if (input.status === "completed") {
+          updateData.completedAt = now;
         }
 
         await db
@@ -1278,6 +1285,63 @@ export const appRouter = router({
         }
 
         return { success: true };
+      }),
+
+    // Assign engineer to job
+    assignEngineer: protectedProcedure
+      .input(z.object({
+        jobId: z.number(),
+        engineerName: z.string(),
+        engineerEmail: z.string().email(),
+        engineerPhone: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { getJobById, addJobStatusHistory, updateJob } = await import("./db");
+        const { sendJobAssignmentNotification } = await import("./_core/email");
+        const { randomBytes } = await import("crypto");
+
+        const job = await getJobById(input.jobId);
+        if (!job) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Job not found' });
+        }
+
+        // Ensure only the assigned supplier can assign an engineer
+        const { getSupplierByUserId } = await import("./db");
+        const supplier = await getSupplierByUserId(ctx.user.id);
+        if (!supplier || job.assignedSupplierId !== supplier.supplier.id) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'You are not authorized to assign this job' });
+        }
+
+        const engineerToken = randomBytes(32).toString('hex');
+
+        await updateJob(job.id, {
+          engineerName: input.engineerName,
+          engineerEmail: input.engineerEmail,
+          engineerPhone: input.engineerPhone,
+          engineerToken: engineerToken,
+          status: 'sent_to_engineer',
+        });
+
+        await addJobStatusHistory({
+          jobId: job.id,
+          status: 'sent_to_engineer',
+          notes: `Assigned to engineer ${input.engineerName} (${input.engineerEmail})`,
+        });
+
+        // Send email to engineer
+        const baseUrl = getBaseUrl(ctx.req);
+        await sendJobAssignmentNotification({
+          engineerEmail: input.engineerEmail,
+          engineerName: input.engineerName,
+          jobId: job.id,
+          siteName: job.siteName,
+          siteAddress: job.address,
+          scheduledDateTime: job.scheduledStart,
+          jobToken: engineerToken,
+          baseUrl,
+        });
+
+        return { success: true, engineerToken };
       }),
 
     // Get timezone from coordinates using Google Maps API
@@ -1342,6 +1406,84 @@ export const appRouter = router({
           .orderBy(desc(jobs.createdAt));
 
         return customerJobs;
+      }),
+
+    // Get job by engineer token (no auth required)
+    getByEngineerToken: publicProcedure
+      .input(z.object({ token: z.string() }))
+      .query(async ({ input }) => {
+        const { getJobByEngineerToken } = await import("./db");
+        return await getJobByEngineerToken(input.token);
+      }),
+
+    // Update job status by engineer token (no auth required)
+    updateStatusByToken: publicProcedure
+      .input(z.object({
+        token: z.string(),
+        status: z.enum(["accepted", "declined", "en_route", "on_site", "completed"]),
+      }))
+      .mutation(async ({ input }) => {
+        const { getJobByEngineerToken, updateJob, addJobStatusHistory } = await import("./db");
+        const { getDb } = await import("./db");
+        const { jobs } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+
+        const job = await getJobByEngineerToken(input.token);
+        if (!job) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Job not found' });
+        }
+
+        // Update status with automatic timestamp tracking
+        const updateData: any = { status: input.status };
+        const now = new Date();
+        
+        if (input.status === "accepted") {
+          updateData.acceptedAt = now;
+        } else if (input.status === "en_route") {
+          updateData.enRouteAt = now;
+        } else if (input.status === "on_site") {
+          updateData.arrivedAt = now;
+        } else if (input.status === "completed") {
+          updateData.completedAt = now;
+        }
+
+        await updateJob(job.id, updateData);
+
+        // Add status history entry
+        await addJobStatusHistory({
+          jobId: job.id,
+          status: input.status,
+          notes: `Status updated by engineer via token`,
+        });
+
+        // Send email notification to customer
+        if (job.customerId) {
+          const db = await getDb();
+          if (db) {
+            const { users } = await import("../drizzle/schema");
+            const [customer] = await db
+              .select()
+              .from(users)
+              .where(eq(users.id, job.customerId))
+              .limit(1);
+
+            if (customer) {
+              const { sendJobStatusEmail } = await import("./_core/email");
+              sendJobStatusEmail(
+                customer.email,
+                customer.name,
+                job.id,
+                job.serviceType,
+                job.status,
+                input.status
+              ).catch((error) => {
+                console.error("Failed to send job status email:", error);
+              });
+            }
+          }
+        }
+
+        return { success: true };
       }),
   }),
 });

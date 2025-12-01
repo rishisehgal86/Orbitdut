@@ -321,3 +321,45 @@ Visit: ${APP_URL}
     text,
   });
 }
+
+/**
+ * Send job assignment notification to engineer
+ */
+export async function sendJobAssignmentNotification(options: {
+  engineerEmail: string;
+  engineerName: string;
+  jobId: number;
+  siteName: string;
+  siteAddress: string;
+  scheduledDateTime: Date;
+  jobToken: string;
+  baseUrl: string;
+}) {
+  const { APP_NAME, APP_URL, GMAIL_USER } = getGmailConfig();
+  const { engineerEmail, engineerName, jobId, siteName, siteAddress, scheduledDateTime, jobToken, baseUrl } = options;
+
+  const engineerJobUrl = `${baseUrl}/engineer/job/${jobToken}`;
+
+  const emailBody = `
+    <p>Hi ${engineerName},</p>
+    <p>You have been assigned a new job on ${APP_NAME}:</p>
+    <table style="width: 100%; border-collapse: collapse;">
+      <tr><td style="padding: 8px; border: 1px solid #ddd;">Job ID:</td><td style="padding: 8px; border: 1px solid #ddd;">${jobId}</td></tr>
+      <tr><td style="padding: 8px; border: 1px solid #ddd;">Site:</td><td style="padding: 8px; border: 1px solid #ddd;">${siteName}</td></tr>
+      <tr><td style="padding: 8px; border: 1px solid #ddd;">Address:</td><td style="padding: 8px; border: 1px solid #ddd;">${siteAddress}</td></tr>
+      <tr><td style="padding: 8px; border: 1px solid #ddd;">Scheduled:</td><td style="padding: 8px; border: 1px solid #ddd;">${new Date(scheduledDateTime).toLocaleString()}</td></tr>
+    </table>
+    <p>Please review the job details and accept or decline the assignment by clicking the link below:</p>
+    <p><a href="${engineerJobUrl}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Job Details</a></p>
+    <p>Thank you,<br/>The ${APP_NAME} Team</p>
+  `;
+
+  const subject = `New Job Assignment: #${jobId} - ${siteName}`;
+
+  return await sendEmail({
+    to: engineerEmail,
+    from: `"${APP_NAME}" <${GMAIL_USER}>`,
+    subject,
+    html: emailBody,
+  });
+}
