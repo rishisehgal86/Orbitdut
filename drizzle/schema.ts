@@ -1,16 +1,16 @@
-import { pgTable, serial, varchar, text, timestamp, integer, index, foreignKey, pgEnum } from "drizzle-orm/pg-core";
+import { decimal, foreignKey, index, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
  * Extend this file with additional tables as your product grows.
  * Columns use camelCase to match both database fields and generated types.
  */
-export const users = pgTable("users", {
+export const users = mysqlTable("users", {
   /**
    * Surrogate primary key. Auto-incremented numeric value managed by the database.
    * Use this for relations between tables.
    */
-  id: serial("id").primaryKey(),
+  id: int("id").autoincrement().primaryKey(),
   /** Manus OAuth identifier (openId) returned from the OAuth callback. Unique per user. Optional for local auth. */
   openId: varchar("openId", { length: 64 }).unique(),
   name: text("name"),
@@ -18,11 +18,11 @@ export const users = pgTable("users", {
   /** Password hash for local authentication. Null for OAuth users. */
   passwordHash: text("passwordHash"),
   /** Account type: customer or supplier */
-  accountType: pgEnum("accountType", ["customer", "supplier"]).notNull(),
+  accountType: mysqlEnum("accountType", ["customer", "supplier"]).notNull(),
   loginMethod: varchar("loginMethod", { length: 64 }).default("local"),
-  role: pgEnum("role", ["user", "admin"]).default("user").notNull(),
+  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
 });
 
@@ -32,8 +32,8 @@ export type InsertUser = typeof users.$inferInsert;
 /**
  * Supplier companies table - stores business information for service providers
  */
-export const suppliers = pgTable("suppliers", {
-  id: serial("id").primaryKey(),
+export const suppliers = mysqlTable("suppliers", {
+  id: int("id").autoincrement().primaryKey(),
   companyName: varchar("companyName", { length: 255 }).notNull(),
   contactEmail: varchar("contactEmail", { length: 320 }).notNull(),
   contactPhone: varchar("contactPhone", { length: 50 }),
@@ -41,11 +41,11 @@ export const suppliers = pgTable("suppliers", {
   city: varchar("city", { length: 100 }),
   country: varchar("country", { length: 2 }).notNull(), // ISO 3166-1 alpha-2
   taxId: varchar("taxId", { length: 100 }),
-  verificationStatus: pgEnum("verificationStatus", ["pending", "verified", "rejected"]).default("pending").notNull(),
+  verificationStatus: mysqlEnum("verificationStatus", ["pending", "verified", "rejected"]).default("pending").notNull(),
   stripeAccountId: varchar("stripeAccountId", { length: 255 }),
-  isActive: integer("isActive", ).default(1).notNull(), // 1 = active, 0 = inactive
+  isActive: int("isActive", { unsigned: true }).default(1).notNull(), // 1 = active, 0 = inactive
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
 export type Supplier = typeof suppliers.$inferSelect;
@@ -54,11 +54,11 @@ export type InsertSupplier = typeof suppliers.$inferInsert;
 /**
  * Supplier users table - links individual users to supplier companies
  */
-export const supplierUsers = pgTable("supplierUsers", {
-  id: serial("id").primaryKey(),
-  userId: integer("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
-  supplierId: integer("supplierId").notNull().references(() => suppliers.id, { onDelete: "cascade" }),
-  role: pgEnum("role", ["supplier_admin", "supplier_tech"]).default("supplier_tech").notNull(),
+export const supplierUsers = mysqlTable("supplierUsers", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  supplierId: int("supplierId").notNull().references(() => suppliers.id, { onDelete: "cascade" }),
+  role: mysqlEnum("role", ["supplier_admin", "supplier_tech"]).default("supplier_tech").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => ({
   userIdIdx: index("supplierUsers_userId_idx").on(table.userId),
@@ -73,28 +73,28 @@ export type InsertSupplierUser = typeof supplierUsers.$inferInsert;
  * Supplier rates table - stores hourly rates per location, service type, and response time
  * Three-dimensional pricing matrix: Location × Service Type × Response Time
  */
-export const supplierRates = pgTable("supplierRates", {
-  id: serial("id").primaryKey(),
-  supplierId: integer("supplierId").notNull().references(() => suppliers.id, { onDelete: "cascade" }),
+export const supplierRates = mysqlTable("supplierRates", {
+  id: int("id").autoincrement().primaryKey(),
+  supplierId: int("supplierId").notNull().references(() => suppliers.id, { onDelete: "cascade" }),
   
   // Location: Country OR Priority City (mutually exclusive)
   countryCode: varchar("countryCode", { length: 2 }), // ISO 3166-1 alpha-2 (null if cityId is set)
-  cityId: integer("cityId").references(() => supplierPriorityCities.id, { onDelete: "cascade" }), // References supplierPriorityCities (null if countryCode is set)
+  cityId: int("cityId").references(() => supplierPriorityCities.id, { onDelete: "cascade" }), // References supplierPriorityCities (null if countryCode is set)
   
   // Service Type: L1_EUC, L1_NETWORK, SMART_HANDS
   serviceType: varchar("serviceType", { length: 50 }).notNull(),
   
   // Response Time: 4, 24, 48, 72, 96 (hours)
-  responseTimeHours: integer("responseTimeHours").notNull(),
+  responseTimeHours: int("responseTimeHours").notNull(),
   
   // Rate in USD cents (nullable - allows opt-out)
-  rateUsdCents: integer("rateUsdCents"),
+  rateUsdCents: int("rateUsdCents"),
   
   // Service status: null = not configured, 0 = not offered (opted out), 1 = active
-  isServiceable: integer("isServiceable", ),
+  isServiceable: int("isServiceable", { unsigned: true }),
   
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, (table) => ({
   // Index for tenant isolation queries
   supplierIdIdx: index("supplierRates_supplierId_idx").on(table.supplierId),
@@ -114,11 +114,11 @@ export type InsertSupplierRate = typeof supplierRates.$inferInsert;
 /**
  * Supplier coverage table - Tier 1: Country-level coverage
  */
-export const supplierCoverageCountries = pgTable("supplierCoverageCountries", {
-  id: serial("id").primaryKey(),
-  supplierId: integer("supplierId").notNull().references(() => suppliers.id, { onDelete: "cascade" }),
+export const supplierCoverageCountries = mysqlTable("supplierCoverageCountries", {
+  id: int("id").autoincrement().primaryKey(),
+  supplierId: int("supplierId").notNull().references(() => suppliers.id, { onDelete: "cascade" }),
   countryCode: varchar("countryCode", { length: 2 }).notNull(), // ISO 3166-1 alpha-2
-  isExcluded: integer("isExcluded", ).default(0).notNull(), // 0 = included, 1 = excluded (Tier 3)
+  isExcluded: int("isExcluded", { unsigned: true }).default(0).notNull(), // 0 = included, 1 = excluded (Tier 3)
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => ({
   supplierIdIdx: index("supplierCoverageCountries_supplierId_idx").on(table.supplierId),
@@ -131,16 +131,16 @@ export type InsertSupplierCoverageCountry = typeof supplierCoverageCountries.$in
 /**
  * Supplier priority cities - Tier 2: City/metro area refinement
  */
-export const supplierPriorityCities = pgTable("supplierPriorityCities", {
-  id: serial("id").primaryKey(),
-  supplierId: integer("supplierId").notNull().references(() => suppliers.id, { onDelete: "cascade" }),
+export const supplierPriorityCities = mysqlTable("supplierPriorityCities", {
+  id: int("id").autoincrement().primaryKey(),
+  supplierId: int("supplierId").notNull().references(() => suppliers.id, { onDelete: "cascade" }),
   countryCode: varchar("countryCode", { length: 2 }).notNull(),
   cityName: varchar("cityName", { length: 255 }).notNull(),
   stateProvince: varchar("stateProvince", { length: 255 }), // State/Province/Region
   placeId: varchar("placeId", { length: 255 }), // Google Places ID for uniqueness
   formattedAddress: text("formattedAddress"), // Full formatted address from Google
-  latitude: numeric("latitude", { precision: 10, scale: 7 }), // Decimal for precise coordinates
-  longitude: numeric("longitude", { precision: 10, scale: 7 }),
+  latitude: decimal("latitude", { precision: 10, scale: 7 }), // Decimal for precise coordinates
+  longitude: decimal("longitude", { precision: 10, scale: 7 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => ({
   supplierIdIdx: index("supplierPriorityCities_supplierId_idx").on(table.supplierId),
@@ -153,15 +153,15 @@ export type InsertSupplierPriorityCity = typeof supplierPriorityCities.$inferIns
 /**
  * Supplier response times - Tier 4: Response time zones by region
  */
-export const supplierResponseTimes = pgTable("supplierResponseTimes", {
-  id: serial("id").primaryKey(),
-  supplierId: integer("supplierId").notNull().references(() => suppliers.id, { onDelete: "cascade" }),
+export const supplierResponseTimes = mysqlTable("supplierResponseTimes", {
+  id: int("id").autoincrement().primaryKey(),
+  supplierId: int("supplierId").notNull().references(() => suppliers.id, { onDelete: "cascade" }),
   countryCode: varchar("countryCode", { length: 2 }), // NULL = global default
   cityName: varchar("cityName", { length: 255 }), // NULL = country-level or global
-  responseTimeHours: integer("responseTimeHours").notNull(), // 4, 24, 48, 72, 96
-  isDefault: integer("isDefault", ).default(0).notNull(), // 1 = global default
+  responseTimeHours: int("responseTimeHours").notNull(), // 4, 24, 48, 72, 96
+  isDefault: int("isDefault", { unsigned: true }).default(0).notNull(), // 1 = global default
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, (table) => ({
   supplierIdIdx: index("supplierResponseTimes_supplierId_idx").on(table.supplierId),
   uniqueResponseTime: index("supplierResponseTimes_unique").on(table.supplierId, table.countryCode, table.cityName, table.responseTimeHours),
@@ -173,9 +173,9 @@ export type InsertSupplierResponseTime = typeof supplierResponseTimes.$inferInse
 /**
  * Jobs table - stores customer service requests
  */
-export const jobs = pgTable("jobs", {
-  id: serial("id").primaryKey(),
-  customerId: integer("customerId").references(() => users.id, { onDelete: "set null" }), // Can be null for guest requests
+export const jobs = mysqlTable("jobs", {
+  id: int("id").autoincrement().primaryKey(),
+  customerId: int("customerId").references(() => users.id, { onDelete: "set null" }), // Can be null for guest requests
   customerName: varchar("customerName", { length: 255 }).notNull(),
   customerEmail: varchar("customerEmail", { length: 320 }).notNull(),
   customerPhone: varchar("customerPhone", { length: 50 }),
@@ -188,11 +188,11 @@ export const jobs = pgTable("jobs", {
   latitude: varchar("latitude", { length: 20 }),
   longitude: varchar("longitude", { length: 20 }),
   scheduledStart: timestamp("scheduledStart").notNull(),
-  estimatedDuration: integer("estimatedDuration").notNull(), // In minutes
-  isOutOfHours: integer("isOutOfHours", ).default(0).notNull(),
-  calculatedPrice: integer("calculatedPrice").notNull(), // In cents
+  estimatedDuration: int("estimatedDuration").notNull(), // In minutes
+  isOutOfHours: int("isOutOfHours", { unsigned: true }).default(0).notNull(),
+  calculatedPrice: int("calculatedPrice").notNull(), // In cents
   currency: varchar("currency", { length: 3 }).notNull(),
-  status: pgEnum("status", [
+  status: mysqlEnum("status", [
     "pending_supplier_acceptance",
     "assigned_to_supplier",
     "en_route",
@@ -200,11 +200,11 @@ export const jobs = pgTable("jobs", {
     "completed",
     "cancelled"
   ]).default("pending_supplier_acceptance").notNull(),
-  assignedSupplierId: integer("assignedSupplierId").references(() => suppliers.id, { onDelete: "set null" }),
+  assignedSupplierId: int("assignedSupplierId").references(() => suppliers.id, { onDelete: "set null" }),
   acceptedAt: timestamp("acceptedAt"),
   completedAt: timestamp("completedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, (table) => ({
   customerIdIdx: index("jobs_customerId_idx").on(table.customerId),
   assignedSupplierIdIdx: index("jobs_assignedSupplierId_idx").on(table.assignedSupplierId),
@@ -217,18 +217,18 @@ export type InsertJob = typeof jobs.$inferInsert;
 /**
  * Payments table - tracks customer payments and supplier payouts
  */
-export const payments = pgTable("payments", {
-  id: serial("id").primaryKey(),
-  jobId: integer("jobId").notNull().references(() => jobs.id, { onDelete: "cascade" }),
-  paymentType: pgEnum("paymentType", ["customer_payment", "supplier_payout"]).notNull(),
-  amount: integer("amount").notNull(), // In cents
+export const payments = mysqlTable("payments", {
+  id: int("id").autoincrement().primaryKey(),
+  jobId: int("jobId").notNull().references(() => jobs.id, { onDelete: "cascade" }),
+  paymentType: mysqlEnum("paymentType", ["customer_payment", "supplier_payout"]).notNull(),
+  amount: int("amount").notNull(), // In cents
   currency: varchar("currency", { length: 3 }).notNull(),
   stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }),
   stripeTransferId: varchar("stripeTransferId", { length: 255 }),
-  status: pgEnum("status", ["pending", "processing", "completed", "failed", "refunded"]).default("pending").notNull(),
+  status: mysqlEnum("status", ["pending", "processing", "completed", "failed", "refunded"]).default("pending").notNull(),
   processedAt: timestamp("processedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, (table) => ({
   jobIdIdx: index("payments_jobId_idx").on(table.jobId),
   paymentTypeIdx: index("payments_paymentType_idx").on(table.paymentType),
@@ -241,12 +241,12 @@ export type InsertPayment = typeof payments.$inferInsert;
 /**
  * Reviews table - stores customer ratings and feedback for suppliers
  */
-export const reviews = pgTable("reviews", {
-  id: serial("id").primaryKey(),
-  jobId: integer("jobId").notNull().references(() => jobs.id, { onDelete: "cascade" }),
-  supplierId: integer("supplierId").notNull().references(() => suppliers.id, { onDelete: "cascade" }),
-  customerId: integer("customerId").references(() => users.id, { onDelete: "set null" }),
-  rating: integer("rating").notNull(), // 1-5 stars
+export const reviews = mysqlTable("reviews", {
+  id: int("id").autoincrement().primaryKey(),
+  jobId: int("jobId").notNull().references(() => jobs.id, { onDelete: "cascade" }),
+  supplierId: int("supplierId").notNull().references(() => suppliers.id, { onDelete: "cascade" }),
+  customerId: int("customerId").references(() => users.id, { onDelete: "set null" }),
+  rating: int("rating").notNull(), // 1-5 stars
   comment: text("comment"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => ({
@@ -262,13 +262,13 @@ export type InsertReview = typeof reviews.$inferInsert;
  * Supplier service exclusions - allows suppliers to mark specific service/location combinations as non-serviceable
  * This is a coverage-level exclusion that prevents rates from being required for excluded combinations
  */
-export const supplierServiceExclusions = pgTable("supplierServiceExclusions", {
-  id: serial("id").primaryKey(),
-  supplierId: integer("supplierId").notNull().references(() => suppliers.id, { onDelete: "cascade" }),
+export const supplierServiceExclusions = mysqlTable("supplierServiceExclusions", {
+  id: int("id").autoincrement().primaryKey(),
+  supplierId: int("supplierId").notNull().references(() => suppliers.id, { onDelete: "cascade" }),
   
   // Location: Country OR Priority City (mutually exclusive)
   countryCode: varchar("countryCode", { length: 2 }), // ISO 3166-1 alpha-2 (null if cityId is set)
-  cityId: integer("cityId").references(() => supplierPriorityCities.id, { onDelete: "cascade" }), // References supplierPriorityCities (null if countryCode is set)
+  cityId: int("cityId").references(() => supplierPriorityCities.id, { onDelete: "cascade" }), // References supplierPriorityCities (null if countryCode is set)
   
   // Service Type: L1_EUC, L1_NETWORK, SMART_HANDS
   serviceType: varchar("serviceType", { length: 50 }).notNull(),
@@ -294,19 +294,19 @@ export type InsertSupplierServiceExclusion = typeof supplierServiceExclusions.$i
  * for individual service/location combinations. More granular than service-level exclusions.
  * Example: "We offer L1 EUC in London, but only for 24h+ response times, not 4h"
  */
-export const supplierResponseTimeExclusions = pgTable("supplierResponseTimeExclusions", {
-  id: serial("id").primaryKey(),
-  supplierId: integer("supplierId").notNull(),
+export const supplierResponseTimeExclusions = mysqlTable("supplierResponseTimeExclusions", {
+  id: int("id").autoincrement().primaryKey(),
+  supplierId: int("supplierId").notNull(),
   
   // Location: Country OR Priority City (mutually exclusive)
   countryCode: varchar("countryCode", { length: 2 }), // ISO 3166-1 alpha-2 (null if cityId is set)
-  cityId: integer("cityId"), // References supplierPriorityCities (null if countryCode is set)
+  cityId: int("cityId"), // References supplierPriorityCities (null if countryCode is set)
   
   // Service Type: L1_EUC, L1_NETWORK, SMART_HANDS
   serviceType: varchar("serviceType", { length: 50 }).notNull(),
   
   // Response Time Hours: 4, 24, 48, 72, 96
-  responseTimeHours: integer("responseTimeHours").notNull(),
+  responseTimeHours: int("responseTimeHours").notNull(),
   
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => ({
