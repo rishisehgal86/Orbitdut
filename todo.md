@@ -1489,3 +1489,41 @@
 - [x] Profile and Settings pages created and routed
 - [x] All import paths fixed
 - [x] Pages ready for testing
+
+## Email Functionality Implementation
+
+### Email Service Infrastructure
+- [ ] Check available email service (Resend, SendGrid, or built-in Manus email API)
+- [ ] Create email service helper in server/_core/email.ts
+- [ ] Design email templates (password reset, job status updates, supplier messages)
+- [ ] Add email template rendering utility
+
+### Password Reset Flow
+- [ ] Create passwordResetTokens table (userId, token, expiresAt)
+- [ ] Add requestPasswordReset API endpoint (generates token, sends email)
+- [ ] Add resetPassword API endpoint (validates token, updates password)
+- [ ] Create forgot password page (/auth/forgot-password)
+- [ ] Create reset password page (/auth/reset-password/:token)
+- [ ] Add "Forgot Password?" link to login page
+
+### Job Status Email Notifications
+- [ ] Add sendJobStatusEmail helper function
+- [ ] Trigger email when job status changes to assigned_to_supplier
+- [ ] Trigger email when engineer goes en_route
+- [ ] Trigger email when engineer arrives on_site
+- [ ] Trigger email when job is completed
+- [ ] Respect user notification preferences from settings
+
+### Supplier-Customer Messaging
+- [ ] Create messages table (jobId, senderId, senderType, content, createdAt)
+- [ ] Add sendMessage API endpoint
+- [ ] Add getMessages API endpoint
+- [ ] Create messaging UI in job detail pages
+- [ ] Send email notification when new message received
+- [ ] Respect user notification preferences
+
+### Testing
+- [ ] Test password reset email delivery
+- [ ] Test job status notification emails
+- [ ] Test message notification emails
+- [ ] Verify email preferences are respected
