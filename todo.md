@@ -1196,3 +1196,11 @@
 - [ ] Update server/db.ts to use PostgreSQL connection
 - [ ] Test database connection
 - [ ] Commit and push changes for Railway deployment
+
+
+## URGENT: Revert PostgreSQL Migration
+- [ ] Revert drizzle.config.ts back to MySQL dialect
+- [ ] Restore mysql2 package dependency
+- [ ] Revert server/db.ts to use mysql2 driver
+- [ ] Test login with existing credentials
+- [ ] Verify all existing data is accessible
