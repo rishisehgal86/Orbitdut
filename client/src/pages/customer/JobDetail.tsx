@@ -7,6 +7,8 @@ import { Separator } from "@/components/ui/separator";
 import { trpc } from "@/lib/trpc";
 import { ArrowLeft, Calendar, CheckCircle, Clock, DollarSign, FileText, MapPin, User } from "lucide-react";
 import { Link, useParams } from "wouter";
+import { JobTimeline } from "@/components/JobTimeline";
+import { EngineerLocationMap } from "@/components/EngineerLocationMap";
 
 // Database status values
 type JobStatus = 
@@ -51,6 +53,31 @@ const statusSteps: JobStatus[] = [
   "on_site", 
   "completed"
 ];
+
+// Wrapper component for JobTimeline with data fetching
+function JobTimelineWrapper({ jobId, currentStatus }: { jobId: number; currentStatus: string }) {
+  const { data: timeline, isLoading } = trpc.jobs.getJobTimeline.useQuery(
+    { jobId },
+    { refetchInterval: 10000 } // Refresh every 10 seconds
+  );
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Job Timeline</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8 text-muted-foreground">Loading timeline...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!timeline) return null;
+
+  return <JobTimeline events={timeline.events} currentStatus={timeline.currentStatus} />;
+}
 
 export default function CustomerJobDetail() {
   const { id } = useParams();
@@ -284,6 +311,14 @@ export default function CustomerJobDetail() {
             </CardContent>
           </Card>
         )}
+
+        {/* Engineer Location Tracking */}
+        {(job.status === "en_route" || job.status === "on_site") && (
+          <EngineerLocationMap jobId={job.id} />
+        )}
+
+        {/* Job Timeline */}
+        <JobTimelineWrapper jobId={job.id} currentStatus={job.status} />
 
         {/* Actions */}
         <div className="flex gap-3">

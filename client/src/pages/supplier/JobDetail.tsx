@@ -20,6 +20,8 @@ import { useEffect, useState } from "react";
 import { useRoute } from "wouter";
 import { toast } from "sonner";
 import { AssignEngineerDialog } from "@/components/AssignEngineerDialog";
+import { JobTimeline } from "@/components/JobTimeline";
+import { EngineerLocationMap } from "@/components/EngineerLocationMap";
 
 const STATUS_FLOW = [
   { key: "assigned_to_supplier", label: "Assigned", icon: CheckCircle },
@@ -27,6 +29,31 @@ const STATUS_FLOW = [
   { key: "on_site", label: "On Site", icon: MapPin },
   { key: "completed", label: "Completed", icon: CheckCircle },
 ];
+
+// Wrapper component for JobTimeline with data fetching
+function JobTimelineWrapper({ jobId, currentStatus }: { jobId: number; currentStatus: string }) {
+  const { data: timeline, isLoading } = trpc.jobs.getJobTimeline.useQuery(
+    { jobId },
+    { refetchInterval: 10000 } // Refresh every 10 seconds
+  );
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Job Timeline</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8 text-muted-foreground">Loading timeline...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!timeline) return null;
+
+  return <JobTimeline events={timeline.events} currentStatus={timeline.currentStatus} />;
+}
 
 export default function SupplierJobDetail() {
   const [, params] = useRoute("/supplier/jobs/:id");
@@ -346,6 +373,14 @@ export default function SupplierJobDetail() {
             </CardContent>
           </Card>
         )}
+
+        {/* Engineer Location Tracking */}
+        {(job.status === "en_route" || job.status === "on_site") && (
+          <EngineerLocationMap jobId={job.id} />
+        )}
+
+        {/* Job Timeline */}
+        <JobTimelineWrapper jobId={job.id} currentStatus={job.status} />
       </div>
     </SupplierLayout>
   );

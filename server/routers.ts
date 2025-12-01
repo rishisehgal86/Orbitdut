@@ -1676,6 +1676,97 @@ export const appRouter = router({
 
         return { ...report, mediaFiles };
       }),
+
+    // Get job timeline with status history and GPS locations
+    getJobTimeline: protectedProcedure
+      .input(z.object({ jobId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const { getDb } = await import("./db");
+        const { jobs, jobStatusHistory, jobLocations } = await import("../drizzle/schema");
+        const { eq, and, desc } = await import("drizzle-orm");
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
+        // Verify user has access to this job
+        const [job] = await db
+          .select()
+          .from(jobs)
+          .where(eq(jobs.id, input.jobId))
+          .limit(1);
+
+        if (!job) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Job not found' });
+        }
+
+        // Check access: customer or supplier
+        const hasAccess = 
+          job.customerId === ctx.user.id || 
+          (job.assignedSupplierId && await (async () => {
+            const { supplierUsers } = await import("../drizzle/schema");
+            const [supplierUser] = await db
+              .select()
+              .from(supplierUsers)
+              .where(and(
+                eq(supplierUsers.userId, ctx.user.id),
+                eq(supplierUsers.supplierId, job.assignedSupplierId!)
+              ))
+              .limit(1);
+            return !!supplierUser;
+          })());
+
+        if (!hasAccess) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied' });
+        }
+
+        // Get status history
+        const statusHistory = await db
+          .select()
+          .from(jobStatusHistory)
+          .where(eq(jobStatusHistory.jobId, input.jobId))
+          .orderBy(jobStatusHistory.changedAt);
+
+        // Get GPS locations for milestone events
+        const locations = await db
+          .select()
+          .from(jobLocations)
+          .where(and(
+            eq(jobLocations.jobId, input.jobId),
+            eq(jobLocations.trackingType, "milestone")
+          ))
+          .orderBy(jobLocations.timestamp);
+
+        // Build timeline events with duration calculations
+        const events = statusHistory.map((event, index) => {
+          // Find matching GPS location
+          const location = locations.find(loc => 
+            Math.abs(new Date(loc.timestamp).getTime() - new Date(event.changedAt).getTime()) < 60000 // Within 1 minute
+          );
+
+          // Calculate duration in this status (time until next status change)
+          let duration: number | undefined;
+          if (index < statusHistory.length - 1) {
+            const nextEvent = statusHistory[index + 1];
+            const durationMs = new Date(nextEvent.changedAt).getTime() - new Date(event.changedAt).getTime();
+            duration = Math.floor(durationMs / 60000); // Convert to minutes
+          } else if (job.status === event.newStatus) {
+            // Still in this status - calculate duration until now
+            const durationMs = Date.now() - new Date(event.changedAt).getTime();
+            duration = Math.floor(durationMs / 60000);
+          }
+
+          return {
+            id: event.id,
+            status: event.newStatus,
+            timestamp: event.changedAt,
+            notes: event.notes,
+            latitude: location?.latitude,
+            longitude: location?.longitude,
+            duration,
+          };
+        });
+
+        return { events, currentStatus: job.status };
+      }),
   }),
 });
 

@@ -75,3 +75,12 @@
 - [ ] Native mobile app for engineers
 - [ ] Customer review/rating system
 - [ ] Invoice generation and management
+
+## Phase 6: Job Timeline & Activity History (Complete)
+- [x] Create JobTimeline component with visual timeline UI
+- [x] Build getJobTimeline tRPC procedure
+- [x] Calculate duration between status changes (travel time, on-site time)
+- [x] Display GPS location for each status change
+- [x] Add timeline to customer job detail page
+- [x] Add timeline to supplier job detail page
+- [x] Show formatted timestamps and durations
