@@ -1,0 +1,19 @@
+{
+  "query": "SELECT id, jobToken, status, assignedSupplierId, customerEmail, serviceType, createdAt FROM jobs WHERE customerEmail = '12@customer.com' ORDER BY createdAt DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT id, jobToken, status, assignedSupplierId, customerEmail, serviceType, createdAt FROM jobs WHERE customerEmail = '12@customer.com' ORDER BY createdAt DESC;",
+  "rows": [
+    {
+      "id": "30001",
+      "jobToken": "JOB-1764608138601-LEASSWJ",
+      "status": "pending_supplier_acceptance",
+      "assignedSupplierId": "NULL",
+      "customerEmail": "12@customer.com",
+      "serviceType": "Level 1 End User Compute Engineer",
+      "createdAt": "2025-12-01 16:55:38"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tjobToken\tstatus\tassignedSupplierId\tcustomerEmail\tserviceType\tcreatedAt\n30001\tJOB-1764608138601-LEASSWJ\tpending_supplier_acceptance\tNULL\t12@customer.com\tLevel 1 End User Compute Engineer\t2025-12-01 16:55:38\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

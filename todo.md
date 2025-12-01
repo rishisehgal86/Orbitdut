@@ -1391,3 +1391,52 @@
 - [x] Update DashboardLayout to redirect to /login instead of OAuth
 - [x] Test customer signup → login → dashboard flow (manual testing required for HTTP context)
 - [x] Verify customer portal stays authenticated (OAuth redirect removed)
+
+## Short-Term Customer Portal Enhancements
+
+### Feature 1: Password Reset Flow
+- [ ] Create password_reset_tokens table in schema
+- [ ] Add requestPasswordReset API endpoint (generates token, sends email)
+- [ ] Add resetPassword API endpoint (validates token, updates password)
+- [ ] Create /forgot-password page with email input form
+- [ ] Create /reset-password/:token page with new password form
+- [ ] Add "Forgot Password?" link to login page
+- [ ] Implement email template for password reset
+- [ ] Add token expiration (15 minutes)
+- [ ] Test complete password reset flow
+
+### Feature 2: Customer Profile & Settings Pages
+- [ ] Create /customer/profile page
+  - [ ] Display current user information (name, email, phone)
+  - [ ] Add edit profile form
+  - [ ] Add change password section
+  - [ ] Add profile update API endpoint
+- [ ] Create /customer/settings page
+  - [ ] Email notification preferences (job updates, supplier messages)
+  - [ ] Timezone preference
+  - [ ] Language preference (future)
+  - [ ] Add settings update API endpoint
+- [ ] Update CustomerLayout navigation to enable Profile and Settings links
+- [ ] Test profile and settings updates
+
+### Feature 3: Job Status Email Notifications
+- [ ] Create email notification system using built-in notification API
+- [ ] Add email templates for job status changes:
+  - [ ] Job accepted by supplier
+  - [ ] Supplier proposes time change
+  - [ ] Engineer en route
+  - [ ] Engineer arrived on site
+  - [ ] Job completed
+  - [ ] Job cancelled
+- [ ] Trigger notifications in job status update endpoints
+- [ ] Add notification preferences to customer settings
+- [ ] Test email delivery for all job status changes
+- [ ] Add email notification history/log
+
+## Bug Fix: Job Status Display Issue
+- [x] Investigate why accepted jobs are not showing as pending jobs
+- [x] Found root cause: jobs.create was not setting customerId field
+- [x] Changed jobs.create from publicProcedure to protectedProcedure
+- [x] Added customerId: ctx.user.id to job insertion
+- [x] Updated existing job to set customerId
+- [x] Fix complete - jobs now appear in customer dashboard

@@ -657,7 +657,7 @@ export const appRouter = router({
     // Note: Old calculatePrice procedure removed - pricing logic needs to be reimplemented
 
     // Create a new job request
-    create: publicProcedure
+    create: protectedProcedure
       .input(
         z.object({
           // Basic job info
@@ -768,6 +768,9 @@ export const appRouter = router({
           currency: input.currency,
           isOutOfHours: input.isOutOfHours ? 1 : 0,
           status: "pending_supplier_acceptance",
+          
+          // Link to customer user
+          customerId: ctx.user.id,
         });
 
         const jobId = Number(result.insertId);

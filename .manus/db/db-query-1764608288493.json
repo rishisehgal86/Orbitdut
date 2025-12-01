@@ -1,0 +1,34 @@
+{
+  "query": "SELECT id, jobToken, status, assignedSupplierId, customerEmail, serviceType FROM jobs ORDER BY createdAt DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT id, jobToken, status, assignedSupplierId, customerEmail, serviceType FROM jobs ORDER BY createdAt DESC LIMIT 5;",
+  "rows": [
+    {
+      "id": "30001",
+      "jobToken": "JOB-1764608138601-LEASSWJ",
+      "status": "pending_supplier_acceptance",
+      "assignedSupplierId": "NULL",
+      "customerEmail": "12@customer.com",
+      "serviceType": "Level 1 End User Compute Engineer"
+    },
+    {
+      "id": "2",
+      "jobToken": "TEST-1764604521258-MINIMAL",
+      "status": "pending_supplier_acceptance",
+      "assignedSupplierId": "NULL",
+      "customerEmail": "minimal@example.com",
+      "serviceType": "L1_NETWORK"
+    },
+    {
+      "id": "1",
+      "jobToken": "TEST-1764604520833-FSM",
+      "status": "pending_supplier_acceptance",
+      "assignedSupplierId": "NULL",
+      "customerEmail": "john.doe@example.com",
+      "serviceType": "L1_EUC"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tjobToken\tstatus\tassignedSupplierId\tcustomerEmail\tserviceType\n30001\tJOB-1764608138601-LEASSWJ\tpending_supplier_acceptance\tNULL\t12@customer.com\tLevel 1 End User Compute Engineer\n2\tTEST-1764604521258-MINIMAL\tpending_supplier_acceptance\tNULL\tminimal@example.com\tL1_NETWORK\n1\tTEST-1764604520833-FSM\tpending_supplier_acceptance\tNULL\tjohn.doe@example.com\tL1_EUC\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}
