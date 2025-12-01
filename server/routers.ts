@@ -1393,16 +1393,22 @@ export const appRouter = router({
     getCustomerJobs: protectedProcedure      .query(async ({ ctx }) => {
         const { getDb } = await import("./db");
         const { jobs } = await import("../drizzle/schema");
-        const { eq, desc } = await import("drizzle-orm");
+        const { eq, desc, or } = await import("drizzle-orm");
 
         const db = await getDb();
         if (!db) return [];
 
-        // Get jobs for this customer (by user ID)
+        // Get jobs for this customer (by user ID or email)
+        // This handles cases where jobs were created before user logged in
         const customerJobs = await db
           .select()
           .from(jobs)
-          .where(eq(jobs.customerId, ctx.user.id))
+          .where(
+            or(
+              eq(jobs.customerId, ctx.user.id),
+              eq(jobs.customerEmail, ctx.user.email)
+            )
+          )
           .orderBy(desc(jobs.createdAt));
 
         return customerJobs;

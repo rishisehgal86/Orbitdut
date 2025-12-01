@@ -84,3 +84,8 @@
 - [x] Add timeline to customer job detail page
 - [x] Add timeline to supplier job detail page
 - [x] Show formatted timestamps and durations
+
+## Bug Fixes
+- [x] Fix customer jobs not appearing in dashboard (user 12@customer.com)
+- [x] Investigate database query for customer jobs
+- [x] Update getCustomerJobs to match by email address as fallback
