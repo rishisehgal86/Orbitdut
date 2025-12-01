@@ -80,6 +80,87 @@ export default function RequestService() {
   const [localTimeDisplay, setLocalTimeDisplay] = useState("");
   const [utcTimeDisplay, setUtcTimeDisplay] = useState("");
   const [fetchingTimezone, setFetchingTimezone] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  // Update form when user logs in or changes
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        customerName: user.name || prev.customerName,
+        customerEmail: user.email || prev.customerEmail,
+      }));
+    }
+  }, [user]);
+
+  // Validate field
+  const validateField = (name: string, value: any) => {
+    const newErrors = { ...errors };
+    
+    switch (name) {
+      case 'customerName':
+        if (!value || value.trim().length < 2) {
+          newErrors.customerName = 'Name must be at least 2 characters';
+        } else {
+          delete newErrors.customerName;
+        }
+        break;
+      case 'customerEmail':
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!value || !emailRegex.test(value)) {
+          newErrors.customerEmail = 'Please enter a valid email address';
+        } else {
+          delete newErrors.customerEmail;
+        }
+        break;
+      case 'customerPhone':
+        if (value && value.length > 0 && value.length < 10) {
+          newErrors.customerPhone = 'Phone number must be at least 10 digits';
+        } else {
+          delete newErrors.customerPhone;
+        }
+        break;
+      case 'serviceType':
+        if (!value) {
+          newErrors.serviceType = 'Please select a service type';
+        } else {
+          delete newErrors.serviceType;
+        }
+        break;
+      case 'address':
+        if (!value) {
+          newErrors.address = 'Please enter a service location';
+        } else if (!formData.latitude || !formData.longitude) {
+          newErrors.address = 'Please select an address from the dropdown';
+        } else {
+          delete newErrors.address;
+        }
+        break;
+      case 'scheduledDate':
+        if (!value) {
+          newErrors.scheduledDate = 'Please select a date';
+        } else {
+          delete newErrors.scheduledDate;
+        }
+        break;
+      case 'scheduledTime':
+        if (!value) {
+          newErrors.scheduledTime = 'Please select a time';
+        } else {
+          delete newErrors.scheduledTime;
+        }
+        break;
+    }
+    
+    setErrors(newErrors);
+  };
+
+  // Handle field blur for validation
+  const handleBlur = (name: string) => {
+    setTouched({ ...touched, [name]: true });
+    validateField(name, formData[name as keyof typeof formData]);
+  };
 
   // Update time displays when date, time, or timezone changes
   useEffect(() => {
@@ -246,7 +327,7 @@ export default function RequestService() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Contact Information */}
           <Card>
             <CardHeader>
@@ -262,11 +343,19 @@ export default function RequestService() {
                   <Input
                     id="customerName"
                     value={formData.customerName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, customerName: e.target.value })
-                    }
+                    onChange={(e) => {
+                      setFormData({ ...formData, customerName: e.target.value });
+                      if (touched.customerName) {
+                        validateField('customerName', e.target.value);
+                      }
+                    }}
+                    onBlur={() => handleBlur('customerName')}
+                    className={errors.customerName && touched.customerName ? 'border-destructive' : ''}
                     required
                   />
+                  {errors.customerName && touched.customerName && (
+                    <p className="text-sm text-destructive">{errors.customerName}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -277,11 +366,19 @@ export default function RequestService() {
                     id="customerEmail"
                     type="email"
                     value={formData.customerEmail}
-                    onChange={(e) =>
-                      setFormData({ ...formData, customerEmail: e.target.value })
-                    }
+                    onChange={(e) => {
+                      setFormData({ ...formData, customerEmail: e.target.value });
+                      if (touched.customerEmail) {
+                        validateField('customerEmail', e.target.value);
+                      }
+                    }}
+                    onBlur={() => handleBlur('customerEmail')}
+                    className={errors.customerEmail && touched.customerEmail ? 'border-destructive' : ''}
                     required
                   />
+                  {errors.customerEmail && touched.customerEmail && (
+                    <p className="text-sm text-destructive">{errors.customerEmail}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -292,11 +389,19 @@ export default function RequestService() {
                     id="customerPhone"
                     type="tel"
                     value={formData.customerPhone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, customerPhone: e.target.value })
-                    }
+                    onChange={(e) => {
+                      setFormData({ ...formData, customerPhone: e.target.value });
+                      if (touched.customerPhone) {
+                        validateField('customerPhone', e.target.value);
+                      }
+                    }}
+                    onBlur={() => handleBlur('customerPhone')}
+                    className={errors.customerPhone && touched.customerPhone ? 'border-destructive' : ''}
                     required
                   />
+                  {errors.customerPhone && touched.customerPhone && (
+                    <p className="text-sm text-destructive">{errors.customerPhone}</p>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -315,12 +420,17 @@ export default function RequestService() {
                 </Label>
                 <Select
                   value={formData.serviceType}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, serviceType: value })
-                  }
+                  onValueChange={(value) => {
+                    setFormData({ ...formData, serviceType: value });
+                    validateField('serviceType', value);
+                  }}
                   required
                 >
-                  <SelectTrigger id="serviceType">
+                  <SelectTrigger 
+                    id="serviceType"
+                    className={errors.serviceType && touched.serviceType ? 'border-destructive' : ''}
+                    onBlur={() => handleBlur('serviceType')}
+                  >
                     <SelectValue placeholder="Select engineer type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -331,6 +441,9 @@ export default function RequestService() {
                     ))}
                   </SelectContent>
                 </Select>
+                {errors.serviceType && touched.serviceType && (
+                  <p className="text-sm text-destructive">{errors.serviceType}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -412,14 +525,21 @@ export default function RequestService() {
                   <Input
                     id="address-input"
                     value={formData.address}
-                    onChange={(e) =>
-                      setFormData({ ...formData, address: e.target.value })
-                    }
-                    className="pl-9"
+                    onChange={(e) => {
+                      setFormData({ ...formData, address: e.target.value });
+                      if (touched.address) {
+                        validateField('address', e.target.value);
+                      }
+                    }}
+                    onBlur={() => handleBlur('address')}
+                    className={`pl-9 ${errors.address && touched.address ? 'border-destructive' : ''}`}
                     placeholder="Start typing the site address..."
                     required
                   />
                 </div>
+                {errors.address && touched.address && (
+                  <p className="text-sm text-destructive">{errors.address}</p>
+                )}
                 <p className="text-xs text-muted-foreground">
                   Select from the dropdown suggestions to auto-fill location details and timezone
                 </p>
@@ -607,14 +727,21 @@ export default function RequestService() {
                       id="scheduledDate"
                       type="date"
                       value={formData.scheduledDate}
-                      onChange={(e) =>
-                        setFormData({ ...formData, scheduledDate: e.target.value })
-                      }
-                      className="pl-9"
+                      onChange={(e) => {
+                        setFormData({ ...formData, scheduledDate: e.target.value });
+                        if (touched.scheduledDate) {
+                          validateField('scheduledDate', e.target.value);
+                        }
+                      }}
+                      onBlur={() => handleBlur('scheduledDate')}
+                      className={`pl-9 ${errors.scheduledDate && touched.scheduledDate ? 'border-destructive' : ''}`}
                       min={new Date().toISOString().split("T")[0]}
                       required
                     />
                   </div>
+                  {errors.scheduledDate && touched.scheduledDate && (
+                    <p className="text-sm text-destructive">{errors.scheduledDate}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -627,13 +754,20 @@ export default function RequestService() {
                       id="scheduledTime"
                       type="time"
                       value={formData.scheduledTime}
-                      onChange={(e) =>
-                        setFormData({ ...formData, scheduledTime: e.target.value })
-                      }
-                      className="pl-9"
+                      onChange={(e) => {
+                        setFormData({ ...formData, scheduledTime: e.target.value });
+                        if (touched.scheduledTime) {
+                          validateField('scheduledTime', e.target.value);
+                        }
+                      }}
+                      onBlur={() => handleBlur('scheduledTime')}
+                      className={`pl-9 ${errors.scheduledTime && touched.scheduledTime ? 'border-destructive' : ''}`}
                       required
                     />
                   </div>
+                  {errors.scheduledTime && touched.scheduledTime && (
+                    <p className="text-sm text-destructive">{errors.scheduledTime}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">

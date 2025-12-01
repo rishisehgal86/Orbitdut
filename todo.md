@@ -115,3 +115,14 @@
   - Impact: Blocks form submission even with valid address selection
   - Workaround: Manually create jobs in database with timezone field
   - Root cause: Needs investigation of Google Maps API integration and tRPC parameter passing
+
+## Phase 8: UX Improvements for Job Request Form (Complete)
+- [x] Auto-fill name and email from logged-in user session
+- [x] Add inline validation with real-time error messages
+- [x] Fix form layout - remove excessive white space gaps (space-y-6 → space-y-4)
+- [x] Add validation to all required fields (name, email, phone, service type, address, date, time)
+- [x] Add red border highlighting for invalid fields when touched
+- [x] Show clear error messages below each invalid field
+- [ ] Add timezone display next to time picker (deferred - timezone API needs fix first)
+- [ ] Add success/error toast notifications (deferred)
+- [ ] Test all UX improvements in browser
