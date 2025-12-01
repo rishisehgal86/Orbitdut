@@ -1204,3 +1204,11 @@
 - [ ] Revert server/db.ts to use mysql2 driver
 - [ ] Test login with existing credentials
 - [ ] Verify all existing data is accessible
+
+
+## Database Sync System (Manus ↔ Railway)
+- [x] Create bidirectional sync script
+- [x] Add sync commands to package.json
+- [x] Test sync from Manus to Railway
+- [ ] Test sync from Railway to Manus
+- [x] Document sync process in DATABASE_SYNC.md

@@ -10,7 +10,9 @@
     "check": "tsc --noEmit",
     "format": "prettier --write .",
     "test": "vitest run",
-    "db:push": "drizzle-kit generate && drizzle-kit migrate"
+    "db:push": "drizzle-kit generate && drizzle-kit migrate",
+    "sync:to-railway": "node scripts/sync-db.mjs to-railway",
+    "sync:from-railway": "node scripts/sync-db.mjs from-railway"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.693.0",
