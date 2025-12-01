@@ -1254,3 +1254,90 @@
 - [ ] Test end-to-end customer → supplier flow
 - [ ] Update documentation
 - [ ] Create checkpoint
+
+
+---
+
+## PHASE 1: FieldPulse Hybrid Integration (IN PROGRESS)
+
+### Step 1: Database Schema Updates
+- [x] Analyze FieldPulse service request form (1050 lines)
+- [ ] Extend jobs table with FSM fields (timezone, booking type, site details)
+- [ ] Add customer profile fields to users table
+- [ ] Create jobStatusHistory table for audit trail
+- [ ] Run database migrations
+
+### Step 2: Migrate FieldPulse Service Request Form
+- [ ] Copy FieldPulse RequestService.tsx to Orbidut
+- [ ] Adapt form for marketplace workflow (pricing, supplier matching)
+- [ ] Integrate Google Maps Places API for address search
+- [ ] Add real-time pricing calculation based on supplier rates
+- [ ] Update form submission to create marketplace job
+
+### Step 3: Customer Authentication
+- [ ] Create customer registration page
+- [ ] Create customer login page
+- [ ] Build customer profile management
+- [ ] Add customer session handling
+
+### Step 4: Pricing & Supplier Matching
+- [ ] Build pricing calculation engine using supplier rates
+- [ ] Implement geographic matching algorithm
+- [ ] Create supplier matching logic (location + service type + response time)
+- [ ] Add pricing preview in service request form
+
+### Step 5: Customer Dashboard
+- [ ] Create customer dashboard layout
+- [ ] Build job list view with status filters
+- [ ] Create job detail page with timeline
+- [ ] Add real-time status updates
+
+### Step 6: Supplier Job Acceptance Workflow
+- [ ] Create supplier job notifications
+- [ ] Build supplier job offer UI
+- [ ] Implement acceptance/rejection logic
+- [ ] Trigger FSM work order creation upon acceptance
+- [ ] Add job assignment to supplier portal
+
+### Step 7: Testing & Deployment
+- [ ] Test end-to-end customer request flow
+- [ ] Test supplier acceptance and work order creation
+- [ ] Test pricing calculations
+- [ ] Create checkpoint and push to GitHub
+- [ ] Deploy to Railway
+
+---
+
+## PHASE 1: FieldPulse Hybrid Integration (IN PROGRESS)
+
+### Step 1: Database Schema Extension ✅ COMPLETE
+- [x] Analyzed FieldPulse service request form (1050 lines)
+- [x] Added all FSM fields to jobs table (40+ fields)
+- [x] Migrated schema: siteAddress, siteLatitude, siteLongitude, scheduledDateTime
+- [x] Added booking types (full_day, hourly, multi_day)
+- [x] Added time negotiation fields (requested/proposed/confirmed)
+- [x] Added engineer tracking fields
+- [x] Added GPS tracking timestamps (enRouteAt, arrivedAt)
+- [x] Added jobToken with unique constraint
+- [x] Updated job creation API to use new schema
+- [x] Ran database migrations successfully
+
+### Step 2: Migrate FieldPulse RequestService Form
+- [ ] Copy FieldPulse RequestService.tsx to Orbidut
+- [ ] Adapt form for marketplace workflow (add pricing calculation)
+- [ ] Replace Leaflet maps with Google Maps
+- [ ] Add supplier matching logic
+- [ ] Test form submission end-to-end
+
+### Step 3: Customer Authentication
+- [ ] Build customer registration flow
+- [ ] Build customer login flow
+- [ ] Create customer dashboard
+- [ ] Add customer profile management
+
+### Step 4: Supplier Job Acceptance Workflow
+- [ ] Create supplier job notifications
+- [ ] Build job offer acceptance UI
+- [ ] Implement work order creation on acceptance
+- [ ] Test marketplace → FSM transition
+

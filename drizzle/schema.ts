@@ -1,4 +1,4 @@
-import { decimal, foreignKey, index, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { boolean, decimal, foreignKey, index, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -175,34 +175,108 @@ export type InsertSupplierResponseTime = typeof supplierResponseTimes.$inferInse
  */
 export const jobs = mysqlTable("jobs", {
   id: int("id").autoincrement().primaryKey(),
+  
+  // Marketplace fields
   customerId: int("customerId").references(() => users.id, { onDelete: "set null" }), // Can be null for guest requests
+  assignedSupplierId: int("assignedSupplierId").references(() => suppliers.id, { onDelete: "set null" }),
+  
+  // Unique identifier for shareable links
+  jobToken: varchar("jobToken", { length: 64 }).notNull().unique(),
+  
+  // Customer Information
   customerName: varchar("customerName", { length: 255 }).notNull(),
   customerEmail: varchar("customerEmail", { length: 320 }).notNull(),
   customerPhone: varchar("customerPhone", { length: 50 }),
-  serviceType: varchar("serviceType", { length: 100 }).notNull(),
-  description: text("description"),
-  address: text("address").notNull(),
-  city: varchar("city", { length: 100 }).notNull(),
+  
+  // Site Information
+  siteName: varchar("siteName", { length: 255 }),
+  siteId: varchar("siteId", { length: 100 }),
+  siteAddress: text("siteAddress").notNull(),
+  siteLatitude: varchar("siteLatitude", { length: 50 }),
+  siteLongitude: varchar("siteLongitude", { length: 50 }),
+  city: varchar("city", { length: 100 }),
   country: varchar("country", { length: 2 }).notNull(),
   postalCode: varchar("postalCode", { length: 20 }),
-  latitude: varchar("latitude", { length: 20 }),
-  longitude: varchar("longitude", { length: 20 }),
-  scheduledStart: timestamp("scheduledStart").notNull(),
-  estimatedDuration: int("estimatedDuration").notNull(), // In minutes
+  
+  // Site Contact Information
+  siteContactName: varchar("siteContactName", { length: 255 }),
+  siteContactNumber: varchar("siteContactNumber", { length: 50 }),
+  
+  // Service Details
+  serviceType: varchar("serviceType", { length: 100 }).notNull(),
+  description: text("description"),
+  incidentDetails: text("incidentDetails"),
+  scopeOfWork: text("scopeOfWork"),
+  
+  // Job Reference Numbers
+  changeNumber: varchar("changeNumber", { length: 100 }),
+  incidentNumber: varchar("incidentNumber", { length: 100 }),
+  
+  // Technical Requirements
+  toolsRequired: text("toolsRequired"),
+  deviceDetails: text("deviceDetails"),
+  downTime: boolean("downTime").default(false),
+  
+  // Scheduling
+  scheduledDateTime: timestamp("scheduledDateTime"),
+  hoursRequired: varchar("hoursRequired", { length: 100 }),
+  estimatedDuration: int("estimatedDuration"), // In minutes
+  
+  // Booking Type and Duration
+  bookingType: mysqlEnum("bookingType", ["full_day", "hourly", "multi_day"]),
+  estimatedHours: int("estimatedHours"), // For hourly bookings
+  estimatedDays: int("estimatedDays"), // For multi-day bookings
+  
+  // Time Scheduling and Negotiation
+  requestedStartDate: timestamp("requestedStartDate"),
+  requestedStartTime: varchar("requestedStartTime", { length: 10 }), // HH:MM format
+  proposedStartDate: timestamp("proposedStartDate"), // Supplier counter-proposal
+  proposedStartTime: varchar("proposedStartTime", { length: 10 }),
+  confirmedStartDate: timestamp("confirmedStartDate"), // Final confirmed schedule
+  confirmedStartTime: varchar("confirmedStartTime", { length: 10 }),
+  timeNegotiationNotes: text("timeNegotiationNotes"),
+  
+  // Timezone - IANA timezone identifier (e.g., 'America/New_York', 'Asia/Dubai')
+  timezone: varchar("timezone", { length: 100 }),
+  
+  // Pricing (Marketplace)
   isOutOfHours: int("isOutOfHours", { unsigned: true }).default(0).notNull(),
-  calculatedPrice: int("calculatedPrice").notNull(), // In cents
-  currency: varchar("currency", { length: 3 }).notNull(),
+  calculatedPrice: int("calculatedPrice"), // In cents
+  currency: varchar("currency", { length: 3 }).default("USD"),
+  
+  // Additional Information
+  notes: text("notes"),
+  videoConferenceLink: varchar("videoConferenceLink", { length: 500 }),
+  coveredByCOI: boolean("coveredByCOI").default(true),
+  
+  // Job Status
   status: mysqlEnum("status", [
     "pending_supplier_acceptance",
     "assigned_to_supplier",
+    "accepted",
+    "declined",
     "en_route",
     "on_site",
     "completed",
     "cancelled"
   ]).default("pending_supplier_acceptance").notNull(),
-  assignedSupplierId: int("assignedSupplierId").references(() => suppliers.id, { onDelete: "set null" }),
+  
+  // Engineer/Technician Information
+  engineerName: varchar("engineerName", { length: 255 }),
+  engineerEmail: varchar("engineerEmail", { length: 320 }),
+  engineerPhone: varchar("engineerPhone", { length: 50 }),
+  
+  // Timestamps
   acceptedAt: timestamp("acceptedAt"),
+  enRouteAt: timestamp("enRouteAt"),
+  arrivedAt: timestamp("arrivedAt"),
   completedAt: timestamp("completedAt"),
+  cancelledAt: timestamp("cancelledAt"),
+  
+  // Cancellation tracking
+  cancellationReason: varchar("cancellationReason", { length: 500 }),
+  cancelledBy: varchar("cancelledBy", { length: 255 }), // Name of person who cancelled
+  
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, (table) => ({
