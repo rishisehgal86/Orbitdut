@@ -30,7 +30,7 @@ export function AssignEngineerDialog({
   const [engineerEmail, setEngineerEmail] = useState("");
   const [engineerPhone, setEngineerPhone] = useState("");
 
-  const assignEngineerMutation = trpc.supplier.assignEngineer.useMutation({
+  const assignEngineerMutation = trpc.jobs.assignEngineer.useMutation({
     onSuccess: () => {
       toast.success("Engineer assigned! They have been notified via email.");
       onOpenChange(false);
@@ -39,8 +39,8 @@ export function AssignEngineerDialog({
       setEngineerPhone("");
       onSuccess?.();
     },
-    onError: (error) => {
-      toast.error(`Assignment failed: ${error.message}`)
+    onError: (error: any) => {
+      toast.error(`Assignment failed: ${error.message}`);
     },
   });
 

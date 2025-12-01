@@ -42,12 +42,13 @@
 - [x] Add location tracking indicator to engineer page
 
 ### Phase 5: Site Visit Reports
-- [ ] Create site visit report form component
-- [ ] Add digital signature capture (react-signature-canvas)
-- [ ] Add photo upload functionality (multiple images)
-- [ ] Build tRPC procedure to save site visit report
-- [ ] Generate PDF report with signature and photos
-- [ ] Email report to customer and supplier
+- [x] Create site visit report form component
+- [x] Add digital signature capture (react-signature-canvas)
+- [x] Add photo upload functionality (multiple images)
+- [x] Build tRPC procedure to save site visit report
+- [x] Integrate report form into EngineerJobPage
+- [ ] Generate PDF report with signature and photos (deferred)
+- [ ] Email report to customer and supplier (deferred)
 
 ### Phase 6: Job Timeline & Activity History
 - [ ] Create JobTimeline component

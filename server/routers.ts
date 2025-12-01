@@ -1334,9 +1334,9 @@ export const appRouter = router({
           engineerEmail: input.engineerEmail,
           engineerName: input.engineerName,
           jobId: job.id,
-          siteName: job.siteName,
-          siteAddress: job.address,
-          scheduledDateTime: job.scheduledStart,
+          siteName: job.siteName || "Site",
+          siteAddress: job.siteAddress,
+          scheduledDateTime: job.scheduledDateTime,
           jobToken: engineerToken,
           baseUrl,
         });
@@ -1471,7 +1471,7 @@ export const appRouter = router({
               const { sendJobStatusEmail } = await import("./_core/email");
               sendJobStatusEmail(
                 customer.email,
-                customer.name,
+                customer.name || "Customer",
                 job.id,
                 job.serviceType,
                 job.status,
@@ -1580,6 +1580,101 @@ export const appRouter = router({
           .limit(1);
 
         return latestLocation || null;
+      }),
+
+    // Submit site visit report by engineer token (no auth required)
+    submitSiteVisitReport: publicProcedure
+      .input(z.object({
+        token: z.string(),
+        workCompleted: z.string(),
+        findings: z.string().optional(),
+        recommendations: z.string().optional(),
+        customerName: z.string(),
+        signatureDataUrl: z.string(),
+        photos: z.array(z.string()).optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { getJobByEngineerToken } = await import("./db");
+        const { getDb } = await import("./db");
+        const { siteVisitReports, svrMediaFiles } = await import("../drizzle/schema");
+
+        const job = await getJobByEngineerToken(input.token);
+        if (!job) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Job not found' });
+        }
+
+        const db = await getDb();
+        if (!db) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        }
+
+        // Create site visit report
+        const [report] = await db.insert(siteVisitReports).values({
+          jobId: job.id,
+          workCompleted: input.workCompleted,
+          findings: input.findings || null,
+          recommendations: input.recommendations || null,
+          customerName: input.customerName,
+          customerSignature: input.signatureDataUrl,
+          completedAt: new Date(),
+        }).$returningId();
+
+        // Save photos if provided
+        if (input.photos && input.photos.length > 0) {
+          for (const photoDataUrl of input.photos) {
+            await db.insert(svrMediaFiles).values({
+              reportId: report.id,
+              fileType: 'photo',
+              fileUrl: photoDataUrl,
+              uploadedAt: new Date(),
+            });
+          }
+        }
+
+        return { success: true, reportId: report.id };
+      }),
+
+    // Get site visit report by job ID
+    getSiteVisitReport: protectedProcedure
+      .input(z.object({ jobId: z.number() }))
+      .query(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { jobs, siteVisitReports, svrMediaFiles } = await import("../drizzle/schema");
+        const { eq, and } = await import("drizzle-orm");
+
+        const db = await getDb();
+        if (!db) return null;
+
+        // Verify the job belongs to the current user (customer)
+        const [job] = await db
+          .select()
+          .from(jobs)
+          .where(and(
+            eq(jobs.id, input.jobId),
+            eq(jobs.customerId, ctx.user.id)
+          ))
+          .limit(1);
+
+        if (!job) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied' });
+        }
+
+        // Get the report
+        const [report] = await db
+          .select()
+          .from(siteVisitReports)
+          .where(eq(siteVisitReports.jobId, input.jobId))
+          .limit(1);
+
+        if (!report) return null;
+
+        // Get media files
+        const mediaFiles = await db
+          .select()
+          .from(svrMediaFiles)
+          .where(eq(svrMediaFiles.reportId, report.id));
+
+        return { ...report, mediaFiles };
       }),
   }),
 });

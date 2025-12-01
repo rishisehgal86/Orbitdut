@@ -97,7 +97,7 @@ export function EngineerLocationMap({
             📍 Lat: {parseFloat(latestLocation.latitude).toFixed(6)}, Lng: {parseFloat(latestLocation.longitude).toFixed(6)}
           </p>
           <p className="text-xs text-muted-foreground">
-            Accuracy: ±{Math.round(parseFloat(latestLocation.accuracy))}m
+            Accuracy: ±{Math.round(parseFloat(latestLocation.accuracy || "0"))}m
           </p>
         </div>
 

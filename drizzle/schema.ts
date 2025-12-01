@@ -307,6 +307,7 @@ export const jobs = mysqlTable("jobs", {
   engineerName: varchar("engineerName", { length: 255 }),
   engineerEmail: varchar("engineerEmail", { length: 320 }),
   engineerPhone: varchar("engineerPhone", { length: 50 }),
+  engineerToken: varchar("engineerToken", { length: 64 }).unique(), // Unique token for engineer access
   
   // Timestamps
   acceptedAt: timestamp("acceptedAt"),

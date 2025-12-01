@@ -6,12 +6,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Loader2, MapPin, Clock, CheckCircle2, Navigation, XCircle, Radio } from "lucide-react";
 import { toast } from "sonner";
+import { SiteVisitReportForm } from "@/components/SiteVisitReportForm";
 
 export default function EngineerJobPage() {
   const [, params] = useRoute<{ token: string }>("/engineer/job/:token");
   const token = params?.token;
   const [isTracking, setIsTracking] = useState(false);
   const [watchId, setWatchId] = useState<number | null>(null);
+  const [showReportForm, setShowReportForm] = useState(false);
 
   const { data: job, isLoading, refetch } = trpc.jobs.getByEngineerToken.useQuery(
     { token: token || "" },
@@ -169,7 +171,7 @@ export default function EngineerJobPage() {
                 <h3 className="font-semibold mb-2">Scheduled Time</h3>
                 <div className="flex items-center gap-2 text-gray-600">
                   <Clock className="h-5 w-5" />
-                  <span>{new Date(job.scheduledStart).toLocaleString()}</span>
+                  <span>{job.scheduledDateTime ? new Date(job.scheduledDateTime).toLocaleString() : "Not scheduled"}</span>
                 </div>
               </div>
               <div>
@@ -184,7 +186,7 @@ export default function EngineerJobPage() {
             <div className="space-y-4">
               <h3 className="font-semibold">Job Status: <span className="font-normal text-primary">{job.status.replace(/_/g, ' ').toUpperCase()}</span></h3>
               
-              {job.status === "sent_to_engineer" && (
+              {(job.status === "sent_to_engineer" || job.status === "assigned_to_supplier") && (
                 <div className="flex gap-4">
                   <Button onClick={() => handleStatusUpdate("accepted")} className="flex-1 bg-green-600 hover:bg-green-700">
                     <CheckCircle2 className="mr-2 h-4 w-4" /> Accept Job
@@ -207,14 +209,26 @@ export default function EngineerJobPage() {
                 </Button>
               )}
 
-              {job.status === "on_site" && (
-                <Button onClick={() => handleStatusUpdate("completed")} className="w-full">
-                  <CheckCircle2 className="mr-2 h-4 w-4" /> Complete Job
+              {job.status === "on_site" && !showReportForm && (
+                <Button onClick={() => setShowReportForm(true)} className="w-full">
+                  <CheckCircle2 className="mr-2 h-4 w-4" /> Complete Job & Submit Report
                 </Button>
               )}
             </div>
           </CardContent>
         </Card>
+
+        {showReportForm && job.status === "on_site" && (
+          <div className="mt-6">
+            <SiteVisitReportForm
+              jobToken={token || ""}
+              onSuccess={() => {
+                setShowReportForm(false);
+                handleStatusUpdate("completed");
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
