@@ -10,10 +10,12 @@ export default function CustomerDashboard() {
 
   const getStatusBadge = (status: string) => {
     const labels: Record<string, string> = {
-      pending_supplier_acceptance: "Finding Supplier",
-      assigned_to_supplier: "Assigned",
-      en_route: "En Route",
-      on_site: "In Progress",
+      pending_supplier_acceptance: "Awaiting Supplier",
+      assigned_to_supplier: "Supplier Assigned",
+      accepted: "Accepted",
+      declined: "Declined",
+      en_route: "Engineer En Route",
+      on_site: "Engineer On Site",
       completed: "Completed",
       cancelled: "Cancelled",
     };

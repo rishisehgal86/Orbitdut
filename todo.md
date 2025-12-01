@@ -1446,3 +1446,11 @@
 - [x] Found field name mismatches from schema migration (address→siteAddress, scheduledTime→scheduledDateTime, totalPrice→calculatedPrice)
 - [x] Fixed all field references
 - [x] Customer jobs page should now load correctly
+
+## Job Status Frontend Update
+- [x] Update customer/Jobs.tsx status values to match database (pending_supplier_acceptance, assigned_to_supplier, accepted, declined, en_route, on_site, completed, cancelled)
+- [x] Create user-friendly status labels for display ("Awaiting Supplier", "Supplier Assigned", etc.)
+- [x] Update status filter dropdown with correct values
+- [x] Update customer/Dashboard.tsx status logic
+- [x] Update customer/JobDetail.tsx status display
+- [x] All customer pages now use consistent, user-friendly status labels

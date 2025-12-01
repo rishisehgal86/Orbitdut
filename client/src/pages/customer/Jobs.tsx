@@ -10,20 +10,34 @@ import { Calendar, Clock, DollarSign, MapPin, Search, User } from "lucide-react"
 import { useState } from "react";
 import { Link } from "wouter";
 
-type JobStatus = "pending" | "assigned" | "en_route" | "on_site" | "completed" | "cancelled";
+// Database status values
+type JobStatus = 
+  | "pending_supplier_acceptance" 
+  | "assigned_to_supplier" 
+  | "accepted" 
+  | "declined" 
+  | "en_route" 
+  | "on_site" 
+  | "completed" 
+  | "cancelled";
 
 const statusColors: Record<JobStatus, string> = {
-  pending: "bg-yellow-500",
-  assigned: "bg-blue-500",
+  pending_supplier_acceptance: "bg-yellow-500",
+  assigned_to_supplier: "bg-blue-500",
+  accepted: "bg-green-500",
+  declined: "bg-red-500",
   en_route: "bg-purple-500",
   on_site: "bg-orange-500",
-  completed: "bg-green-500",
+  completed: "bg-green-600",
   cancelled: "bg-gray-500",
 };
 
+// User-friendly labels
 const statusLabels: Record<JobStatus, string> = {
-  pending: "Pending",
-  assigned: "Assigned",
+  pending_supplier_acceptance: "Awaiting Supplier",
+  assigned_to_supplier: "Supplier Assigned",
+  accepted: "Accepted",
+  declined: "Declined",
   en_route: "Engineer En Route",
   on_site: "Engineer On Site",
   completed: "Completed",
@@ -91,8 +105,10 @@ export default function CustomerJobs() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="assigned">Assigned</SelectItem>
+              <SelectItem value="pending_supplier_acceptance">Awaiting Supplier</SelectItem>
+              <SelectItem value="assigned_to_supplier">Supplier Assigned</SelectItem>
+              <SelectItem value="accepted">Accepted</SelectItem>
+              <SelectItem value="declined">Declined</SelectItem>
               <SelectItem value="en_route">En Route</SelectItem>
               <SelectItem value="on_site">On Site</SelectItem>
               <SelectItem value="completed">Completed</SelectItem>
@@ -111,9 +127,9 @@ export default function CustomerJobs() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Pending</CardDescription>
+              <CardDescription>Awaiting Supplier</CardDescription>
               <CardTitle className="text-3xl">
-                {jobs?.filter((j: any) => j.status === "pending").length || 0}
+                {jobs?.filter((j: any) => j.status === "pending_supplier_acceptance").length || 0}
               </CardTitle>
             </CardHeader>
           </Card>
@@ -121,7 +137,7 @@ export default function CustomerJobs() {
             <CardHeader className="pb-2">
               <CardDescription>In Progress</CardDescription>
               <CardTitle className="text-3xl">
-                {jobs?.filter((j: any) => ["assigned", "en_route", "on_site"].includes(j.status)).length || 0}
+                {jobs?.filter((j: any) => ["assigned_to_supplier", "accepted", "en_route", "on_site"].includes(j.status)).length || 0}
               </CardTitle>
             </CardHeader>
           </Card>

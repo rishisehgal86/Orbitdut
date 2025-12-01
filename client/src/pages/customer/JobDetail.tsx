@@ -8,27 +8,49 @@ import { trpc } from "@/lib/trpc";
 import { ArrowLeft, Calendar, CheckCircle, Clock, DollarSign, FileText, MapPin, User } from "lucide-react";
 import { Link, useParams } from "wouter";
 
-type JobStatus = "pending" | "assigned" | "en_route" | "on_site" | "completed" | "cancelled";
+// Database status values
+type JobStatus = 
+  | "pending_supplier_acceptance" 
+  | "assigned_to_supplier" 
+  | "accepted" 
+  | "declined" 
+  | "en_route" 
+  | "on_site" 
+  | "completed" 
+  | "cancelled";
 
 const statusColors: Record<JobStatus, string> = {
-  pending: "bg-yellow-500",
-  assigned: "bg-blue-500",
+  pending_supplier_acceptance: "bg-yellow-500",
+  assigned_to_supplier: "bg-blue-500",
+  accepted: "bg-green-500",
+  declined: "bg-red-500",
   en_route: "bg-purple-500",
   on_site: "bg-orange-500",
-  completed: "bg-green-500",
+  completed: "bg-green-600",
   cancelled: "bg-gray-500",
 };
 
+// User-friendly labels
 const statusLabels: Record<JobStatus, string> = {
-  pending: "Pending Assignment",
-  assigned: "Assigned to Engineer",
+  pending_supplier_acceptance: "Awaiting Supplier",
+  assigned_to_supplier: "Supplier Assigned",
+  accepted: "Accepted",
+  declined: "Declined",
   en_route: "Engineer En Route",
   on_site: "Engineer On Site",
   completed: "Completed",
   cancelled: "Cancelled",
 };
 
-const statusSteps: JobStatus[] = ["pending", "assigned", "en_route", "on_site", "completed"];
+// Timeline steps (excluding declined and cancelled)
+const statusSteps: JobStatus[] = [
+  "pending_supplier_acceptance", 
+  "assigned_to_supplier", 
+  "accepted", 
+  "en_route", 
+  "on_site", 
+  "completed"
+];
 
 export default function CustomerJobDetail() {
   const { id } = useParams();
