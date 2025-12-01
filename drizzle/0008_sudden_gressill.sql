@@ -1,1 +1,0 @@
-ALTER TABLE `supplierRates` ADD CONSTRAINT `supplierRates_cityId_supplierPriorityCities_id_fk` FOREIGN KEY (`cityId`) REFERENCES `supplierPriorityCities`(`id`) ON DELETE cascade ON UPDATE no action;

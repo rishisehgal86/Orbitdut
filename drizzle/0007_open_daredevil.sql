@@ -1,1 +1,0 @@
-ALTER TABLE `supplierRates` MODIFY COLUMN `serviceType` varchar(50) NOT NULL;
