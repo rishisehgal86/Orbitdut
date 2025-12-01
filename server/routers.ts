@@ -204,10 +204,10 @@ export const appRouter = router({
           taxId: z.string().optional(),
         })
       )
-      .mutation(async ({ input }) => {
+      .mutation(async ({ ctx, input }) => {
         const { updateSupplier } = await import("./db");
         const { supplierId, ...data } = input;
-        await updateSupplier(supplierId, data);
+        await updateSupplier(supplierId, ctx.user.id, data);
         return { success: true };
       }),
 
@@ -427,6 +427,7 @@ export const appRouter = router({
     bulkAddServiceExclusions: protectedProcedure
       .input(
         z.object({
+          supplierId: z.number(),
           exclusions: z.array(
             z.object({
               supplierId: z.number(),
@@ -644,10 +645,10 @@ export const appRouter = router({
       }),
 
     deleteResponseTime: protectedProcedure
-      .input(z.object({ id: z.number() }))
+      .input(z.object({ id: z.number(), supplierId: z.number() }))
       .mutation(async ({ input }) => {
         const { deleteSupplierResponseTime } = await import("./db");
-        await deleteSupplierResponseTime(input.id);
+        await deleteSupplierResponseTime(input.id, input.supplierId);
         return { success: true };
       }),
   }),

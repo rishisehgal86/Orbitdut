@@ -4,6 +4,7 @@ import {
   InsertUser,
   users,
   suppliers,
+  Supplier,
   InsertSupplier,
   supplierUsers,
   InsertSupplierUser,

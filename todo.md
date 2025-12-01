@@ -1212,3 +1212,45 @@
 - [x] Test sync from Manus to Railway
 - [ ] Test sync from Railway to Manus
 - [x] Document sync process in DATABASE_SYNC.md
+
+
+---
+
+## CURRENT: Phase 1 - Hybrid FieldPulse Integration (Weeks 1-2)
+
+### Database Schema Updates
+- [ ] Extend users table with customer role and FSM fields
+- [ ] Extend jobs table with FSM workflow fields (12-state workflow)
+- [ ] Add jobStatusHistory table for audit trail
+- [ ] Run database migrations
+
+### Customer Authentication System
+- [ ] Create customer registration page
+- [ ] Create customer login page  
+- [ ] Implement customer auth procedures (register, login)
+- [ ] Add customer role to auth middleware
+
+### Service Request Form
+- [ ] Build multi-step service request form
+- [ ] Integrate Google Maps Places API for location
+- [ ] Add real-time pricing calculator
+- [ ] Implement form validation and submission
+
+### Supplier Acceptance Workflow
+- [ ] Create job offer notification for suppliers
+- [ ] Build supplier job acceptance UI
+- [ ] Implement work order creation trigger on acceptance
+- [ ] Add status transition to jobStatusHistory
+
+### Customer Dashboard
+- [ ] Create customer dashboard layout
+- [ ] Build job list with status filtering
+- [ ] Add job detail view with status timeline
+- [ ] Implement real-time status updates
+
+### Testing & Documentation
+- [ ] Write unit tests for customer auth
+- [ ] Write integration tests for job workflow
+- [ ] Test end-to-end customer → supplier flow
+- [ ] Update documentation
+- [ ] Create checkpoint
