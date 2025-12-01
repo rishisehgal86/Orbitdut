@@ -59,8 +59,8 @@ export default function CustomerJobs() {
     const matchesSearch =
       searchQuery === "" ||
       job.serviceType.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.city.toLowerCase().includes(searchQuery.toLowerCase());
+      job.siteAddress?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      job.city?.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStatus && matchesSearch;
   }) || [];
 
@@ -171,7 +171,7 @@ export default function CustomerJobs() {
                     <div className="flex items-start gap-2">
                       <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
                       <div className="text-sm">
-                        <p className="font-medium">{job.address}</p>
+                        <p className="font-medium">{job.siteAddress}</p>
                         <p className="text-muted-foreground">
                           {job.city}, {job.country}
                         </p>
@@ -181,10 +181,10 @@ export default function CustomerJobs() {
                       <Calendar className="h-4 w-4 text-muted-foreground mt-0.5" />
                       <div className="text-sm">
                         <p className="font-medium">
-                          {new Date(job.scheduledTime).toLocaleDateString()}
+                          {new Date(job.scheduledDateTime).toLocaleDateString()}
                         </p>
                         <p className="text-muted-foreground">
-                          {new Date(job.scheduledTime).toLocaleTimeString([], {
+                          {new Date(job.scheduledDateTime).toLocaleTimeString([], {
                             hour: "2-digit",
                             minute: "2-digit",
                           })}
@@ -203,7 +203,7 @@ export default function CustomerJobs() {
                       <div className="text-sm">
                         <p className="font-medium">Total Price</p>
                         <p className="text-muted-foreground">
-                          {job.currency} {job.totalPrice.toFixed(2)}
+                          {job.currency} {(job.calculatedPrice / 100).toFixed(2)}
                         </p>
                       </div>
                     </div>

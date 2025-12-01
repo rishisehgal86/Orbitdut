@@ -1440,3 +1440,9 @@
 - [x] Added customerId: ctx.user.id to job insertion
 - [x] Updated existing job to set customerId
 - [x] Fix complete - jobs now appear in customer dashboard
+
+## Bug Fix: Customer Jobs.tsx Runtime Error
+- [x] Investigate error at line 432 in customer/Jobs.tsx
+- [x] Found field name mismatches from schema migration (address→siteAddress, scheduledTime→scheduledDateTime, totalPrice→calculatedPrice)
+- [x] Fixed all field references
+- [x] Customer jobs page should now load correctly
