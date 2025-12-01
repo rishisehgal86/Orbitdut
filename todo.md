@@ -1188,3 +1188,11 @@
 - [ ] **MVP Milestone (Week 6):** End-to-end job flow works (request → assignment → completion)
 - [ ] **Full Launch (Week 9):** Automated payment processing integrated
 - [ ] **Maturity (Week 12+):** Advanced features and analytics operational
+
+
+## CURRENT: Database Migration to PostgreSQL
+- [ ] Update drizzle.config.ts to use PostgreSQL dialect
+- [ ] Update package.json to replace mysql2 with postgres driver
+- [ ] Update server/db.ts to use PostgreSQL connection
+- [ ] Test database connection
+- [ ] Commit and push changes for Railway deployment
