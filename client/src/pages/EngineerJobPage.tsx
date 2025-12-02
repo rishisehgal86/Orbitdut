@@ -4,7 +4,7 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, MapPin, Clock, CheckCircle2, Navigation, XCircle, Radio } from "lucide-react";
+import { Loader2, MapPin, Clock, CheckCircle2, Navigation, XCircle, Radio, User, Mail, Phone as PhoneIcon } from "lucide-react";
 import { toast } from "sonner";
 import { SiteVisitReportForm } from "@/components/SiteVisitReportForm";
 
@@ -14,11 +14,24 @@ export default function EngineerJobPage() {
   const [isTracking, setIsTracking] = useState(false);
   const [watchId, setWatchId] = useState<number | null>(null);
   const [showReportForm, setShowReportForm] = useState(false);
+  const [engineerName, setEngineerName] = useState("");
+  const [engineerEmail, setEngineerEmail] = useState("");
+  const [engineerPhone, setEngineerPhone] = useState("");
 
   const { data: job, isLoading, refetch } = trpc.jobs.getByEngineerToken.useQuery(
     { token: token || "" },
     { enabled: !!token }
   );
+
+  const claimJobMutation = trpc.jobs.claimJob.useMutation({
+    onSuccess: () => {
+      toast.success("Job claimed successfully!");
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(`Failed to claim job: ${error.message}`);
+    },
+  });
 
   const updateStatusMutation = trpc.jobs.updateStatusByToken.useMutation({
     onSuccess: () => {
@@ -145,6 +158,103 @@ export default function EngineerJobPage() {
 
   if (!job) {
     return <div className="min-h-screen flex items-center justify-center">Job not found or link is invalid.</div>;
+  }
+
+  // Show claim form if job exists but no engineer details yet
+  if (!job.engineerName && !job.engineerEmail && job.status === 'supplier_accepted') {
+    return (
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-8">
+        <div className="max-w-md mx-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle>Claim This Job</CardTitle>
+              <CardDescription>
+                Enter your details to claim this job assignment
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <h3 className="font-semibold mb-2">Job Details</h3>
+                <p className="text-sm text-gray-600">Service: {job.serviceType}</p>
+                <p className="text-sm text-gray-600">Location: {job.siteAddress}</p>
+                <p className="text-sm text-gray-600">
+                  Scheduled: {job.scheduledDateTime ? new Date(job.scheduledDateTime).toLocaleString() : "Not scheduled"}
+                </p>
+              </div>
+              
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Your Name *</label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <input
+                      type="text"
+                      value={engineerName}
+                      onChange={(e) => setEngineerName(e.target.value)}
+                      className="w-full pl-10 pr-3 py-2 border rounded-md"
+                      placeholder="John Doe"
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">Your Email *</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <input
+                      type="email"
+                      value={engineerEmail}
+                      onChange={(e) => setEngineerEmail(e.target.value)}
+                      className="w-full pl-10 pr-3 py-2 border rounded-md"
+                      placeholder="john@example.com"
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">Your Phone (Optional)</label>
+                  <div className="relative">
+                    <PhoneIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <input
+                      type="tel"
+                      value={engineerPhone}
+                      onChange={(e) => setEngineerPhone(e.target.value)}
+                      className="w-full pl-10 pr-3 py-2 border rounded-md"
+                      placeholder="+1 234 567 8900"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <Button
+                onClick={() => {
+                  if (!engineerName || !engineerEmail) {
+                    toast.error("Please fill in all required fields");
+                    return;
+                  }
+                  claimJobMutation.mutate({
+                    token: token || "",
+                    engineerName,
+                    engineerEmail,
+                    engineerPhone,
+                  });
+                }}
+                className="w-full"
+                disabled={claimJobMutation.isPending}
+              >
+                {claimJobMutation.isPending ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Claiming...</>
+                ) : (
+                  <><CheckCircle2 className="mr-2 h-4 w-4" /> Claim Job</>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
   }
 
   return (

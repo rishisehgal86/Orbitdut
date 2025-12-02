@@ -9,8 +9,10 @@ import {
   Calendar,
   CheckCircle,
   Clock,
+  Copy,
   DollarSign,
   FileText,
+  Link2,
   Loader2,
   MapPin,
   Navigation,
@@ -156,11 +158,25 @@ export default function SupplierJobDetail() {
                 Out of Hours
               </Badge>
             )}
-            {!job.engineerName && job.status === "assigned_to_supplier" && (
-              <Button onClick={() => setAssignDialogOpen(true)} size="sm">
-                <User className="mr-2 h-4 w-4" />
-                Assign Engineer
-              </Button>
+            {!job.engineerName && job.status === "supplier_accepted" && (
+              <div className="flex flex-col gap-2">
+                <Button onClick={() => setAssignDialogOpen(true)} size="sm">
+                  <User className="mr-2 h-4 w-4" />
+                  Assign Engineer
+                </Button>
+                <Button
+                  onClick={() => {
+                    const link = `${window.location.origin}/engineer/job/${job.engineerToken}`;
+                    navigator.clipboard.writeText(link);
+                    toast.success("Engineer link copied to clipboard!");
+                  }}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Copy className="mr-2 h-4 w-4" />
+                  Copy Engineer Link
+                </Button>
+              </div>
             )}
           </div>
         </div>

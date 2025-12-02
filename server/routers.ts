@@ -1301,6 +1301,7 @@ export const appRouter = router({
       }))
       .mutation(async ({ input, ctx }) => {
         const { getJobById, addJobStatusHistory, updateJob, getSupplierByUserId } = await import("./db");
+        const { randomBytes } = await import("crypto");
 
         const job = await getJobById(input.jobId);
         if (!job) {
@@ -1318,10 +1319,14 @@ export const appRouter = router({
           throw new TRPCError({ code: 'FORBIDDEN', message: 'You must be a supplier to accept jobs' });
         }
 
-        // Update job status and assign to supplier
+        // Generate engineer token for shareable link
+        const engineerToken = randomBytes(32).toString('hex');
+
+        // Update job status, assign to supplier, and set engineer token
         await updateJob(job.id, {
           status: 'supplier_accepted',
           assignedSupplierId: supplier.supplier.id,
+          engineerToken,
         });
 
         await addJobStatusHistory({
@@ -1330,7 +1335,7 @@ export const appRouter = router({
           notes: `Job accepted by ${supplier.supplier.companyName}`,
         });
 
-        return { success: true };
+        return { success: true, engineerToken };
       }),
 
     // Assign engineer to job
@@ -1393,6 +1398,49 @@ export const appRouter = router({
         });
 
         return { success: true, engineerToken };
+      }),
+
+    // Engineer claims job by providing their details
+    claimJob: publicProcedure
+      .input(z.object({
+        token: z.string(),
+        engineerName: z.string().min(1, "Name is required"),
+        engineerEmail: z.string().email("Valid email is required"),
+        engineerPhone: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { getJobByEngineerToken, updateJob, addJobStatusHistory } = await import("./db");
+
+        const job = await getJobByEngineerToken(input.token);
+        if (!job) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Job not found' });
+        }
+
+        // Verify job is in supplier_accepted status (not yet claimed)
+        if (job.status !== 'supplier_accepted') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Job has already been claimed or is not available' });
+        }
+
+        // Verify no engineer is assigned yet
+        if (job.engineerName || job.engineerEmail) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Job has already been assigned to an engineer' });
+        }
+
+        // Update job with engineer details and change status
+        await updateJob(job.id, {
+          engineerName: input.engineerName,
+          engineerEmail: input.engineerEmail,
+          engineerPhone: input.engineerPhone,
+          status: 'sent_to_engineer',
+        });
+
+        await addJobStatusHistory({
+          jobId: job.id,
+          status: 'sent_to_engineer',
+          notes: `Job claimed by engineer ${input.engineerName} (${input.engineerEmail})`,
+        });
+
+        return { success: true };
       }),
 
     // Get timezone from coordinates using Google Maps API

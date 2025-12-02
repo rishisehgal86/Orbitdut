@@ -13,6 +13,9 @@ import { EngineerLocationMap } from "@/components/EngineerLocationMap";
 // Database status values
 type JobStatus = 
   | "pending_supplier_acceptance" 
+  | "supplier_accepted"
+  | "sent_to_engineer"
+  | "engineer_accepted"
   | "assigned_to_supplier" 
   | "accepted" 
   | "declined" 
@@ -23,6 +26,9 @@ type JobStatus =
 
 const statusColors: Record<JobStatus, string> = {
   pending_supplier_acceptance: "bg-yellow-500",
+  supplier_accepted: "bg-green-500",
+  sent_to_engineer: "bg-blue-500",
+  engineer_accepted: "bg-green-500",
   assigned_to_supplier: "bg-blue-500",
   accepted: "bg-green-500",
   declined: "bg-red-500",
@@ -35,6 +41,9 @@ const statusColors: Record<JobStatus, string> = {
 // User-friendly labels
 const statusLabels: Record<JobStatus, string> = {
   pending_supplier_acceptance: "Awaiting Supplier",
+  supplier_accepted: "Supplier Accepted",
+  sent_to_engineer: "Sent to Engineer",
+  engineer_accepted: "Engineer Accepted",
   assigned_to_supplier: "Supplier Assigned",
   accepted: "Accepted",
   declined: "Declined",
@@ -43,16 +52,6 @@ const statusLabels: Record<JobStatus, string> = {
   completed: "Completed",
   cancelled: "Cancelled",
 };
-
-// Timeline steps (excluding declined and cancelled)
-const statusSteps: JobStatus[] = [
-  "pending_supplier_acceptance", 
-  "assigned_to_supplier", 
-  "accepted", 
-  "en_route", 
-  "on_site", 
-  "completed"
-];
 
 // Wrapper component for JobTimeline with data fetching
 function JobTimelineWrapper({ jobId, currentStatus }: { jobId: number; currentStatus: string }) {
@@ -138,59 +137,8 @@ export default function CustomerJobDetail() {
           </Badge>
         </div>
 
-        {/* Status Timeline */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Job Progress</CardTitle>
-            <CardDescription>Track the status of your service request</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="relative">
-              {/* Progress Line */}
-              <div className="absolute top-5 left-0 right-0 h-0.5 bg-muted">
-                <div
-                  className="h-full bg-primary transition-all duration-500"
-                  style={{
-                    width: `${(currentStatusIndex / (statusSteps.length - 1)) * 100}%`,
-                  }}
-                />
-              </div>
-
-              {/* Status Steps */}
-              <div className="relative flex justify-between">
-                {statusSteps.map((status, index) => {
-                  const isCompleted = index <= currentStatusIndex;
-                  const isCurrent = index === currentStatusIndex;
-
-                  return (
-                    <div key={status} className="flex flex-col items-center">
-                      <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
-                          isCompleted
-                            ? "bg-primary border-primary text-primary-foreground"
-                            : "bg-background border-muted-foreground/30"
-                        } ${isCurrent ? "ring-4 ring-primary/20" : ""}`}
-                      >
-                        {isCompleted ? (
-                          <CheckCircle className="h-5 w-5" />
-                        ) : (
-                          <div className="w-2 h-2 rounded-full bg-muted-foreground/30" />
-                        )}
-                      </div>
-                      <p
-                        className={`mt-2 text-xs text-center max-w-[80px] ${
-                          isCompleted ? "font-medium" : "text-muted-foreground"
-                        }`}
-                      >
-                        {statusLabels[status].replace("Engineer ", "")}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Job Timeline */}
+        <JobTimelineWrapper jobId={job.id} currentStatus={job.status} />
 
         {/* Job Details */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

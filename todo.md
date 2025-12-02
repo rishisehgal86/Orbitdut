@@ -158,3 +158,25 @@
 - [x] Update status enum in updateStatus procedure
 - [x] Add View Details button to Available Jobs for suppliers to review before accepting
 - [ ] Test complete workflow: Available → Accept → Assign Engineer → My Jobs
+
+## Phase 14: Build Engineer Assignment UI (Dual Assignment Options)
+- [x] Research Field Pulse engineer assignment approach
+- [x] Verify assignEngineer backend procedure accepts name, email, phone
+- [x] Update acceptJob procedure to generate engineerToken when supplier accepts
+- [x] Keep existing assignEngineer for Option 1: Manual assignment (supplier inputs details, email sent)
+- [x] Add shareable engineer link to supplier job detail page with copy button (Option 2)
+- [x] Update status check from assigned_to_supplier to supplier_accepted
+- [x] Update engineer job page to show claim form if engineer details not yet provided
+- [x] Create claimJob procedure for engineers to self-assign by submitting their details
+- [ ] Test both workflows:
+  - Option 1: Supplier assigns manually → Email sent to engineer
+  - Option 2: Supplier shares link → Engineer claims job themselves
+
+## Phase 15: Update Job Status Timeline Display
+- [x] Update JobTimeline component to show complete workflow: pending_supplier_acceptance → supplier_accepted → sent_to_engineer → engineer_accepted → en_route → on_site → completed
+- [x] Add visual distinction for engineer assignment step (sent_to_engineer)
+- [x] Update status labels and descriptions to match new workflow
+- [x] Ensure timeline works correctly in both customer and supplier job detail pages
+- [x] Consolidate job progress bar (customer) and job status bar (supplier) to use same JobTimeline component
+- [ ] Create shared JobDetailCards component for common job information display
+- [ ] Refactor customer and supplier job detail pages to use shared components

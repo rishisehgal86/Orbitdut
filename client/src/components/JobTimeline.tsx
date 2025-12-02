@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, MapPin, CheckCircle2, Navigation, Radio, XCircle, FileText } from "lucide-react";
+import { Clock, MapPin, CheckCircle2, Navigation, Radio, XCircle, FileText, UserCheck, Send, UserPlus } from "lucide-react";
 
 interface TimelineEvent {
   id: number;
@@ -21,6 +21,13 @@ export function JobTimeline({ events, currentStatus }: JobTimelineProps) {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "pending_supplier_acceptance":
+        return <Clock className="h-5 w-5 text-amber-600" />;
+      case "supplier_accepted":
+        return <UserCheck className="h-5 w-5 text-green-600" />;
+      case "sent_to_engineer":
+        return <Send className="h-5 w-5 text-blue-600" />;
+      case "engineer_accepted":
+        return <UserPlus className="h-5 w-5 text-green-600" />;
       case "assigned_to_supplier":
         return <Clock className="h-5 w-5" />;
       case "accepted":
@@ -42,6 +49,14 @@ export function JobTimeline({ events, currentStatus }: JobTimelineProps) {
 
   const getStatusColor = (status: string) => {
     switch (status) {
+      case "pending_supplier_acceptance":
+        return "bg-amber-100 text-amber-800";
+      case "supplier_accepted":
+        return "bg-green-100 text-green-800";
+      case "sent_to_engineer":
+        return "bg-blue-100 text-blue-800";
+      case "engineer_accepted":
+        return "bg-green-100 text-green-800";
       case "accepted":
         return "bg-green-100 text-green-800";
       case "declined":
@@ -68,7 +83,20 @@ export function JobTimeline({ events, currentStatus }: JobTimelineProps) {
   };
 
   const formatStatus = (status: string) => {
-    return status.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+    const statusLabels: Record<string, string> = {
+      pending_supplier_acceptance: "Awaiting Supplier",
+      supplier_accepted: "Supplier Accepted",
+      sent_to_engineer: "Sent to Engineer",
+      engineer_accepted: "Engineer Accepted",
+      assigned_to_supplier: "Supplier Assigned",
+      accepted: "Accepted",
+      declined: "Declined",
+      en_route: "Engineer En Route",
+      on_site: "Engineer On Site",
+      completed: "Completed",
+      cancelled: "Cancelled",
+    };
+    return statusLabels[status] || status.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
   return (
