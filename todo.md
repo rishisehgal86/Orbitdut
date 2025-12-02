@@ -271,3 +271,10 @@
 - [x] Fix EngineerJobPage to handle null/invalid tokens gracefully
 - [x] Show appropriate message when job hasn't been accepted by supplier yet
 - [x] Test with jobs in different states
+
+## Phase 30: Fix Engineer Token System
+- [x] Investigate when engineer tokens are generated (job creation vs supplier acceptance)
+- [x] Check all procedures that should generate tokens
+- [x] Verify token generation works for all job statuses
+- [x] Ensure engineer page loads correctly with valid tokens
+- [x] Test complete workflow end-to-end

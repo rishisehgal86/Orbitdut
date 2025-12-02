@@ -987,8 +987,12 @@ export const appRouter = router({
       .mutation(async ({ input, ctx }) => {
         const { getDb } = await import("./db");
         const { jobs } = await import("../drizzle/schema");
+        const { randomBytes } = await import("crypto");
         const db = await getDb();
         if (!db) throw new Error("Database not available");
+        
+        // Generate engineer token once at job creation
+        const engineerToken = randomBytes(32).toString('hex');
 
         const [result] = await db.insert(jobs).values({
           // Basic job info
@@ -1041,6 +1045,9 @@ export const appRouter = router({
           currency: input.currency,
           isOutOfHours: input.isOutOfHours ? 1 : 0,
           status: "pending_supplier_acceptance",
+          
+          // Engineer token (generated once at creation)
+          engineerToken: engineerToken,
           
           // Link to customer user
           customerId: ctx.user.id,
@@ -1301,7 +1308,6 @@ export const appRouter = router({
       }))
       .mutation(async ({ input, ctx }) => {
         const { getJobById, addJobStatusHistory, updateJob, getSupplierByUserId } = await import("./db");
-        const { randomBytes } = await import("crypto");
 
         const job = await getJobById(input.jobId);
         if (!job) {
@@ -1319,14 +1325,10 @@ export const appRouter = router({
           throw new TRPCError({ code: 'FORBIDDEN', message: 'You must be a supplier to accept jobs' });
         }
 
-        // Generate engineer token for shareable link
-        const engineerToken = randomBytes(32).toString('hex');
-
-        // Update job status, assign to supplier, and set engineer token
+        // Update job status and assign to supplier (token already exists from job creation)
         await updateJob(job.id, {
           status: 'supplier_accepted',
           assignedSupplierId: supplier.supplier.id,
-          engineerToken,
         });
 
         await addJobStatusHistory({
@@ -1335,7 +1337,8 @@ export const appRouter = router({
           notes: `Job accepted by ${supplier.supplier.companyName}`,
         });
 
-        return { success: true, engineerToken };
+        // Return existing engineer token (generated at job creation)
+        return { success: true, engineerToken: job.engineerToken };
       }),
 
     // Assign engineer to job
@@ -1368,13 +1371,11 @@ export const appRouter = router({
           throw new TRPCError({ code: 'FORBIDDEN', message: 'You are not authorized to assign this job' });
         }
 
-        const engineerToken = randomBytes(32).toString('hex');
-
+        // Use existing engineer token (generated at job creation)
         await updateJob(job.id, {
           engineerName: input.engineerName,
           engineerEmail: input.engineerEmail,
           engineerPhone: input.engineerPhone,
-          engineerToken: engineerToken,
           status: 'sent_to_engineer',
         });
 
@@ -1384,7 +1385,7 @@ export const appRouter = router({
           notes: `Assigned to engineer ${input.engineerName} (${input.engineerEmail})`,
         });
 
-        // Send email to engineer
+        // Send email to engineer (using existing token from job creation)
         const baseUrl = process.env.VITE_APP_URL || "http://localhost:3000";
         await sendJobAssignmentNotification({
           engineerEmail: input.engineerEmail,
@@ -1393,11 +1394,11 @@ export const appRouter = router({
           siteName: job.siteName || "Site",
           siteAddress: job.siteAddress,
           scheduledDateTime: job.scheduledDateTime,
-          jobToken: engineerToken,
+          jobToken: job.engineerToken!,
           baseUrl,
         });
 
-        return { success: true, engineerToken };
+        return { success: true, engineerToken: job.engineerToken };
       }),
 
     // Engineer claims job by providing their details
