@@ -222,3 +222,10 @@
 - [x] Update JobDetailCards scheduled datetime to show service location time + UTC
 - [x] Format: "18/12/2025, 14:30:00 (14:30 UTC)" + "Local time at service location" label
 - [x] Verify display in both customer and supplier portals
+
+## Phase 22: Redesign Engineer Claim Page
+- [x] Add Orbidut header with logo and branding to engineer claim page
+- [x] Display complete job details using JobDetailCards component
+- [x] Maintain claim form functionality (name, email, phone)
+- [x] Match styling and layout with main platform design
+- [x] Test engineer claim workflow end-to-end

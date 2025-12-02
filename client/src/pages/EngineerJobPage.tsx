@@ -1,12 +1,13 @@
-import { useState, useEffect } from "react";
-import { useRoute } from "wouter";
+import { useState } from "react";
+import { useRoute, Link } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, MapPin, Clock, CheckCircle2, Navigation, XCircle, Radio, User, Mail, Phone as PhoneIcon } from "lucide-react";
+import { Loader2, MapPin, Clock, CheckCircle2, Navigation, XCircle, Radio, User, Mail, Phone as PhoneIcon, Briefcase } from "lucide-react";
 import { toast } from "sonner";
 import { SiteVisitReportForm } from "@/components/SiteVisitReportForm";
+import { JobDetailCards } from "@/components/JobDetailCards";
 
 export default function EngineerJobPage() {
   const [, params] = useRoute<{ token: string }>("/engineer/job/:token");
@@ -163,35 +164,52 @@ export default function EngineerJobPage() {
   // Show claim form if job exists but no engineer details yet
   if (!job.engineerName && !job.engineerEmail && job.status === 'supplier_accepted') {
     return (
-      <div className="min-h-screen bg-gray-50 p-4 sm:p-8">
-        <div className="max-w-md mx-auto">
+      <div className="min-h-screen bg-background">
+        {/* Orbidut Header */}
+        <header className="border-b bg-card">
+          <div className="container flex h-16 items-center justify-between">
+            <Link href="/" className="flex items-center gap-2">
+              <Briefcase className="h-6 w-6 text-primary" />
+              <span className="text-xl font-bold">Orbidut</span>
+            </Link>
+            <div className="text-sm text-muted-foreground">
+              Engineer Job Assignment
+            </div>
+          </div>
+        </header>
+
+        <div className="container py-8 space-y-6">
+          {/* Job Header */}
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-3xl font-bold">{job.serviceType}</h1>
+              <p className="text-muted-foreground">Job #{job.id}</p>
+            </div>
+            <Badge className="bg-amber-100 text-amber-800">Awaiting Claim</Badge>
+          </div>
+
+          {/* Complete Job Details */}
+          <JobDetailCards job={job} viewerType="customer" />
+
+          {/* Claim Form */}
           <Card>
             <CardHeader>
               <CardTitle>Claim This Job</CardTitle>
               <CardDescription>
-                Enter your details to claim this job assignment
+                Enter your details to accept this job assignment. You'll receive confirmation via email.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <h3 className="font-semibold mb-2">Job Details</h3>
-                <p className="text-sm text-gray-600">Service: {job.serviceType}</p>
-                <p className="text-sm text-gray-600">Location: {job.siteAddress}</p>
-                <p className="text-sm text-gray-600">
-                  Scheduled: {job.scheduledDateTime ? new Date(job.scheduledDateTime).toLocaleString() : "Not scheduled"}
-                </p>
-              </div>
-              
-              <div className="space-y-3">
+              <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Your Name *</label>
+                  <label className="block text-sm font-medium mb-2">Your Name *</label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <input
                       type="text"
                       value={engineerName}
                       onChange={(e) => setEngineerName(e.target.value)}
-                      className="w-full pl-10 pr-3 py-2 border rounded-md"
+                      className="w-full pl-10 pr-3 py-2 border border-input rounded-md bg-background"
                       placeholder="John Doe"
                       required
                     />
@@ -199,32 +217,32 @@ export default function EngineerJobPage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Your Email *</label>
+                  <label className="block text-sm font-medium mb-2">Your Email *</label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <input
                       type="email"
                       value={engineerEmail}
                       onChange={(e) => setEngineerEmail(e.target.value)}
-                      className="w-full pl-10 pr-3 py-2 border rounded-md"
+                      className="w-full pl-10 pr-3 py-2 border border-input rounded-md bg-background"
                       placeholder="john@example.com"
                       required
                     />
                   </div>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-1">Your Phone (Optional)</label>
-                  <div className="relative">
-                    <PhoneIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <input
-                      type="tel"
-                      value={engineerPhone}
-                      onChange={(e) => setEngineerPhone(e.target.value)}
-                      className="w-full pl-10 pr-3 py-2 border rounded-md"
-                      placeholder="+1 234 567 8900"
-                    />
-                  </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Your Phone (Optional)</label>
+                <div className="relative">
+                  <PhoneIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <input
+                    type="tel"
+                    value={engineerPhone}
+                    onChange={(e) => setEngineerPhone(e.target.value)}
+                    className="w-full pl-10 pr-3 py-2 border border-input rounded-md bg-background"
+                    placeholder="+1 234 567 8900"
+                  />
                 </div>
               </div>
               
@@ -242,10 +260,11 @@ export default function EngineerJobPage() {
                   });
                 }}
                 className="w-full"
+                size="lg"
                 disabled={claimJobMutation.isPending}
               >
                 {claimJobMutation.isPending ? (
-                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Claiming...</>
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Claiming Job...</>
                 ) : (
                   <><CheckCircle2 className="mr-2 h-4 w-4" /> Claim Job</>
                 )}
