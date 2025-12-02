@@ -188,10 +188,7 @@ export default function EngineerJobPage() {
             <Badge className="bg-amber-100 text-amber-800">Awaiting Claim</Badge>
           </div>
 
-          {/* Complete Job Details */}
-          <JobDetailCards job={job} viewerType="customer" />
-
-          {/* Claim Form */}
+          {/* Claim Form - Moved to top */}
           <Card>
             <CardHeader>
               <CardTitle>Claim This Job</CardTitle>
@@ -271,94 +268,34 @@ export default function EngineerJobPage() {
               </Button>
             </CardContent>
           </Card>
+
+          {/* Complete Job Details - No pricing for engineers */}
+          <JobDetailCards job={job} viewerType="customer" showPricing={false} />
         </div>
       </div>
     );
   }
 
+  // After claim, show job management interface
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-8">
-      <div className="max-w-3xl mx-auto">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-2xl">Job #{job.id}: {job.serviceType}</CardTitle>
-                <CardDescription>{job.siteName} - {job.siteAddress}</CardDescription>
-              </div>
-              {isTracking && (
-                <Badge variant="default" className="flex items-center gap-2">
-                  <Radio className="h-3 w-3 animate-pulse" />
-                  Tracking
-                </Badge>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <h3 className="font-semibold mb-2">Scheduled Time</h3>
-                <div className="flex items-center gap-2 text-gray-600">
-                  <Clock className="h-5 w-5" />
-                  <span>{job.scheduledDateTime ? new Date(job.scheduledDateTime).toLocaleString() : "Not scheduled"}</span>
-                </div>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-2">Customer</h3>
-                <div className="flex items-center gap-2 text-gray-600">
-                  <MapPin className="h-5 w-5" />
-                  <span>{job.customerName}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="font-semibold">Job Status: <span className="font-normal text-primary">{job.status.replace(/_/g, ' ').toUpperCase()}</span></h3>
-              
-              {(job.status === "sent_to_engineer" || job.status === "assigned_to_supplier") && (
-                <div className="flex gap-4">
-                  <Button onClick={() => handleStatusUpdate("accepted")} className="flex-1 bg-green-600 hover:bg-green-700">
-                    <CheckCircle2 className="mr-2 h-4 w-4" /> Accept Job
-                  </Button>
-                  <Button onClick={() => handleStatusUpdate("declined")} variant="destructive" className="flex-1">
-                    <XCircle className="mr-2 h-4 w-4" /> Decline Job
-                  </Button>
-                </div>
-              )}
-
-              {job.status === "accepted" && (
-                <Button onClick={() => handleStatusUpdate("en_route")} className="w-full">
-                  <Navigation className="mr-2 h-4 w-4" /> Start Travel (En Route)
-                </Button>
-              )}
-
-              {job.status === "en_route" && (
-                <Button onClick={() => handleStatusUpdate("on_site")} className="w-full">
-                  <MapPin className="mr-2 h-4 w-4" /> Arrived at Site
-                </Button>
-              )}
-
-              {job.status === "on_site" && !showReportForm && (
-                <Button onClick={() => setShowReportForm(true)} className="w-full">
-                  <CheckCircle2 className="mr-2 h-4 w-4" /> Complete Job & Submit Report
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {showReportForm && job.status === "on_site" && (
-          <div className="mt-6">
-            <SiteVisitReportForm
-              jobToken={token || ""}
-              onSuccess={() => {
-                setShowReportForm(false);
-                handleStatusUpdate("completed");
-              }}
-            />
+    <div className="min-h-screen bg-background">
+      {/* Orbidut Header */}
+      <header className="border-b bg-card">
+        <div className="container flex h-16 items-center justify-between">
+          <Link href="/" className="flex items-center gap-2">
+            <Briefcase className="h-6 w-6 text-primary" />
+            <span className="text-xl font-bold">Orbidut</span>
+          </Link>
+          <div className="text-sm text-muted-foreground">
+            Engineer Job Management
           </div>
-        )}
+        </div>
+      </header>
+
+      <div className="container py-8 space-y-6">
+        {/* Job management interface content will go here */}
       </div>
     </div>
   );
 }
+

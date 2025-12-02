@@ -29,9 +29,10 @@ interface Job {
 interface JobDetailCardsProps {
   job: Job;
   viewerType: 'customer' | 'supplier';
+  showPricing?: boolean; // Default true, set false for engineer view
 }
 
-export function JobDetailCards({ job, viewerType }: JobDetailCardsProps) {
+export function JobDetailCards({ job, viewerType, showPricing = true }: JobDetailCardsProps) {
   // Calculate pricing based on viewer type
   // For customers: show full price they paid (calculatedPrice)
   // For suppliers: show amount they receive (calculatedPrice - Orbidut margin)
@@ -124,52 +125,54 @@ export function JobDetailCards({ job, viewerType }: JobDetailCardsProps) {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>{viewerType === 'customer' ? 'Pricing Details' : 'Payment Details'}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Hourly Rate</span>
-                <span className="text-sm font-medium">
-                  {job.currency ?? "USD"} {hourlyRate}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Duration</span>
-                <span className="text-sm font-medium">{job.estimatedDuration ?? 0} hours</span>
-              </div>
-              {viewerType === 'supplier' && (
-                <>
-                  <Separator />
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Customer Price</span>
-                    <span className="text-sm font-medium">
-                      {job.currency ?? "USD"} {(customerPrice / 100).toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Orbidut Margin ({ORBIDUT_MARGIN_PERCENT}%)</span>
-                    <span className="text-sm font-medium text-muted-foreground">
-                      -{job.currency ?? "USD"} {((customerPrice - supplierAmount) / 100).toFixed(2)}
-                    </span>
-                  </div>
-                </>
-              )}
-              <Separator />
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5 text-primary" />
-                  <span className="font-semibold">
-                    {viewerType === 'customer' ? 'Total Price' : 'You Receive'}
+          {showPricing && (
+            <Card>
+              <CardHeader>
+                <CardTitle>{viewerType === 'customer' ? 'Pricing Details' : 'Payment Details'}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Hourly Rate</span>
+                  <span className="text-sm font-medium">
+                    {job.currency ?? "USD"} {hourlyRate}
                   </span>
                 </div>
-                <span className="text-lg font-bold text-primary">
-                  {job.currency ?? "USD"} {(displayPrice / 100).toFixed(2)}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Duration</span>
+                  <span className="text-sm font-medium">{job.estimatedDuration ?? 0} hours</span>
+                </div>
+                {viewerType === 'supplier' && (
+                  <>
+                    <Separator />
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Customer Price</span>
+                      <span className="text-sm font-medium">
+                        {job.currency ?? "USD"} {(customerPrice / 100).toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Orbidut Margin ({ORBIDUT_MARGIN_PERCENT}%)</span>
+                      <span className="text-sm font-medium text-muted-foreground">
+                        -{job.currency ?? "USD"} {((customerPrice - supplierAmount) / 100).toFixed(2)}
+                      </span>
+                    </div>
+                  </>
+                )}
+                <Separator />
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-5 w-5 text-primary" />
+                    <span className="font-semibold">
+                      {viewerType === 'customer' ? 'Total Price' : 'You Receive'}
+                    </span>
+                  </div>
+                  <span className="text-lg font-bold text-primary">
+                    {job.currency ?? "USD"} {(displayPrice / 100).toFixed(2)}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
 

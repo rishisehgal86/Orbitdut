@@ -229,3 +229,10 @@
 - [x] Maintain claim form functionality (name, email, phone)
 - [x] Match styling and layout with main platform design
 - [x] Test engineer claim workflow end-to-end
+
+## Phase 23: Remove Pricing from Engineer View
+- [x] Update JobDetailCards to accept showPricing prop
+- [x] Hide pricing section when showPricing=false
+- [x] Update engineer claim page to use showPricing=false
+- [x] Move claim form to top of engineer page (after header, before job details)
+- [x] Verify engineer page shows job details without payment information
