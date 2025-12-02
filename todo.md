@@ -288,3 +288,22 @@
 - [x] Fix ReferenceError: Phone variable undefined in CustomerJobDetail
 - [x] Test customer job detail pages
 - [x] Verify all customer pages load correctly
+
+## Phase 33: Add Real-Time GPS Tracking Maps
+- [ ] Review existing EngineerLocationMap component
+- [ ] Add map to customer job detail page (show when en route/on site)
+- [ ] Add map to supplier job detail page (show when en route/on site)
+- [ ] Display engineer location pin and site location pin
+- [ ] Show route/distance when en route
+- [ ] Test real-time updates
+
+## Phase 33: Add Real-Time GPS Tracking Maps with ETA
+- [x] Review existing EngineerLocationMap component
+- [x] Add map to customer job detail page (show when en route/on site)
+- [x] Add map to supplier job detail page (show when en route/on site)
+- [x] Display engineer location pin and site location pin
+- [x] Show route line between engineer and site
+- [x] Calculate and display distance
+- [x] Calculate and display estimated ETA
+- [x] Auto-refresh location every 30 seconds
+- [x] Test real-time updates

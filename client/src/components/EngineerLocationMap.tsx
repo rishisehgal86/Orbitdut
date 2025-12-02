@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Navigation, Clock } from "lucide-react";
+import { MapPin, Navigation, Clock, TrendingUp } from "lucide-react";
+import { MapView } from "@/components/Map";
 
 interface EngineerLocationMapProps {
   jobId: number;
@@ -12,6 +13,12 @@ interface EngineerLocationMapProps {
   siteLongitude?: string | null;
 }
 
+interface RouteInfo {
+  distance: string;
+  duration: string;
+  durationValue: number; // in seconds
+}
+
 export function EngineerLocationMap({
   jobId,
   engineerToken,
@@ -19,39 +26,114 @@ export function EngineerLocationMap({
   siteLatitude,
   siteLongitude,
 }: EngineerLocationMapProps) {
-  const [mapUrl, setMapUrl] = useState<string>("");
+  const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
+  const mapRef = useRef<google.maps.Map | null>(null);
+  const engineerMarkerRef = useRef<google.maps.Marker | null>(null);
+  const siteMarkerRef = useRef<google.maps.Marker | null>(null);
+  const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
 
   // Only fetch location if engineer is en route or on site
   const shouldTrack = jobStatus === "en_route" || jobStatus === "on_site";
 
   const { data: latestLocation } = trpc.jobs.getLatestLocationByJobId.useQuery(
     { jobId },
-    { enabled: shouldTrack, refetchInterval: 10000 } // Refresh every 10 seconds
+    { enabled: shouldTrack, refetchInterval: 30000 } // Refresh every 30 seconds
   );
 
+  // Calculate route and ETA
   useEffect(() => {
-    if (latestLocation && siteLatitude && siteLongitude) {
-      // Create a static map URL with both engineer location and site location
-      const engineerLat = parseFloat(latestLocation.latitude);
-      const engineerLng = parseFloat(latestLocation.longitude);
-      const siteLat = parseFloat(siteLatitude);
-      const siteLng = parseFloat(siteLongitude);
-
-      // Center map between engineer and site
-      const centerLat = (engineerLat + siteLat) / 2;
-      const centerLng = (engineerLng + siteLng) / 2;
-
-      // Calculate zoom level based on distance
-      const latDiff = Math.abs(engineerLat - siteLat);
-      const lngDiff = Math.abs(engineerLng - siteLng);
-      const maxDiff = Math.max(latDiff, lngDiff);
-      const zoom = maxDiff > 0.1 ? 11 : maxDiff > 0.05 ? 12 : maxDiff > 0.01 ? 13 : 14;
-
-      // Google Static Maps API URL
-      const url = `https://maps.googleapis.com/maps/api/staticmap?center=${centerLat},${centerLng}&zoom=${zoom}&size=600x400&markers=color:blue%7Clabel:E%7C${engineerLat},${engineerLng}&markers=color:red%7Clabel:S%7C${siteLat},${siteLng}&path=color:0x0000ff%7Cweight:2%7C${engineerLat},${engineerLng}%7C${siteLat},${siteLng}&key=YOUR_GOOGLE_MAPS_API_KEY`;
-
-      setMapUrl(url);
+    if (!latestLocation || !siteLatitude || !siteLongitude || !mapRef.current) {
+      return;
     }
+
+    const engineerLat = parseFloat(latestLocation.latitude);
+    const engineerLng = parseFloat(latestLocation.longitude);
+    const siteLat = parseFloat(siteLatitude);
+    const siteLng = parseFloat(siteLongitude);
+
+    // Update or create engineer marker
+    if (engineerMarkerRef.current) {
+      engineerMarkerRef.current.setPosition({ lat: engineerLat, lng: engineerLng });
+    } else {
+      engineerMarkerRef.current = new google.maps.Marker({
+        position: { lat: engineerLat, lng: engineerLng },
+        map: mapRef.current,
+        title: "Engineer Location",
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 10,
+          fillColor: "#3B82F6",
+          fillOpacity: 1,
+          strokeColor: "#FFFFFF",
+          strokeWeight: 2,
+        },
+      });
+    }
+
+    // Update or create site marker
+    if (siteMarkerRef.current) {
+      siteMarkerRef.current.setPosition({ lat: siteLat, lng: siteLng });
+    } else {
+      siteMarkerRef.current = new google.maps.Marker({
+        position: { lat: siteLat, lng: siteLng },
+        map: mapRef.current,
+        title: "Site Location",
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 10,
+          fillColor: "#EF4444",
+          fillOpacity: 1,
+          strokeColor: "#FFFFFF",
+          strokeWeight: 2,
+        },
+      });
+    }
+
+    // Calculate route using Directions API
+    const directionsService = new google.maps.DirectionsService();
+    
+    directionsService.route(
+      {
+        origin: { lat: engineerLat, lng: engineerLng },
+        destination: { lat: siteLat, lng: siteLng },
+        travelMode: google.maps.TravelMode.DRIVING,
+      },
+      (result, status) => {
+        if (status === google.maps.DirectionsStatus.OK && result) {
+          // Update or create directions renderer
+          if (!directionsRendererRef.current) {
+            directionsRendererRef.current = new google.maps.DirectionsRenderer({
+              map: mapRef.current!,
+              suppressMarkers: true, // We're using custom markers
+              polylineOptions: {
+                strokeColor: "#3B82F6",
+                strokeWeight: 4,
+                strokeOpacity: 0.7,
+              },
+            });
+          }
+          
+          directionsRendererRef.current.setDirections(result);
+
+          // Extract route info
+          const route = result.routes[0];
+          if (route && route.legs[0]) {
+            const leg = route.legs[0];
+            setRouteInfo({
+              distance: leg.distance?.text || "Unknown",
+              duration: leg.duration?.text || "Unknown",
+              durationValue: leg.duration?.value || 0,
+            });
+          }
+
+          // Fit map to show both markers
+          const bounds = new google.maps.LatLngBounds();
+          bounds.extend({ lat: engineerLat, lng: engineerLng });
+          bounds.extend({ lat: siteLat, lng: siteLng });
+          mapRef.current?.fitBounds(bounds);
+        }
+      }
+    );
   }, [latestLocation, siteLatitude, siteLongitude]);
 
   if (!shouldTrack) {
@@ -77,6 +159,11 @@ export function EngineerLocationMap({
   const timeSinceUpdate = Date.now() - new Date(latestLocation.timestamp).getTime();
   const minutesAgo = Math.floor(timeSinceUpdate / 60000);
 
+  // Calculate ETA
+  const now = new Date();
+  const etaDate = routeInfo ? new Date(now.getTime() + routeInfo.durationValue * 1000) : null;
+  const etaString = etaDate ? etaDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
+
   return (
     <Card>
       <CardHeader>
@@ -92,35 +179,71 @@ export function EngineerLocationMap({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="bg-gray-100 rounded-lg p-4 text-center">
-          <p className="text-sm text-muted-foreground mb-2">
-            📍 Lat: {parseFloat(latestLocation.latitude).toFixed(6)}, Lng: {parseFloat(latestLocation.longitude).toFixed(6)}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Accuracy: ±{Math.round(parseFloat(latestLocation.accuracy || "0"))}m
-          </p>
+        {/* Route Info */}
+        {routeInfo && jobStatus === "en_route" && (
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-blue-50 rounded-lg p-3">
+              <div className="flex items-center gap-2 text-blue-700 mb-1">
+                <TrendingUp className="h-4 w-4" />
+                <span className="text-xs font-medium">Distance</span>
+              </div>
+              <p className="text-lg font-bold text-blue-900">{routeInfo.distance}</p>
+            </div>
+            <div className="bg-green-50 rounded-lg p-3">
+              <div className="flex items-center gap-2 text-green-700 mb-1">
+                <Clock className="h-4 w-4" />
+                <span className="text-xs font-medium">ETA</span>
+              </div>
+              <p className="text-lg font-bold text-green-900">
+                {etaString || routeInfo.duration}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Google Map */}
+        <div className="rounded-lg overflow-hidden border">
+          <MapView
+            onMapReady={(map) => {
+              mapRef.current = map;
+              
+              // Initial map setup
+              if (latestLocation && siteLatitude && siteLongitude) {
+                const engineerLat = parseFloat(latestLocation.latitude);
+                const engineerLng = parseFloat(latestLocation.longitude);
+                const siteLat = parseFloat(siteLatitude);
+                const siteLng = parseFloat(siteLongitude);
+
+                const bounds = new google.maps.LatLngBounds();
+                bounds.extend({ lat: engineerLat, lng: engineerLng });
+                bounds.extend({ lat: siteLat, lng: siteLng });
+                map.fitBounds(bounds);
+              }
+            }}
+            style={{ height: "400px", width: "100%" }}
+          />
         </div>
 
-        {/* Placeholder for map - in production, integrate with Google Maps */}
-        <div className="bg-gray-200 rounded-lg h-64 flex items-center justify-center">
-          <div className="text-center">
-            <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-600">Map view coming soon</p>
-            <p className="text-xs text-gray-500 mt-1">
-              Engineer is {latestLocation.trackingType === "en_route" ? "en route" : "on site"}
-            </p>
+        {/* Legend */}
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+              <span className="text-muted-foreground">Engineer</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+              <span className="text-muted-foreground">Site</span>
+            </div>
+          </div>
+          <div className="text-xs text-muted-foreground">
+            Status: {jobStatus === "en_route" ? "En Route" : "On Site"}
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-            <span>Engineer</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-            <span>Site</span>
-          </div>
+        {/* Location accuracy */}
+        <div className="text-xs text-muted-foreground text-center">
+          Accuracy: ±{Math.round(parseFloat(latestLocation.accuracy || "0"))}m
         </div>
       </CardContent>
     </Card>

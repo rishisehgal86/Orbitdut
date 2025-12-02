@@ -178,7 +178,13 @@ export default function CustomerJobDetail() {
 
         {/* Engineer Location Tracking */}
         {(job.status === "en_route" || job.status === "on_site") && (
-          <EngineerLocationMap jobId={job.id} />
+          <EngineerLocationMap 
+            jobId={job.id}
+            engineerToken={job.engineerToken}
+            jobStatus={job.status}
+            siteLatitude={job.siteLatitude}
+            siteLongitude={job.siteLongitude}
+          />
         )}
 
         {/* Job Timeline - Audit Trail */}
