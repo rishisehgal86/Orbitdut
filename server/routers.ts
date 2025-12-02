@@ -1427,21 +1427,74 @@ export const appRouter = router({
           throw new TRPCError({ code: 'BAD_REQUEST', message: 'Job has already been assigned to an engineer' });
         }
 
-        // Update job with engineer details and change status
+        // Update job with engineer details and change status to engineer_accepted (self-claim implies acceptance)
         await updateJob(job.id, {
           engineerName: input.engineerName,
           engineerEmail: input.engineerEmail,
           engineerPhone: input.engineerPhone,
-          status: 'sent_to_engineer',
+          status: 'engineer_accepted',
         });
 
         await addJobStatusHistory({
           jobId: job.id,
-          status: 'sent_to_engineer',
-          notes: `Job claimed by engineer ${input.engineerName} (${input.engineerEmail})`,
+          status: 'engineer_accepted',
+          notes: `Job claimed and accepted by engineer ${input.engineerName} (${input.engineerEmail})`,
         });
 
         // Send confirmation email to engineer
+        const baseUrl = getBaseUrl(ctx.req);
+        await sendJobAssignmentNotification({
+          engineerEmail: input.engineerEmail,
+          engineerName: input.engineerName,
+          jobId: job.id,
+          siteName: job.siteName || "Site",
+          siteAddress: job.siteAddress,
+          scheduledDateTime: job.scheduledDateTime,
+          jobToken: input.token,
+          baseUrl,
+        });
+
+        return { success: true };
+      }),
+
+    // Engineer accepts manually assigned job and can update their details
+    acceptJob: publicProcedure
+      .input(z.object({
+        token: z.string(),
+        engineerName: z.string().min(1, "Name is required"),
+        engineerEmail: z.string().email("Valid email is required"),
+        engineerPhone: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { getJobByEngineerToken, updateJob, addJobStatusHistory } = await import("./db");
+        const { sendJobAssignmentNotification } = await import("./_core/email");
+
+        const job = await getJobByEngineerToken(input.token);
+        if (!job) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Job not found' });
+        }
+
+        // Verify job is in sent_to_engineer status (manually assigned, awaiting acceptance)
+        if (job.status !== 'sent_to_engineer') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Job is not awaiting engineer acceptance' });
+        }
+
+        // Update job with engineer's confirmed/updated details and change status to engineer_accepted
+        // Engineer's input supersedes supplier's manual assignment
+        await updateJob(job.id, {
+          engineerName: input.engineerName,
+          engineerEmail: input.engineerEmail,
+          engineerPhone: input.engineerPhone,
+          status: 'engineer_accepted',
+        });
+
+        await addJobStatusHistory({
+          jobId: job.id,
+          status: 'engineer_accepted',
+          notes: `Job accepted by engineer ${input.engineerName} (${input.engineerEmail})`,
+        });
+
+        // Send confirmation email to engineer with updated details
         const baseUrl = getBaseUrl(ctx.req);
         await sendJobAssignmentNotification({
           engineerEmail: input.engineerEmail,

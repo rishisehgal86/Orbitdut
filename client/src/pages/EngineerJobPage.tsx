@@ -34,6 +34,16 @@ export default function EngineerJobPage() {
     },
   });
 
+  const acceptJobMutation = trpc.jobs.acceptJob.useMutation({
+    onSuccess: () => {
+      toast.success("Job accepted successfully!");
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(`Failed to accept job: ${error.message}`);
+    },
+  });
+
   const updateStatusMutation = trpc.jobs.updateStatusByToken.useMutation({
     onSuccess: () => {
       toast.success("Job status updated successfully");
@@ -144,6 +154,15 @@ export default function EngineerJobPage() {
     updateStatusMutation.mutate({ token, status });
   };
 
+  // Pre-fill engineer details when manually assigned
+  useEffect(() => {
+    if (job && job.status === 'sent_to_engineer') {
+      setEngineerName(job.engineerName || "");
+      setEngineerEmail(job.engineerEmail || "");
+      setEngineerPhone(job.engineerPhone || "");
+    }
+  }, [job]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -161,8 +180,8 @@ export default function EngineerJobPage() {
     return <div className="min-h-screen flex items-center justify-center">Job not found or link is invalid.</div>;
   }
 
-  // Show claim form if job exists but no engineer details yet
-  if (!job.engineerName && !job.engineerEmail && job.status === 'supplier_accepted') {
+  // Show claim/accept form if job hasn't been accepted by engineer yet
+  if (job.status === 'supplier_accepted' || job.status === 'sent_to_engineer') {
     return (
       <div className="min-h-screen bg-background">
         {/* Orbidut Header */}
@@ -185,15 +204,19 @@ export default function EngineerJobPage() {
               <h1 className="text-3xl font-bold">{job.serviceType}</h1>
               <p className="text-muted-foreground">Job #{job.id}</p>
             </div>
-            <Badge className="bg-amber-100 text-amber-800">Awaiting Claim</Badge>
+            <Badge className="bg-amber-100 text-amber-800">
+              {job.status === 'sent_to_engineer' ? 'Awaiting Acceptance' : 'Awaiting Claim'}
+            </Badge>
           </div>
 
-          {/* Claim Form - Moved to top */}
+          {/* Claim/Accept Form - Moved to top */}
           <Card>
             <CardHeader>
-              <CardTitle>Claim This Job</CardTitle>
+              <CardTitle>{job.status === 'sent_to_engineer' ? 'Accept This Job' : 'Claim This Job'}</CardTitle>
               <CardDescription>
-                Enter your details to accept this job assignment. You'll receive confirmation via email.
+                {job.status === 'sent_to_engineer' 
+                  ? 'Review and confirm your details to accept this job assignment. You can update your information before accepting.'
+                  : 'Enter your details to accept this job assignment. You\'ll receive confirmation via email.'}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -249,7 +272,8 @@ export default function EngineerJobPage() {
                     toast.error("Please fill in all required fields");
                     return;
                   }
-                  claimJobMutation.mutate({
+                  const mutation = job.status === 'sent_to_engineer' ? acceptJobMutation : claimJobMutation;
+                  mutation.mutate({
                     token: token || "",
                     engineerName,
                     engineerEmail,
@@ -258,12 +282,12 @@ export default function EngineerJobPage() {
                 }}
                 className="w-full"
                 size="lg"
-                disabled={claimJobMutation.isPending}
+                disabled={claimJobMutation.isPending || acceptJobMutation.isPending}
               >
-                {claimJobMutation.isPending ? (
-                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Claiming Job...</>
+                {(claimJobMutation.isPending || acceptJobMutation.isPending) ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {job.status === 'sent_to_engineer' ? 'Accepting...' : 'Claiming...'}</>
                 ) : (
-                  <><CheckCircle2 className="mr-2 h-4 w-4" /> Claim Job</>
+                  <><CheckCircle2 className="mr-2 h-4 w-4" /> {job.status === 'sent_to_engineer' ? 'Accept Job' : 'Claim Job'}</>
                 )}
               </Button>
             </CardContent>

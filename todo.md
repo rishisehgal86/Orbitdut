@@ -241,3 +241,12 @@
 - [x] Update claimJob procedure to send confirmation email to engineer
 - [x] Include job details, site info, schedule, and engineer link in email
 - [x] Test self-claim workflow end-to-end with email delivery (dev server running successfully)
+
+## Phase 25: Update Engineer Assignment Workflow Logic
+- [x] Update claimJob procedure to set status to `engineer_accepted` (self-claim implies acceptance)
+- [x] Create acceptJob procedure for manually assigned engineers to confirm/update details
+- [x] Engineer input details supersede supplier's manual assignment details
+- [x] Update engineer page to show accept form when status is `sent_to_engineer`
+- [x] Update engineer page to show job management interface when status is `engineer_accepted` or later (already implemented - shows full job management when status is beyond sent_to_engineer)
+- [x] Test self-claim workflow (should go directly to engineer_accepted)
+- [x] Test manual assignment workflow (should require engineer acceptance)
