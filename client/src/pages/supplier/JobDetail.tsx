@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { AssignEngineerDialog } from "@/components/AssignEngineerDialog";
 import { JobTimeline } from "@/components/JobTimeline";
 import { EngineerLocationMap } from "@/components/EngineerLocationMap";
+import { JobDetailCards } from "@/components/JobDetailCards";
 
 const STATUS_FLOW = [
   { key: "assigned_to_supplier", label: "Assigned", icon: CheckCircle },
