@@ -14,7 +14,7 @@ export default function SupplierJobs() {
     trpc.jobs.getAvailableForSupplier.useQuery();
   const { data: myJobs, isLoading: loadingMy, refetch: refetchMy } =
     trpc.jobs.getSupplierJobs.useQuery();
-  const acceptJob = trpc.jobs.acceptJobAsSupplier.useMutation();
+  const acceptJob = trpc.jobs.acceptJob.useMutation();
 
   const handleAcceptJob = async (jobId: number) => {
     try {
