@@ -194,3 +194,11 @@
 - [x] Replace with JobTimeline component (same as customer portal - already present at bottom)
 - [x] Ensure both portals show identical timeline with complete workflow (both use JobTimelineWrapper)
 - [x] Test timeline display in both customer and supplier portals
+
+## Phase 18: Separate Job Status Progress from Timeline
+- [x] Create JobStatusProgress component for visual workflow indicator (top of page)
+- [x] Keep JobTimeline as audit trail (bottom of page)
+- [x] Update customer job detail page with new layout: Header → Status Progress → Details → Timeline
+- [x] Update supplier job detail page with same layout structure (keeping supplier-specific features)
+- [x] Ensure both pages have identical formatting and component placement
+- [x] Test both portals show consistent layout

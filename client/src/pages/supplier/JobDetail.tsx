@@ -2,31 +2,16 @@ import SupplierLayout from "@/components/SupplierLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { trpc } from "@/lib/trpc";
-import {
-  ArrowRight,
-  Calendar,
-  CheckCircle,
-  Clock,
-  Copy,
-  DollarSign,
-  FileText,
-  Link2,
-  Loader2,
-  MapPin,
-  Navigation,
-  Phone,
-  User,
-} from "lucide-react";
-import { useEffect, useState } from "react";
+import { Copy, Loader2, Phone, User } from "lucide-react";
+import { useState } from "react";
 import { useRoute } from "wouter";
 import { toast } from "sonner";
 import { AssignEngineerDialog } from "@/components/AssignEngineerDialog";
 import { JobTimeline } from "@/components/JobTimeline";
+import { JobStatusProgress } from "@/components/JobStatusProgress";
 import { EngineerLocationMap } from "@/components/EngineerLocationMap";
 import { JobDetailCards } from "@/components/JobDetailCards";
-
 
 // Wrapper component for JobTimeline with data fetching
 function JobTimelineWrapper({ jobId, currentStatus }: { jobId: number; currentStatus: string }) {
@@ -53,6 +38,39 @@ function JobTimelineWrapper({ jobId, currentStatus }: { jobId: number; currentSt
   return <JobTimeline events={timeline.events} currentStatus={timeline.currentStatus} />;
 }
 
+// Database status values
+type JobStatus = 
+  | "pending_supplier_acceptance" 
+  | "supplier_accepted"
+  | "sent_to_engineer"
+  | "engineer_accepted"
+  | "en_route" 
+  | "on_site" 
+  | "completed" 
+  | "cancelled";
+
+const statusColors: Record<JobStatus, string> = {
+  pending_supplier_acceptance: "bg-amber-100 text-amber-800",
+  supplier_accepted: "bg-green-100 text-green-800",
+  sent_to_engineer: "bg-blue-100 text-blue-800",
+  engineer_accepted: "bg-green-100 text-green-800",
+  en_route: "bg-blue-100 text-blue-800",
+  on_site: "bg-purple-100 text-purple-800",
+  completed: "bg-green-100 text-green-800",
+  cancelled: "bg-gray-100 text-gray-800",
+};
+
+const statusLabels: Record<JobStatus, string> = {
+  pending_supplier_acceptance: "Awaiting Supplier",
+  supplier_accepted: "Supplier Accepted",
+  sent_to_engineer: "Sent to Engineer",
+  engineer_accepted: "Engineer Accepted",
+  en_route: "En Route",
+  on_site: "On Site",
+  completed: "Completed",
+  cancelled: "Cancelled",
+};
+
 export default function SupplierJobDetail() {
   const [, params] = useRoute("/supplier/jobs/:id");
   const jobId = params?.id ? parseInt(params.id) : 0;
@@ -62,42 +80,11 @@ export default function SupplierJobDetail() {
     { id: jobId },
     { enabled: jobId > 0 }
   );
-  const updateStatus = trpc.jobs.updateStatus.useMutation();
-
-  const handleStatusUpdate = async (newStatus: string) => {
-    try {
-      await updateStatus.mutateAsync({
-        jobId,
-        status: newStatus as any,
-      });
-      toast.success("Status updated successfully");
-      refetch();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update status");
-    }
-  };
 
   const formatCurrency = (cents: number, currency: string) => {
     const symbol = currency === "USD" ? "$" : currency;
     return `${symbol}${(cents / 100).toFixed(2)}`;
   };
-
-  const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString(undefined, {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
-
-  const formatTime = (date: Date) => {
-    return new Date(date).toLocaleTimeString(undefined, {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
 
   if (isLoading) {
     return (
@@ -122,7 +109,6 @@ export default function SupplierJobDetail() {
     );
   }
 
-
   return (
     <SupplierLayout>
       <div className="space-y-6">
@@ -136,33 +122,43 @@ export default function SupplierJobDetail() {
             <div className="text-2xl font-bold text-primary">
               {formatCurrency(job.calculatedPrice ?? 0, job.currency ?? "USD")}
             </div>
+            <Badge className={statusColors[job.status as JobStatus]}>
+              {statusLabels[job.status as JobStatus]}
+            </Badge>
             {job.isOutOfHours === 1 && (
-              <Badge variant="secondary" className="mt-1">
+              <Badge variant="secondary" className="block mt-1">
                 Out of Hours
               </Badge>
             )}
-            {!job.engineerName && job.status === "supplier_accepted" && (
-              <div className="flex flex-col gap-2">
-                <Button onClick={() => setAssignDialogOpen(true)} size="sm">
-                  <User className="mr-2 h-4 w-4" />
-                  Assign Engineer
-                </Button>
-                <Button
-                  onClick={() => {
-                    const link = `${window.location.origin}/engineer/job/${job.engineerToken}`;
-                    navigator.clipboard.writeText(link);
-                    toast.success("Engineer link copied to clipboard!");
-                  }}
-                  variant="outline"
-                  size="sm"
-                >
-                  <Copy className="mr-2 h-4 w-4" />
-                  Copy Engineer Link
-                </Button>
-              </div>
-            )}
           </div>
         </div>
+
+        {/* Engineer Assignment Buttons (Supplier-specific) */}
+        {!job.engineerName && job.status === "supplier_accepted" && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Assign Engineer</CardTitle>
+              <CardDescription>Choose how to assign an engineer to this job</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              <Button onClick={() => setAssignDialogOpen(true)}>
+                <User className="mr-2 h-4 w-4" />
+                Assign Engineer Manually
+              </Button>
+              <Button
+                onClick={() => {
+                  const link = `${window.location.origin}/engineer/job/${job.engineerToken}`;
+                  navigator.clipboard.writeText(link);
+                  toast.success("Engineer link copied to clipboard!");
+                }}
+                variant="outline"
+              >
+                <Copy className="mr-2 h-4 w-4" />
+                Copy Engineer Link (Self-Claim)
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Assign Engineer Dialog */}
         <AssignEngineerDialog
@@ -172,264 +168,70 @@ export default function SupplierJobDetail() {
           onSuccess={() => refetch()}
         />
 
+        {/* Job Status Progress */}
+        <JobStatusProgress currentStatus={job.status} />
 
-        {/* Job Details */}
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Customer Information */}
+        {/* Customer Information (Supplier-specific) */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Customer Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-start gap-3">
+              <User className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div>
+                <p className="font-medium">{job.customerName}</p>
+                <p className="text-sm text-muted-foreground">{job.customerEmail}</p>
+              </div>
+            </div>
+
+            {job.customerPhone && (
+              <div className="flex items-start gap-3">
+                <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="font-medium">Phone</p>
+                  <a
+                    href={`tel:${job.customerPhone}`}
+                    className="text-sm text-primary hover:underline"
+                  >
+                    {job.customerPhone}
+                  </a>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Shared Job Details */}
+        <JobDetailCards job={job} viewerType="supplier" />
+
+        {/* Engineer Information */}
+        {job.engineerName && (
           <Card>
             <CardHeader>
-              <CardTitle>Customer Information</CardTitle>
+              <CardTitle>Assigned Engineer</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-start gap-3">
                 <User className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="font-medium">{job.customerName}</p>
-                  <p className="text-sm text-muted-foreground">{job.customerEmail}</p>
+                  <p className="font-medium">{job.engineerName}</p>
+                  <p className="text-sm text-muted-foreground">{job.engineerEmail}</p>
                 </div>
               </div>
 
-              {job.customerPhone && (
+              {job.engineerPhone && (
                 <div className="flex items-start gap-3">
                   <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
                     <p className="font-medium">Phone</p>
                     <a
-                      href={`tel:${job.customerPhone}`}
+                      href={`tel:${job.engineerPhone}`}
                       className="text-sm text-primary hover:underline"
                     >
-                      {job.customerPhone}
+                      {job.engineerPhone}
                     </a>
                   </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Location */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Service Location</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="font-medium">{job.siteAddress}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {job.city}, {job.postalCode}
-                  </p>
-                </div>
-              </div>
-
-              {job.siteLatitude && job.siteLongitude && (
-                <Button variant="outline" className="w-full" asChild>
-                  <a
-                    href={`https://www.google.com/maps/dir/?api=1&destination=${job.siteLatitude},${job.siteLongitude}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Navigation className="mr-2 h-4 w-4" />
-                    Get Directions
-                  </a>
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Schedule */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Schedule</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-start gap-3">
-                <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="font-medium">{job.scheduledDateTime ? formatDate(job.scheduledDateTime) : "Not scheduled"}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {job.scheduledDateTime ? formatTime(job.scheduledDateTime) : ""}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="font-medium">Duration</p>
-                  <p className="text-sm text-muted-foreground">
-                    {job.estimatedDuration ?? 0} minutes
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Payment */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Payment</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-start gap-3">
-                <DollarSign className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div className="flex-1">
-                  <p className="font-medium">Total Amount</p>
-                  <p className="text-2xl font-bold text-primary">
-                    {formatCurrency(job.calculatedPrice ?? 0, job.currency ?? "USD")}
-                  </p>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="text-sm text-muted-foreground">
-                <p>Payment will be processed after job completion.</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Description */}
-        {job.description && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Job Description</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">{job.description}</p>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Additional Details Grid */}
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Site Contact */}
-          {(job.siteContactName || job.siteContactNumber) && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Site Contact</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {job.siteContactName && (
-                  <div className="flex items-start gap-3">
-                    <User className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="font-medium">Contact Name</p>
-                      <p className="text-sm text-muted-foreground">{job.siteContactName}</p>
-                    </div>
-                  </div>
-                )}
-                {job.siteContactNumber && (
-                  <div className="flex items-start gap-3">
-                    <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="font-medium">Contact Number</p>
-                      <a
-                        href={`tel:${job.siteContactNumber}`}
-                        className="text-sm text-primary hover:underline"
-                      >
-                        {job.siteContactNumber}
-                      </a>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Project & Ticket Information */}
-          {(job.projectName || job.changeNumber || job.incidentNumber) && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Project & Ticket Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {job.projectName && (
-                  <div className="flex items-start gap-3">
-                    <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="font-medium">Project Name</p>
-                      <p className="text-sm text-muted-foreground">{job.projectName}</p>
-                    </div>
-                  </div>
-                )}
-                {job.changeNumber && (
-                  <div className="flex items-start gap-3">
-                    <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="font-medium">Change Number</p>
-                      <p className="text-sm text-muted-foreground">{job.changeNumber}</p>
-                    </div>
-                  </div>
-                )}
-                {job.incidentNumber && (
-                  <div className="flex items-start gap-3">
-                    <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="font-medium">Incident Number</p>
-                      <p className="text-sm text-muted-foreground">{job.incidentNumber}</p>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* Site Access & Requirements */}
-        {(job.accessInstructions || job.specialRequirements || job.equipmentNeeded) && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Site Access & Requirements</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {job.accessInstructions && (
-                <div>
-                  <p className="font-medium mb-1">Access Instructions</p>
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{job.accessInstructions}</p>
-                </div>
-              )}
-              {job.specialRequirements && (
-                <div>
-                  <p className="font-medium mb-1">Special Requirements</p>
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{job.specialRequirements}</p>
-                </div>
-              )}
-              {job.equipmentNeeded && (
-                <div>
-                  <p className="font-medium mb-1">Equipment Needed</p>
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{job.equipmentNeeded}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Communication */}
-        {(job.videoConferenceLink || job.notes) && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Communication</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {job.videoConferenceLink && (
-                <div>
-                  <p className="font-medium mb-1">Video Conference Link</p>
-                  <a
-                    href={job.videoConferenceLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-primary hover:underline break-all"
-                  >
-                    {job.videoConferenceLink}
-                  </a>
-                </div>
-              )}
-              {job.notes && (
-                <div>
-                  <p className="font-medium mb-1">Additional Notes</p>
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{job.notes}</p>
                 </div>
               )}
             </CardContent>
@@ -441,7 +243,7 @@ export default function SupplierJobDetail() {
           <EngineerLocationMap jobId={job.id} />
         )}
 
-        {/* Job Timeline */}
+        {/* Job Timeline - Audit Trail */}
         <JobTimelineWrapper jobId={job.id} currentStatus={job.status} />
       </div>
     </SupplierLayout>

@@ -10,6 +10,7 @@ import { Link, useParams } from "wouter";
 import { JobTimeline } from "@/components/JobTimeline";
 import { EngineerLocationMap } from "@/components/EngineerLocationMap";
 import { JobDetailCards } from "@/components/JobDetailCards";
+import { JobStatusProgress } from "@/components/JobStatusProgress";
 
 // Database status values
 type JobStatus = 
@@ -136,8 +137,8 @@ export default function CustomerJobDetail() {
           </Badge>
         </div>
 
-        {/* Job Timeline */}
-        <JobTimelineWrapper jobId={job.id} currentStatus={job.status} />
+        {/* Job Status Progress */}
+        <JobStatusProgress currentStatus={job.status} />
 
         {/* Shared Job Details */}
         <JobDetailCards job={job} viewerType="customer" />
@@ -167,6 +168,8 @@ export default function CustomerJobDetail() {
           <EngineerLocationMap jobId={job.id} />
         )}
 
+        {/* Job Timeline - Audit Trail */}
+        <JobTimelineWrapper jobId={job.id} currentStatus={job.status} />
 
         {/* Actions */}
         <div className="flex gap-3">
