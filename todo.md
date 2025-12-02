@@ -307,3 +307,9 @@
 - [x] Calculate and display estimated ETA
 - [x] Auto-refresh location every 30 seconds
 - [x] Test real-time updates
+
+## Phase 34: Remove Route Line from GPS Tracking
+- [x] Remove DirectionsRenderer from EngineerLocationMap
+- [x] Keep only pins (engineer and site) visible
+- [x] Keep ETA and distance calculation (but no visual route line)
+- [x] Test map display

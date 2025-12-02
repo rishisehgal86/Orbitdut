@@ -30,7 +30,6 @@ export function EngineerLocationMap({
   const mapRef = useRef<google.maps.Map | null>(null);
   const engineerMarkerRef = useRef<google.maps.Marker | null>(null);
   const siteMarkerRef = useRef<google.maps.Marker | null>(null);
-  const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
 
   // Only fetch location if engineer is en route or on site
   const shouldTrack = jobStatus === "en_route" || jobStatus === "on_site";
@@ -89,7 +88,7 @@ export function EngineerLocationMap({
       });
     }
 
-    // Calculate route using Directions API
+    // Calculate ETA using Directions API (no route line displayed)
     const directionsService = new google.maps.DirectionsService();
     
     directionsService.route(
@@ -100,22 +99,7 @@ export function EngineerLocationMap({
       },
       (result, status) => {
         if (status === google.maps.DirectionsStatus.OK && result) {
-          // Update or create directions renderer
-          if (!directionsRendererRef.current) {
-            directionsRendererRef.current = new google.maps.DirectionsRenderer({
-              map: mapRef.current!,
-              suppressMarkers: true, // We're using custom markers
-              polylineOptions: {
-                strokeColor: "#3B82F6",
-                strokeWeight: 4,
-                strokeOpacity: 0.7,
-              },
-            });
-          }
-          
-          directionsRendererRef.current.setDirections(result);
-
-          // Extract route info
+          // Extract route info for ETA calculation only
           const route = result.routes[0];
           if (route && route.legs[0]) {
             const leg = route.legs[0];
@@ -125,15 +109,15 @@ export function EngineerLocationMap({
               durationValue: leg.duration?.value || 0,
             });
           }
-
-          // Fit map to show both markers
-          const bounds = new google.maps.LatLngBounds();
-          bounds.extend({ lat: engineerLat, lng: engineerLng });
-          bounds.extend({ lat: siteLat, lng: siteLng });
-          mapRef.current?.fitBounds(bounds);
         }
       }
     );
+
+    // Fit map to show both markers
+    const bounds = new google.maps.LatLngBounds();
+    bounds.extend({ lat: engineerLat, lng: engineerLng });
+    bounds.extend({ lat: siteLat, lng: siteLng });
+    mapRef.current?.fitBounds(bounds);
   }, [latestLocation, siteLatitude, siteLongitude]);
 
   if (!shouldTrack) {
