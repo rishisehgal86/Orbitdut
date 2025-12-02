@@ -250,3 +250,15 @@
 - [x] Update engineer page to show job management interface when status is `engineer_accepted` or later (already implemented - shows full job management when status is beyond sent_to_engineer)
 - [x] Test self-claim workflow (should go directly to engineer_accepted)
 - [x] Test manual assignment workflow (should require engineer acceptance)
+
+## Phase 26: Fix Engineer Claim Job 500 Error
+- [x] Investigate claimJob procedure backend error causing 500 response
+- [x] Fix the error and test engineer claim workflow
+- [x] Verify email notification is sent after successful claim
+
+## Phase 27: Complete Engineer Job Management Interface
+- [x] Add job details display to engineer page after claim (job info, location, schedule)
+- [x] Add status update buttons (En Route, On Site, Complete Job)
+- [x] Add GPS tracking integration
+- [x] Add site visit report form
+- [x] Test complete engineer workflow end-to-end

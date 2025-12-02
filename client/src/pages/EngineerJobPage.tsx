@@ -317,7 +317,101 @@ export default function EngineerJobPage() {
       </header>
 
       <div className="container py-8 space-y-6">
-        {/* Job management interface content will go here */}
+        {/* Job Header */}
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">{job.serviceType}</h1>
+            <p className="text-muted-foreground">Job #{job.id}</p>
+          </div>
+          <Badge className="bg-green-100 text-green-800">
+            {job.status === 'engineer_accepted' && 'Accepted'}
+            {job.status === 'en_route' && 'En Route'}
+            {job.status === 'on_site' && 'On Site'}
+            {job.status === 'completed' && 'Completed'}
+          </Badge>
+        </div>
+
+        {/* Status Update Buttons */}
+        {job.status !== 'completed' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Update Job Status</CardTitle>
+              <CardDescription>Update your current status to keep the customer informed</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-3">
+                {job.status === 'engineer_accepted' && (
+                  <Button
+                    onClick={() => {
+                      captureCurrentLocation('en_route');
+                      updateStatusMutation.mutate({ token: token || "", status: 'en_route' });
+                      startTracking('en_route');
+                    }}
+                    disabled={updateStatusMutation.isPending}
+                    size="lg"
+                  >
+                    {updateStatusMutation.isPending ? (
+                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Updating...</>
+                    ) : (
+                      <><Navigation className="mr-2 h-4 w-4" /> I'm En Route</>
+                    )}
+                  </Button>
+                )}
+
+                {job.status === 'en_route' && (
+                  <Button
+                    onClick={() => {
+                      captureCurrentLocation('on_site');
+                      updateStatusMutation.mutate({ token: token || "", status: 'on_site' });
+                      startTracking('on_site');
+                    }}
+                    disabled={updateStatusMutation.isPending}
+                    size="lg"
+                  >
+                    {updateStatusMutation.isPending ? (
+                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Updating...</>
+                    ) : (
+                      <><Radio className="mr-2 h-4 w-4" /> I've Arrived On Site</>
+                    )}
+                  </Button>
+                )}
+
+                {job.status === 'on_site' && (
+                  <Button
+                    onClick={() => setShowReportForm(true)}
+                    size="lg"
+                  >
+                    <CheckCircle2 className="mr-2 h-4 w-4" /> Complete Job
+                  </Button>
+                )}
+              </div>
+              
+              {isTracking && (
+                <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                  GPS tracking active
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Site Visit Report Form */}
+        {showReportForm && (
+          <SiteVisitReportForm
+            jobId={job.id}
+            token={token || ""}
+            onSuccess={() => {
+              toast.success("Job completed successfully!");
+              refetch();
+              setShowReportForm(false);
+            }}
+            onCancel={() => setShowReportForm(false)}
+          />
+        )}
+
+        {/* Complete Job Details */}
+        <JobDetailCards job={job} viewerType="customer" showPricing={false} />
       </div>
     </div>
   );

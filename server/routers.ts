@@ -1385,7 +1385,7 @@ export const appRouter = router({
         });
 
         // Send email to engineer
-        const baseUrl = getBaseUrl(ctx.req);
+        const baseUrl = process.env.VITE_APP_URL || "http://localhost:3000";
         await sendJobAssignmentNotification({
           engineerEmail: input.engineerEmail,
           engineerName: input.engineerName,
@@ -1442,7 +1442,7 @@ export const appRouter = router({
         });
 
         // Send confirmation email to engineer
-        const baseUrl = getBaseUrl(ctx.req);
+        const baseUrl = process.env.VITE_APP_URL || "http://localhost:3000";
         await sendJobAssignmentNotification({
           engineerEmail: input.engineerEmail,
           engineerName: input.engineerName,
@@ -1495,7 +1495,7 @@ export const appRouter = router({
         });
 
         // Send confirmation email to engineer with updated details
-        const baseUrl = getBaseUrl(ctx.req);
+        const baseUrl = process.env.VITE_APP_URL || "http://localhost:3000";
         await sendJobAssignmentNotification({
           engineerEmail: input.engineerEmail,
           engineerName: input.engineerName,
