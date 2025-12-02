@@ -144,21 +144,34 @@ export default function CustomerJobDetail() {
         <JobDetailCards job={job} viewerType="customer" />
 
         {/* Engineer Information */}
-        {job.assignedSupplierId && (
+        {job.engineerName && (
           <Card>
             <CardHeader>
               <CardTitle>Assigned Engineer</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <div className="flex items-start gap-3">
                 <User className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium">Engineer ID: {job.assignedSupplierId}</p>
-                  <p className="text-sm text-muted-foreground">
-                    Your engineer has been assigned and will contact you shortly.
-                  </p>
+                  <p className="font-medium">{job.engineerName}</p>
+                  <p className="text-sm text-muted-foreground">{job.engineerEmail}</p>
                 </div>
               </div>
+
+              {job.engineerPhone && (
+                <div className="flex items-start gap-3">
+                  <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="font-medium">Phone</p>
+                    <a
+                      href={`tel:${job.engineerPhone}`}
+                      className="text-sm text-primary hover:underline"
+                    >
+                      {job.engineerPhone}
+                    </a>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}

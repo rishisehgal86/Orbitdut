@@ -202,3 +202,9 @@
 - [x] Update supplier job detail page with same layout structure (keeping supplier-specific features)
 - [x] Ensure both pages have identical formatting and component placement
 - [x] Test both portals show consistent layout
+
+## Phase 19: Fix Engineer Information Display
+- [x] Check why engineer info showing when no engineer assigned (was checking assignedSupplierId instead of engineerName)
+- [x] Fix conditional rendering in customer job detail page
+- [x] Fix conditional rendering in supplier job detail page (already correct from rewrite)
+- [x] Verify engineer info only shows when engineerName exists
