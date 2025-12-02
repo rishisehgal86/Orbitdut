@@ -181,3 +181,10 @@
 - [x] Create shared JobDetailCards component for common job information display
 - [x] Add viewerType prop to JobDetailCards to show different pricing (customer: price paid, supplier: amount received)
 - [x] Refactor customer and supplier job detail pages to use shared components
+
+## Phase 16: Fix Job Details Display and Timeline
+- [x] Debug why JobDetailCards component is not showing job details
+- [x] Fix job details rendering in customer portal (added null checks and fallbacks)
+- [x] Update JobTimeline to show actual timeline events with timestamps (component already has all status icons and labels)
+- [x] Ensure timeline displays all workflow transitions properly (fetches from jobStatusHistory table)
+- [x] Test both customer and supplier job detail pages

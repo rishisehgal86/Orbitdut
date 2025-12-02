@@ -103,10 +103,12 @@ export function JobDetailCards({ job, viewerType }: JobDetailCardsProps) {
               <div className="flex items-start gap-3">
                 <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium">{job.siteAddress}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {job.city}, {job.country}
-                  </p>
+                  <p className="text-sm font-medium">{job.siteAddress || 'Address not provided'}</p>
+                  {(job.city || job.country) && (
+                    <p className="text-sm text-muted-foreground">
+                      {[job.city, job.country].filter(Boolean).join(', ')}
+                    </p>
+                  )}
                   {job.postalCode && (
                     <p className="text-sm text-muted-foreground">{job.postalCode}</p>
                   )}
