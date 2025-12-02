@@ -117,8 +117,6 @@ export default function CustomerJobDetail() {
     );
   }
 
-  const currentStatusIndex = statusSteps.indexOf(job.status as JobStatus);
-
   return (
     <CustomerLayout>
       <div className="space-y-6">
