@@ -178,5 +178,6 @@
 - [x] Update status labels and descriptions to match new workflow
 - [x] Ensure timeline works correctly in both customer and supplier job detail pages
 - [x] Consolidate job progress bar (customer) and job status bar (supplier) to use same JobTimeline component
-- [ ] Create shared JobDetailCards component for common job information display
+- [x] Create shared JobDetailCards component for common job information display
+- [x] Add viewerType prop to JobDetailCards to show different pricing (customer: price paid, supplier: amount received)
 - [ ] Refactor customer and supplier job detail pages to use shared components

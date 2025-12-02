@@ -28,9 +28,21 @@ interface Job {
 
 interface JobDetailCardsProps {
   job: Job;
+  viewerType: 'customer' | 'supplier';
 }
 
-export function JobDetailCards({ job }: JobDetailCardsProps) {
+export function JobDetailCards({ job, viewerType }: JobDetailCardsProps) {
+  // Calculate pricing based on viewer type
+  // For customers: show full price they paid (calculatedPrice)
+  // For suppliers: show amount they receive (calculatedPrice - Orbidut margin)
+  // Assuming 15% Orbidut margin for now (can be made configurable)
+  const ORBIDUT_MARGIN_PERCENT = 15;
+  const customerPrice = job.calculatedPrice ?? 0;
+  const supplierAmount = viewerType === 'supplier' 
+    ? Math.round(customerPrice * (1 - ORBIDUT_MARGIN_PERCENT / 100))
+    : customerPrice;
+  const displayPrice = viewerType === 'customer' ? customerPrice : supplierAmount;
+  const hourlyRate = ((displayPrice / 100) / (job.estimatedDuration ?? 1)).toFixed(2);
   return (
     <>
       {/* Service Information & Location Grid */}
@@ -105,27 +117,46 @@ export function JobDetailCards({ job }: JobDetailCardsProps) {
 
           <Card>
             <CardHeader>
-              <CardTitle>Pricing Details</CardTitle>
+              <CardTitle>{viewerType === 'customer' ? 'Pricing Details' : 'Payment Details'}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Hourly Rate</span>
                 <span className="text-sm font-medium">
-                  {job.currency ?? "USD"} {(((job.calculatedPrice ?? 0) / 100) / (job.estimatedDuration ?? 1)).toFixed(2)}
+                  {job.currency ?? "USD"} {hourlyRate}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Duration</span>
                 <span className="text-sm font-medium">{job.estimatedDuration ?? 0} hours</span>
               </div>
+              {viewerType === 'supplier' && (
+                <>
+                  <Separator />
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Customer Price</span>
+                    <span className="text-sm font-medium">
+                      {job.currency ?? "USD"} {(customerPrice / 100).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Orbidut Margin ({ORBIDUT_MARGIN_PERCENT}%)</span>
+                    <span className="text-sm font-medium text-muted-foreground">
+                      -{job.currency ?? "USD"} {((customerPrice - supplierAmount) / 100).toFixed(2)}
+                    </span>
+                  </div>
+                </>
+              )}
               <Separator />
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   <DollarSign className="h-5 w-5 text-primary" />
-                  <span className="font-semibold">Total Price</span>
+                  <span className="font-semibold">
+                    {viewerType === 'customer' ? 'Total Price' : 'You Receive'}
+                  </span>
                 </div>
                 <span className="text-lg font-bold text-primary">
-                  {job.currency ?? "USD"} {((job.calculatedPrice ?? 0) / 100).toFixed(2)}
+                  {job.currency ?? "USD"} {(displayPrice / 100).toFixed(2)}
                 </span>
               </div>
             </CardContent>
