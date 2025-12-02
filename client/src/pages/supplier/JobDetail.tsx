@@ -27,12 +27,6 @@ import { JobTimeline } from "@/components/JobTimeline";
 import { EngineerLocationMap } from "@/components/EngineerLocationMap";
 import { JobDetailCards } from "@/components/JobDetailCards";
 
-const STATUS_FLOW = [
-  { key: "assigned_to_supplier", label: "Assigned", icon: CheckCircle },
-  { key: "en_route", label: "En Route", icon: Navigation },
-  { key: "on_site", label: "On Site", icon: MapPin },
-  { key: "completed", label: "Completed", icon: CheckCircle },
-];
 
 // Wrapper component for JobTimeline with data fetching
 function JobTimelineWrapper({ jobId, currentStatus }: { jobId: number; currentStatus: string }) {
@@ -104,16 +98,6 @@ export default function SupplierJobDetail() {
     });
   };
 
-  const getCurrentStatusIndex = () => {
-    if (!job) return -1;
-    return STATUS_FLOW.findIndex((s) => s.key === job.status);
-  };
-
-  const getNextStatus = () => {
-    const currentIndex = getCurrentStatusIndex();
-    if (currentIndex === -1 || currentIndex >= STATUS_FLOW.length - 1) return null;
-    return STATUS_FLOW[currentIndex + 1];
-  };
 
   if (isLoading) {
     return (
@@ -138,8 +122,6 @@ export default function SupplierJobDetail() {
     );
   }
 
-  const nextStatus = getNextStatus();
-  const currentStatusIndex = getCurrentStatusIndex();
 
   return (
     <SupplierLayout>
@@ -190,78 +172,6 @@ export default function SupplierJobDetail() {
           onSuccess={() => refetch()}
         />
 
-        {/* Status Progress */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Job Status</CardTitle>
-            <CardDescription>Track the progress of this job</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="relative">
-              {/* Progress Bar */}
-              <div className="absolute top-5 left-0 right-0 h-0.5 bg-muted">
-                <div
-                  className="h-full bg-primary transition-all duration-500"
-                  style={{
-                    width: `${(currentStatusIndex / (STATUS_FLOW.length - 1)) * 100}%`,
-                  }}
-                />
-              </div>
-
-              {/* Status Steps */}
-              <div className="relative flex justify-between">
-                {STATUS_FLOW.map((status, index) => {
-                  const Icon = status.icon;
-                  const isCompleted = index <= currentStatusIndex;
-                  const isCurrent = index === currentStatusIndex;
-
-                  return (
-                    <div key={status.key} className="flex flex-col items-center">
-                      <div
-                        className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all ${
-                          isCompleted
-                            ? "border-primary bg-primary text-primary-foreground"
-                            : "border-muted bg-background text-muted-foreground"
-                        } ${isCurrent ? "ring-4 ring-primary/20" : ""}`}
-                      >
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <span
-                        className={`mt-2 text-sm font-medium ${
-                          isCompleted ? "text-foreground" : "text-muted-foreground"
-                        }`}
-                      >
-                        {status.label}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {nextStatus && (
-              <div className="mt-6 flex justify-center">
-                <Button
-                  onClick={() => handleStatusUpdate(nextStatus.key)}
-                  disabled={updateStatus.isPending}
-                  size="lg"
-                >
-                  {updateStatus.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Updating...
-                    </>
-                  ) : (
-                    <>
-                      Mark as {nextStatus.label}
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </>
-                  )}
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
 
         {/* Job Details */}
         <div className="grid gap-6 md:grid-cols-2">

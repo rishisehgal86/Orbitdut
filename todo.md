@@ -188,3 +188,9 @@
 - [x] Update JobTimeline to show actual timeline events with timestamps (component already has all status icons and labels)
 - [x] Ensure timeline displays all workflow transitions properly (fetches from jobStatusHistory table)
 - [x] Test both customer and supplier job detail pages
+
+## Phase 17: Standardize Timeline Across Both Portals
+- [x] Remove old STATUS_FLOW progress bar from supplier job detail page
+- [x] Replace with JobTimeline component (same as customer portal - already present at bottom)
+- [x] Ensure both portals show identical timeline with complete workflow (both use JobTimelineWrapper)
+- [x] Test timeline display in both customer and supplier portals
