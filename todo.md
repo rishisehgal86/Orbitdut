@@ -262,3 +262,7 @@
 - [x] Add GPS tracking integration
 - [x] Add site visit report form
 - [x] Test complete engineer workflow end-to-end
+
+## Phase 28: Fix Customer Job Acceptance Error
+- [x] Fix customer Accept Job button calling wrong mutation (should call acceptJobAsSupplier, not acceptJob)
+- [x] Test customer job acceptance workflow
