@@ -1294,8 +1294,8 @@ export const appRouter = router({
         return { success: true };
       }),
 
-    // Accept available job
-    acceptJob: protectedProcedure
+    // Accept available job (supplier)
+    acceptJobAsSupplier: protectedProcedure
       .input(z.object({
         jobId: z.number(),
       }))
