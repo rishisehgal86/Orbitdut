@@ -236,3 +236,8 @@
 - [x] Update engineer claim page to use showPricing=false
 - [x] Move claim form to top of engineer page (after header, before job details)
 - [x] Verify engineer page shows job details without payment information
+
+## Phase 24: Add Email Notification to Self-Claim Workflow
+- [x] Update claimJob procedure to send confirmation email to engineer
+- [x] Include job details, site info, schedule, and engineer link in email
+- [x] Test self-claim workflow end-to-end with email delivery (dev server running successfully)

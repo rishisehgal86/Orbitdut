@@ -1408,8 +1408,9 @@ export const appRouter = router({
         engineerEmail: z.string().email("Valid email is required"),
         engineerPhone: z.string().optional(),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         const { getJobByEngineerToken, updateJob, addJobStatusHistory } = await import("./db");
+        const { sendJobAssignmentNotification } = await import("./_core/email");
 
         const job = await getJobByEngineerToken(input.token);
         if (!job) {
@@ -1438,6 +1439,19 @@ export const appRouter = router({
           jobId: job.id,
           status: 'sent_to_engineer',
           notes: `Job claimed by engineer ${input.engineerName} (${input.engineerEmail})`,
+        });
+
+        // Send confirmation email to engineer
+        const baseUrl = getBaseUrl(ctx.req);
+        await sendJobAssignmentNotification({
+          engineerEmail: input.engineerEmail,
+          engineerName: input.engineerName,
+          jobId: job.id,
+          siteName: job.siteName || "Site",
+          siteAddress: job.siteAddress,
+          scheduledDateTime: job.scheduledDateTime,
+          jobToken: input.token,
+          baseUrl,
         });
 
         return { success: true };
