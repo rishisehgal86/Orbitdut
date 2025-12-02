@@ -145,3 +145,16 @@
 
 ## Phase 12: Fix Job Timeline Backend Errors
 - [x] Fix getJobTimeline procedure to use correct field names (status instead of newStatus, timestamp instead of changedAt)
+
+## Phase 13: Implement Supplier Job Acceptance Workflow
+- [x] Research Field Pulse code for supplier job acceptance pattern
+- [x] Update database schema with new statuses (supplier_accepted, sent_to_engineer, engineer_accepted)
+- [x] Add backend procedure for supplier to accept available jobs (jobs.acceptJob)
+- [x] Update job status flow: pending_supplier_acceptance → supplier_accepted → sent_to_engineer (after engineer assigned)
+- [x] Update assignEngineer to require supplier_accepted status before assigning
+- [x] Fix mutation name from jobs.accept to jobs.acceptJob in supplier Jobs page
+- [x] Update getSupplierJobs to exclude pending_supplier_acceptance jobs
+- [x] Update dashboard metrics to reflect new status flow (Available Jobs + My Jobs)
+- [x] Update status enum in updateStatus procedure
+- [x] Add View Details button to Available Jobs for suppliers to review before accepting
+- [ ] Test complete workflow: Available → Accept → Assign Engineer → My Jobs

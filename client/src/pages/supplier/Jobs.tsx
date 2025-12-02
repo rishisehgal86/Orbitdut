@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
-import { Calendar, CheckCircle, Clock, DollarSign, Loader2, MapPin } from "lucide-react";
+import { Calendar, CheckCircle, Clock, DollarSign, Eye, Loader2, MapPin } from "lucide-react";
 import { Link } from "wouter";
 import { toast } from "sonner";
 
@@ -14,7 +14,7 @@ export default function SupplierJobs() {
     trpc.jobs.getAvailableForSupplier.useQuery();
   const { data: myJobs, isLoading: loadingMy, refetch: refetchMy } =
     trpc.jobs.getSupplierJobs.useQuery();
-  const acceptJob = trpc.jobs.accept.useMutation();
+  const acceptJob = trpc.jobs.acceptJob.useMutation();
 
   const handleAcceptJob = async (jobId: number) => {
     try {
@@ -176,22 +176,30 @@ export default function SupplierJobs() {
                       <div className="text-sm text-muted-foreground">
                         Customer: {job.customerName}
                       </div>
-                      <Button
-                        onClick={() => handleAcceptJob(job.id)}
-                        disabled={acceptJob.isPending}
-                      >
-                        {acceptJob.isPending ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Accepting...
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle className="mr-2 h-4 w-4" />
-                            Accept Job
-                          </>
-                        )}
-                      </Button>
+                      <div className="flex gap-2">
+                        <Link href={`/supplier/jobs/${job.id}`}>
+                          <Button variant="outline">
+                            <Eye className="mr-2 h-4 w-4" />
+                            View Details
+                          </Button>
+                        </Link>
+                        <Button
+                          onClick={() => handleAcceptJob(job.id)}
+                          disabled={acceptJob.isPending}
+                        >
+                          {acceptJob.isPending ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Accepting...
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle className="mr-2 h-4 w-4" />
+                              Accept Job
+                            </>
+                          )}
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

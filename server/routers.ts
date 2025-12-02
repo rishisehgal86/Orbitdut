@@ -1186,7 +1186,7 @@ export const appRouter = router({
         const { getSupplierByUserId } = await import("./db");
         const { getDb } = await import("./db");
         const { jobs } = await import("../drizzle/schema");
-        const { eq } = await import("drizzle-orm");
+        const { eq, and, ne } = await import("drizzle-orm");
 
         const supplier = await getSupplierByUserId(ctx.user.id);
         if (!supplier) return [];
@@ -1194,10 +1194,17 @@ export const appRouter = router({
         const db = await getDb();
         if (!db) return [];
 
+        // Get jobs assigned to this supplier, excluding pending_supplier_acceptance
+        // (those appear in Available Jobs tab)
         const supplierJobs = await db
           .select()
           .from(jobs)
-          .where(eq(jobs.assignedSupplierId, supplier.supplier.id));
+          .where(
+            and(
+              eq(jobs.assignedSupplierId, supplier.supplier.id),
+              ne(jobs.status, 'pending_supplier_acceptance')
+            )
+          );
 
         return supplierJobs;
       }),
@@ -1207,7 +1214,7 @@ export const appRouter = router({
       .input(
         z.object({
           jobId: z.number(),
-          status: z.enum(["assigned_to_supplier", "en_route", "on_site", "completed"]),
+          status: z.enum(["supplier_accepted", "sent_to_engineer", "engineer_accepted", "en_route", "on_site", "completed"]),
         })
       )
       .mutation(async ({ input, ctx }) => {
@@ -1287,6 +1294,45 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    // Accept available job
+    acceptJob: protectedProcedure
+      .input(z.object({
+        jobId: z.number(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { getJobById, addJobStatusHistory, updateJob, getSupplierByUserId } = await import("./db");
+
+        const job = await getJobById(input.jobId);
+        if (!job) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Job not found' });
+        }
+
+        // Verify job is available for acceptance
+        if (job.status !== 'pending_supplier_acceptance') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Job is not available for acceptance' });
+        }
+
+        // Get supplier info
+        const supplier = await getSupplierByUserId(ctx.user.id);
+        if (!supplier) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'You must be a supplier to accept jobs' });
+        }
+
+        // Update job status and assign to supplier
+        await updateJob(job.id, {
+          status: 'supplier_accepted',
+          assignedSupplierId: supplier.supplier.id,
+        });
+
+        await addJobStatusHistory({
+          jobId: job.id,
+          status: 'supplier_accepted',
+          notes: `Job accepted by ${supplier.supplier.companyName}`,
+        });
+
+        return { success: true };
+      }),
+
     // Assign engineer to job
     assignEngineer: protectedProcedure
       .input(z.object({
@@ -1303,6 +1349,11 @@ export const appRouter = router({
         const job = await getJobById(input.jobId);
         if (!job) {
           throw new TRPCError({ code: 'NOT_FOUND', message: 'Job not found' });
+        }
+
+        // Verify job has been accepted by supplier
+        if (job.status !== 'supplier_accepted') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Job must be accepted before assigning an engineer' });
         }
 
         // Ensure only the assigned supplier can assign an engineer

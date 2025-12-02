@@ -293,14 +293,15 @@ export const jobs = mysqlTable("jobs", {
   
   // Job Status
   status: mysqlEnum("status", [
-    "pending_supplier_acceptance",
-    "assigned_to_supplier",
-    "accepted",
-    "declined",
-    "en_route",
-    "on_site",
-    "completed",
-    "cancelled"
+    "pending_supplier_acceptance",  // Available for suppliers to accept
+    "supplier_accepted",            // Supplier accepted, pending engineer assignment
+    "sent_to_engineer",             // Sent to engineer via token link
+    "engineer_accepted",            // Engineer accepted the job
+    "declined",                     // Supplier or engineer declined
+    "en_route",                     // Engineer traveling to site
+    "on_site",                      // Engineer arrived on site
+    "completed",                    // Job finished
+    "cancelled"                     // Job cancelled
   ]).default("pending_supplier_acceptance").notNull(),
   
   // Engineer/Technician Information
