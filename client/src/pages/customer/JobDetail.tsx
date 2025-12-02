@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { trpc } from "@/lib/trpc";
-import { ArrowLeft, Calendar, CheckCircle, Clock, DollarSign, FileText, MapPin, User } from "lucide-react";
+import { ArrowLeft, Calendar, CheckCircle, Clock, DollarSign, FileText, MapPin, Phone, User } from "lucide-react";
 import { Link, useParams } from "wouter";
 import { JobTimeline } from "@/components/JobTimeline";
 import { EngineerLocationMap } from "@/components/EngineerLocationMap";

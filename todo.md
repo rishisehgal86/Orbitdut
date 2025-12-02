@@ -278,3 +278,13 @@
 - [x] Verify token generation works for all job statuses
 - [x] Ensure engineer page loads correctly with valid tokens
 - [x] Test complete workflow end-to-end
+
+## Phase 31: Fix Engineer Email Links
+- [x] Set VITE_APP_URL environment variable to production domain
+- [x] Test email link generation uses correct domain
+- [x] Verify all email notifications use production URLs
+
+## Phase 32: Fix Customer Job Page Error
+- [x] Fix ReferenceError: Phone variable undefined in CustomerJobDetail
+- [x] Test customer job detail pages
+- [x] Verify all customer pages load correctly
