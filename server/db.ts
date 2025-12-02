@@ -439,7 +439,7 @@ export async function getJobByEngineerToken(token: string) {
     .where(eq(jobs.engineerToken, token))
     .limit(1);
   
-  return job;
+  return job || null;
 }
 
 /**
