@@ -1,0 +1,30 @@
+{
+  "query": "SELECT id, serviceType, status, siteAddress, customerName, customerEmail, assignedSupplierId, scheduledDateTime FROM jobs WHERE id IN (1, 2) ORDER BY id",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT id, serviceType, status, siteAddress, customerName, customerEmail, assignedSupplierId, scheduledDateTime FROM jobs WHERE id IN (1, 2) ORDER BY id",
+  "rows": [
+    {
+      "id": "1",
+      "serviceType": "L1_EUC",
+      "status": "pending_supplier_acceptance",
+      "siteAddress": "123 Tech Street, San Francisco, CA 94105",
+      "customerName": "John Doe",
+      "customerEmail": "john.doe@example.com",
+      "assignedSupplierId": "NULL",
+      "scheduledDateTime": "2025-01-15 17:00:00"
+    },
+    {
+      "id": "2",
+      "serviceType": "L1_NETWORK",
+      "status": "pending_supplier_acceptance",
+      "siteAddress": "456 Simple St, New York, NY 10001",
+      "customerName": "Minimal Test",
+      "customerEmail": "minimal@example.com",
+      "assignedSupplierId": "NULL",
+      "scheduledDateTime": "2025-01-20 19:00:00"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tserviceType\tstatus\tsiteAddress\tcustomerName\tcustomerEmail\tassignedSupplierId\tscheduledDateTime\n1\tL1_EUC\tpending_supplier_acceptance\t123 Tech Street, San Francisco, CA 94105\tJohn Doe\tjohn.doe@example.com\tNULL\t2025-01-15 17:00:00\n2\tL1_NETWORK\tpending_supplier_acceptance\t456 Simple St, New York, NY 10001\tMinimal Test\tminimal@example.com\tNULL\t2025-01-20 19:00:00\n",
+  "stderr": "",
+  "execution_time_ms": 89
+}

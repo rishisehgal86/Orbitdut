@@ -126,3 +126,22 @@
 - [ ] Add timezone display next to time picker (deferred - timezone API needs fix first)
 - [ ] Add success/error toast notifications (deferred)
 - [ ] Test all UX improvements in browser
+
+## Phase 9: Fix Supplier Dashboard Statistics
+- [x] Fix supplier dashboard to show real job counts instead of hardcoded zeros
+
+## Phase 10: Fix Job Timeline Display
+- [ ] Verify JobTimeline component is imported and rendered in customer job detail page
+- [ ] Verify JobTimeline component is imported and rendered in supplier job detail page
+- [ ] Test timeline displays all status changes with timestamps
+
+## Phase 11: Display All Job Details
+- [x] Add Site Access & Requirements section to customer job detail page
+- [x] Add Project & Ticket Information section to customer job detail page
+- [x] Add Site Contact section to customer job detail page
+- [x] Add Communication section (video conference link) to customer job detail page
+- [x] Add all missing sections to supplier job detail page
+- [x] Ensure all fields from job request form are visible in both portals
+
+## Phase 12: Fix Job Timeline Backend Errors
+- [x] Fix getJobTimeline procedure to use correct field names (status instead of newStatus, timestamp instead of changedAt)

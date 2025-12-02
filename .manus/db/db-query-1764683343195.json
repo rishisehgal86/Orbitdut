@@ -1,0 +1,26 @@
+{
+  "query": "SELECT \n  j.id, \n  j.serviceType, \n  j.status, \n  j.siteAddress, \n  j.customerName,\n  j.assignedSupplierId\nFROM jobs j\nWHERE j.assignedSupplierId = (\n  SELECT su.supplierId \n  FROM users u \n  JOIN supplierUsers su ON u.id = su.userId \n  WHERE u.email = '12@supplier.com' \n  LIMIT 1\n)\nORDER BY j.id",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT \n  j.id, \n  j.serviceType, \n  j.status, \n  j.siteAddress, \n  j.customerName,\n  j.assignedSupplierId\nFROM jobs j\nWHERE j.assignedSupplierId = (\n  SELECT su.supplierId \n  FROM users u \n  JOIN supplierUsers su ON u.id = su.userId \n  WHERE u.email = '12@supplier.com' \n  LIMIT 1\n)\nORDER BY j.id",
+  "rows": [
+    {
+      "id": "30001",
+      "serviceType": "Level 1 End User Compute Engineer",
+      "status": "assigned_to_supplier",
+      "siteAddress": "Transputec House, Wembley HA0, UK",
+      "customerName": "Tester",
+      "assignedSupplierId": "240001"
+    },
+    {
+      "id": "90001",
+      "serviceType": "L1 Network Engineer",
+      "status": "assigned_to_supplier",
+      "siteAddress": "123 Main St, San Francisco, CA 94105, USA",
+      "customerName": "Test Customer",
+      "assignedSupplierId": "240001"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tserviceType\tstatus\tsiteAddress\tcustomerName\tassignedSupplierId\n30001\tLevel 1 End User Compute Engineer\tassigned_to_supplier\tTransputec House, Wembley HA0, UK\tTester\t240001\n90001\tL1 Network Engineer\tassigned_to_supplier\t123 Main St, San Francisco, CA 94105, USA\tTest Customer\t240001\n",
+  "stderr": "",
+  "execution_time_ms": 61
+}

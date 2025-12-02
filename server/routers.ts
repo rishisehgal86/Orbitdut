@@ -1730,7 +1730,7 @@ export const appRouter = router({
           .select()
           .from(jobStatusHistory)
           .where(eq(jobStatusHistory.jobId, input.jobId))
-          .orderBy(jobStatusHistory.changedAt);
+          .orderBy(jobStatusHistory.timestamp);
 
         // Get GPS locations for milestone events
         const locations = await db
@@ -1746,25 +1746,25 @@ export const appRouter = router({
         const events = statusHistory.map((event, index) => {
           // Find matching GPS location
           const location = locations.find(loc => 
-            Math.abs(new Date(loc.timestamp).getTime() - new Date(event.changedAt).getTime()) < 60000 // Within 1 minute
+            Math.abs(new Date(loc.timestamp).getTime() - new Date(event.timestamp).getTime()) < 60000 // Within 1 minute
           );
 
           // Calculate duration in this status (time until next status change)
           let duration: number | undefined;
           if (index < statusHistory.length - 1) {
             const nextEvent = statusHistory[index + 1];
-            const durationMs = new Date(nextEvent.changedAt).getTime() - new Date(event.changedAt).getTime();
+            const durationMs = new Date(nextEvent.timestamp).getTime() - new Date(event.timestamp).getTime();
             duration = Math.floor(durationMs / 60000); // Convert to minutes
-          } else if (job.status === event.newStatus) {
+          } else if (job.status === event.status) {
             // Still in this status - calculate duration until now
-            const durationMs = Date.now() - new Date(event.changedAt).getTime();
+            const durationMs = Date.now() - new Date(event.timestamp).getTime();
             duration = Math.floor(durationMs / 60000);
           }
 
           return {
             id: event.id,
-            status: event.newStatus,
-            timestamp: event.changedAt,
+            status: event.status,
+            timestamp: event.timestamp,
             notes: event.notes,
             latitude: location?.latitude,
             longitude: location?.longitude,

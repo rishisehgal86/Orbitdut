@@ -1,0 +1,42 @@
+{
+  "query": "SELECT \n  id, \n  customerEmail,\n  serviceType,\n  status,\n  assignedSupplierId,\n  SUBSTRING(siteAddress, 1, 40) as location\nFROM jobs \nWHERE customerEmail = '12@customer.com' OR id IN (1, 2, 30001, 90001)\nORDER BY id",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT \n  id, \n  customerEmail,\n  serviceType,\n  status,\n  assignedSupplierId,\n  SUBSTRING(siteAddress, 1, 40) as location\nFROM jobs \nWHERE customerEmail = '12@customer.com' OR id IN (1, 2, 30001, 90001)\nORDER BY id",
+  "rows": [
+    {
+      "id": "1",
+      "customerEmail": "john.doe@example.com",
+      "serviceType": "L1_EUC",
+      "status": "pending_supplier_acceptance",
+      "assignedSupplierId": "NULL",
+      "location": "123 Tech Street, San Francisco, CA 94105"
+    },
+    {
+      "id": "2",
+      "customerEmail": "minimal@example.com",
+      "serviceType": "L1_NETWORK",
+      "status": "pending_supplier_acceptance",
+      "assignedSupplierId": "NULL",
+      "location": "456 Simple St, New York, NY 10001"
+    },
+    {
+      "id": "30001",
+      "customerEmail": "12@customer.com",
+      "serviceType": "Level 1 End User Compute Engineer",
+      "status": "assigned_to_supplier",
+      "assignedSupplierId": "240001",
+      "location": "Transputec House, Wembley HA0, UK"
+    },
+    {
+      "id": "90001",
+      "customerEmail": "12@customer.com",
+      "serviceType": "L1 Network Engineer",
+      "status": "assigned_to_supplier",
+      "assignedSupplierId": "240001",
+      "location": "123 Main St, San Francisco, CA 94105, US"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcustomerEmail\tserviceType\tstatus\tassignedSupplierId\tlocation\n1\tjohn.doe@example.com\tL1_EUC\tpending_supplier_acceptance\tNULL\t123 Tech Street, San Francisco, CA 94105\n2\tminimal@example.com\tL1_NETWORK\tpending_supplier_acceptance\tNULL\t456 Simple St, New York, NY 10001\n30001\t12@customer.com\tLevel 1 End User Compute Engineer\tassigned_to_supplier\t240001\tTransputec House, Wembley HA0, UK\n90001\t12@customer.com\tL1 Network Engineer\tassigned_to_supplier\t240001\t123 Main St, San Francisco, CA 94105, US\n",
+  "stderr": "",
+  "execution_time_ms": 58
+}

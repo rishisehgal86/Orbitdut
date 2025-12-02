@@ -292,6 +292,135 @@ export default function CustomerJobDetail() {
           </div>
         </div>
 
+        {/* Additional Details Grid */}
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Site Contact */}
+          {(job.siteContactName || job.siteContactNumber) && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Site Contact</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {job.siteContactName && (
+                  <div className="flex items-start gap-3">
+                    <User className="h-5 w-5 text-muted-foreground mt-0.5" />
+                    <div>
+                      <p className="font-medium">Contact Name</p>
+                      <p className="text-sm text-muted-foreground">{job.siteContactName}</p>
+                    </div>
+                  </div>
+                )}
+                {job.siteContactNumber && (
+                  <div className="flex items-start gap-3">
+                    <User className="h-5 w-5 text-muted-foreground mt-0.5" />
+                    <div>
+                      <p className="font-medium">Contact Number</p>
+                      <p className="text-sm text-muted-foreground">{job.siteContactNumber}</p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Project & Ticket Information */}
+          {(job.projectName || job.changeNumber || job.incidentNumber) && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Project & Ticket Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {job.projectName && (
+                  <div className="flex items-start gap-3">
+                    <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
+                    <div>
+                      <p className="font-medium">Project Name</p>
+                      <p className="text-sm text-muted-foreground">{job.projectName}</p>
+                    </div>
+                  </div>
+                )}
+                {job.changeNumber && (
+                  <div className="flex items-start gap-3">
+                    <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
+                    <div>
+                      <p className="font-medium">Change Number</p>
+                      <p className="text-sm text-muted-foreground">{job.changeNumber}</p>
+                    </div>
+                  </div>
+                )}
+                {job.incidentNumber && (
+                  <div className="flex items-start gap-3">
+                    <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
+                    <div>
+                      <p className="font-medium">Incident Number</p>
+                      <p className="text-sm text-muted-foreground">{job.incidentNumber}</p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {/* Site Access & Requirements */}
+        {(job.accessInstructions || job.specialRequirements || job.equipmentNeeded) && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Site Access & Requirements</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {job.accessInstructions && (
+                <div>
+                  <p className="font-medium mb-1">Access Instructions</p>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{job.accessInstructions}</p>
+                </div>
+              )}
+              {job.specialRequirements && (
+                <div>
+                  <p className="font-medium mb-1">Special Requirements</p>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{job.specialRequirements}</p>
+                </div>
+              )}
+              {job.equipmentNeeded && (
+                <div>
+                  <p className="font-medium mb-1">Equipment Needed</p>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{job.equipmentNeeded}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Communication */}
+        {(job.videoConferenceLink || job.notes) && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Communication</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {job.videoConferenceLink && (
+                <div>
+                  <p className="font-medium mb-1">Video Conference Link</p>
+                  <a
+                    href={job.videoConferenceLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:underline break-all"
+                  >
+                    {job.videoConferenceLink}
+                  </a>
+                </div>
+              )}
+              {job.notes && (
+                <div>
+                  <p className="font-medium mb-1">Additional Notes</p>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{job.notes}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Engineer Information */}
         {job.assignedSupplierId && (
           <Card>
