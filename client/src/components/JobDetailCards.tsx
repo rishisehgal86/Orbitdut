@@ -66,7 +66,14 @@ export function JobDetailCards({ job, viewerType }: JobDetailCardsProps) {
               <div>
                 <p className="text-sm font-medium">Scheduled Date & Time</p>
                 <p className="text-sm text-muted-foreground">
-                  {job.scheduledDateTime ? new Date(job.scheduledDateTime).toLocaleString() : "Not scheduled"}
+                  {job.scheduledDateTime ? (
+                    <>
+                      {new Date(job.scheduledDateTime).toLocaleString()}
+                      <span className="text-xs ml-1">
+                        ({new Date(job.scheduledDateTime).toLocaleString('en-US', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit', hour12: false })} UTC)
+                      </span>
+                    </>
+                  ) : "Not scheduled"}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Local time at service location

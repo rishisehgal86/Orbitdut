@@ -217,3 +217,8 @@
 - [x] Update JobTimeline component to show local time (primary) + UTC (secondary)
 - [x] Format: "Dec 2, 2025 3:30 PM (15:30 UTC)"
 - [x] Verify dual timezone display on both customer and supplier job detail pages
+
+## Phase 21: Add Dual Timezone to Scheduled Date & Time
+- [x] Update JobDetailCards scheduled datetime to show service location time + UTC
+- [x] Format: "18/12/2025, 14:30:00 (14:30 UTC)" + "Local time at service location" label
+- [x] Verify display in both customer and supplier portals
