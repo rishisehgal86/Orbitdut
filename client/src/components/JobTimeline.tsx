@@ -124,7 +124,8 @@ export function JobTimeline({ events, currentStatus }: JobTimelineProps) {
                     {formatStatus(event.status)}
                   </Badge>
                   <span className="text-sm text-muted-foreground">
-                    {new Date(event.timestamp).toLocaleString()}
+                    {new Date(event.timestamp).toLocaleString()} 
+                    <span className="text-xs">({new Date(event.timestamp).toLocaleString('en-US', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit', hour12: false })} UTC)</span>
                   </span>
                 </div>
 

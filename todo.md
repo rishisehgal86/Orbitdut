@@ -208,3 +208,12 @@
 - [x] Fix conditional rendering in customer job detail page
 - [x] Fix conditional rendering in supplier job detail page (already correct from rewrite)
 - [x] Verify engineer info only shows when engineerName exists
+
+## Phase 20: Add UTC Markers to Timeline Timestamps
+- [ ] Update JobTimeline component to show UTC markers on all timestamps
+- [ ] Verify UTC markers appear on both customer and supplier job detail pages
+
+## Phase 20: Add Dual Timezone Display to Timeline
+- [x] Update JobTimeline component to show local time (primary) + UTC (secondary)
+- [x] Format: "Dec 2, 2025 3:30 PM (15:30 UTC)"
+- [x] Verify dual timezone display on both customer and supplier job detail pages
