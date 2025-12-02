@@ -19,9 +19,12 @@ export default function EngineerJobPage() {
   const [engineerEmail, setEngineerEmail] = useState("");
   const [engineerPhone, setEngineerPhone] = useState("");
 
-  const { data: job, isLoading, refetch } = trpc.jobs.getByEngineerToken.useQuery(
+  const { data: job, isLoading, error, refetch } = trpc.jobs.getByEngineerToken.useQuery(
     { token: token || "" },
-    { enabled: !!token }
+    { 
+      enabled: !!token,
+      retry: false // Don't retry on error
+    }
   );
 
   const claimJobMutation = trpc.jobs.claimJob.useMutation({
@@ -176,8 +179,33 @@ export default function EngineerJobPage() {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
 
+  if (!token) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <h2 className="text-2xl font-bold">Invalid Link</h2>
+          <p className="text-muted-foreground">The engineer job link is missing or invalid.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!job && !isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <h2 className="text-2xl font-bold">Job Not Available</h2>
+          <p className="text-muted-foreground">
+            This job link is not yet active. The supplier needs to accept the job first before you can claim it.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Type guard: ensure job is defined
   if (!job) {
-    return <div className="min-h-screen flex items-center justify-center">Job not found or link is invalid.</div>;
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
 
   // Show claim/accept form if job hasn't been accepted by engineer yet

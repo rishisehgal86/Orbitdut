@@ -266,3 +266,8 @@
 ## Phase 28: Fix Customer Job Acceptance Error
 - [x] Fix customer Accept Job button calling wrong mutation (should call acceptJobAsSupplier, not acceptJob)
 - [x] Test customer job acceptance workflow
+
+## Phase 29: Fix Engineer Link Error for Jobs Without Engineer Token
+- [x] Fix EngineerJobPage to handle null/invalid tokens gracefully
+- [x] Show appropriate message when job hasn't been accepted by supplier yet
+- [x] Test with jobs in different states
