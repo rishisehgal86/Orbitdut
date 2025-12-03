@@ -501,3 +501,6 @@
 
 - [x] Fix duration display in supplier jobs list to show hours and minutes format (e.g., "2h 0m" instead of "120 minutes")
 - [x] Add site name, duration, and payment details to My Jobs cards
+
+## Phase 55: Simplify Request Service Form
+- [x] Remove booking type field from customer request service form (only hourly bookings supported)

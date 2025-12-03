@@ -459,27 +459,7 @@ export default function RequestService() {
                 />
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="bookingType">Booking Type</Label>
-                  <Select
-                    value={formData.bookingType}
-                    onValueChange={(value: "full_day" | "hourly" | "multi_day") =>
-                      setFormData({ ...formData, bookingType: value })
-                    }
-                  >
-                    <SelectTrigger id="bookingType">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="hourly">Hourly</SelectItem>
-                      <SelectItem value="full_day">Full Day</SelectItem>
-                      <SelectItem value="multi_day">Multi-Day</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex items-center space-x-2 pt-8">
+              <div className="flex items-center space-x-2">
                   <input
                     type="checkbox"
                     id="downTime"
@@ -493,7 +473,6 @@ export default function RequestService() {
                     🚨 Urgent - Causing Downtime
                   </Label>
                 </div>
-              </div>
             </CardContent>
           </Card>
 
