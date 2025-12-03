@@ -554,3 +554,9 @@
 - [x] Add pin marker to show exact service location on map
 - [x] Make service location section clickable to open map popup
 - [x] Test map popup on supplier job details pages - tested with Job #210004 (New York) and Job #210003 (Dubai), both working perfectly
+
+## Phase 66: Reorganize Job Details Page Layout
+- [x] Review current section order in job details page
+- [x] Make Customer Information, Engineer Link, and Assigned Engineer half-width (2 columns) while maintaining current order
+- [x] Keep Job Status, Service Information, and Job Timeline full-width
+- [x] Test responsive layout on Job #210004 - working correctly with better space utilization
