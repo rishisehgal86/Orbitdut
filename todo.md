@@ -560,3 +560,7 @@
 - [x] Make Customer Information, Engineer Link, and Assigned Engineer half-width (2 columns) while maintaining current order
 - [x] Keep Job Status, Service Information, and Job Timeline full-width
 - [x] Test responsive layout on Job #210004 - working correctly with better space utilization
+
+## Phase 67: Make Site Contact and Assigned Engineer Side-by-Side
+- [x] Move Site Contact and Assigned Engineer into same responsive 2-column grid
+- [x] Test responsive layout - working correctly with md:grid-cols-2 (mobile: stacked, desktop: side-by-side)

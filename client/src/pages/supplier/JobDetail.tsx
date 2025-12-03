@@ -250,41 +250,6 @@ export default function SupplierJobDetail() {
         {/* Shared Job Details */}
         <JobDetailCards job={job} viewerType="supplier" />
 
-        {/* Assigned Engineer - Half Width */}
-        {job.engineerName && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Assigned Engineer</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <User className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="font-medium">{job.engineerName}</p>
-                    <p className="text-sm text-muted-foreground">{job.engineerEmail}</p>
-                  </div>
-                </div>
-
-                {job.engineerPhone && (
-                  <div className="flex items-start gap-3">
-                    <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="font-medium">Phone</p>
-                      <a
-                        href={`tel:${job.engineerPhone}`}
-                        className="text-sm text-primary hover:underline"
-                      >
-                        {job.engineerPhone}
-                      </a>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
         {/* Engineer Location Tracking */}
         {(job.status === "en_route" || job.status === "on_site") && (
           <EngineerLocationMap 

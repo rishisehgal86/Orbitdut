@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Calendar, Clock, DollarSign, FileText, MapPin, User, Link2 } from "lucide-react";
+import { Calendar, Clock, DollarSign, FileText, MapPin, User, Link2, Phone } from "lucide-react";
 import { LocationMapDialog } from "@/components/LocationMapDialog";
 import { useState } from "react";
 
@@ -29,6 +29,9 @@ interface Job {
   equipmentNeeded?: string | null;
   videoConferenceLink?: string | null;
   notes?: string | null;
+  engineerName?: string | null;
+  engineerEmail?: string | null;
+  engineerPhone?: string | null;
 }
 
 interface JobDetailCardsProps {
@@ -255,6 +258,39 @@ export function JobDetailCards({ job, viewerType, showPricing = true }: JobDetai
                   <div>
                     <p className="font-medium">Contact Number</p>
                     <p className="text-sm text-muted-foreground">{job.siteContactNumber}</p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Assigned Engineer */}
+        {job.engineerName && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Assigned Engineer</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-start gap-3">
+                <User className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="font-medium">{job.engineerName}</p>
+                  <p className="text-sm text-muted-foreground">{job.engineerEmail}</p>
+                </div>
+              </div>
+
+              {job.engineerPhone && (
+                <div className="flex items-start gap-3">
+                  <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="font-medium">Phone</p>
+                    <a
+                      href={`tel:${job.engineerPhone}`}
+                      className="text-sm text-primary hover:underline"
+                    >
+                      {job.engineerPhone}
+                    </a>
                   </div>
                 </div>
               )}
