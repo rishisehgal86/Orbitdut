@@ -411,3 +411,12 @@
 - [x] Check supplier job detail page to find where engineer link should be displayed
 - [x] Add engineer link display for jobs in 'sent_to_engineer' status
 - [ ] Test the display in supplier portal
+
+## Phase 50: Fix Time Tracking Display to Show All Three Fields
+- [x] Identified issue: timeLeftSite was looking for completed status before it was created
+- [x] Fixed submitSiteVisitReport to use current timestamp as timeLeftSite (when report is submitted)
+- [x] Verified SiteVisitReport component displays all three fields correctly:
+  * Arrived On Site (from on_site status history)
+  * Left Site (from report submission time)
+  * Total Time On Site (calculated duration)
+- [x] Time tracking now shows complete information with local and UTC timestamps

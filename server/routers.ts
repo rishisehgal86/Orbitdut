@@ -1839,14 +1839,16 @@ export const appRouter = router({
           throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
         }
 
-        // Get on-site and completed timestamps from status history
+        // Get on-site timestamp from status history
         const statusHistory = await db
           .select()
           .from(jobStatusHistory)
           .where(eq(jobStatusHistory.jobId, job.id));
 
         const onSiteEntry = statusHistory.find(h => h.status === 'on_site');
-        const completedEntry = statusHistory.find(h => h.status === 'completed');
+        
+        // Use current timestamp as "left site" time since submitting the report means the job is complete
+        const currentTime = new Date();
 
         // Create site visit report - map form fields to database schema
         const reportData = {
@@ -1854,7 +1856,7 @@ export const appRouter = router({
           visitDate: new Date(),
           engineerName: job.engineerName || 'Unknown Engineer',
           timeOnsite: onSiteEntry?.timestamp ? new Date(onSiteEntry.timestamp).toISOString() : null,
-          timeLeftSite: completedEntry?.timestamp ? new Date(completedEntry.timestamp).toISOString() : null,
+          timeLeftSite: currentTime.toISOString(), // Current time = when engineer left site
           issueFault: input.findings || null,
           actionsPerformed: input.workCompleted,
           recommendations: input.recommendations || null,
