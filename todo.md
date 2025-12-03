@@ -492,3 +492,12 @@
 - [x] Calculate and display actual working time (total time - pause time)
 - [x] Update site visit report to show pause summary
 - [x] Test pause/resume workflow
+
+
+## Phase 54: Fix Supplier Job Access Issue
+- [ ] Debug getJobDetails procedure to check supplier access control
+- [ ] Fix supplier access verification for assigned jobs
+- [ ] Test supplier can view job details after assignment
+
+- [x] Fix duration display in supplier jobs list to show hours and minutes format (e.g., "2h 0m" instead of "120 minutes")
+- [x] Add site name, duration, and payment details to My Jobs cards
