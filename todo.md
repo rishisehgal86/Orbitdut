@@ -420,3 +420,45 @@
   * Left Site (from report submission time)
   * Total Time On Site (calculated duration)
 - [x] Time tracking now shows complete information with local and UTC timestamps
+
+
+## SHORT-TERM PRIORITY TASKS
+
+### 1. Check Complete Workflow End-to-End
+- [ ] Test customer job creation flow
+- [ ] Test supplier job acceptance
+- [ ] Test engineer assignment (both manual and self-claim)
+- [ ] Test engineer status updates (en route → on site → completed)
+- [ ] Test site visit report submission with new time tracking
+- [ ] Verify all three time fields display correctly (arrived, left, total duration)
+- [ ] Check email notifications at each step
+- [ ] Verify timeline shows all status changes
+
+### 2. Add Print Facility for Completed Jobs
+- [ ] Add "Print Report" button to site visit report display
+- [ ] Create printable PDF layout for site visit reports including:
+  * Job details (service type, location, scheduled time)
+  * Engineer information
+  * Time tracking (arrived, left, total duration)
+  * Findings, actions performed, recommendations
+  * Customer signature
+  * Photos
+- [ ] Implement PDF generation (consider using jsPDF or similar)
+- [ ] Add print button to both customer and supplier job detail pages
+- [ ] Style PDF for professional appearance
+- [ ] Test printing functionality
+
+### 3. Add On-Site Pause Button for Engineers
+- [ ] Add "Pause" and "Resume" buttons to engineer job page when status is "on_site"
+- [ ] Create pauseTracking and resumeTracking tRPC procedures
+- [ ] Add jobTimePauses table to track pause periods:
+  * jobId, pausedAt, resumedAt, reason (optional)
+- [ ] Update timeline to show pause periods visually
+- [ ] Calculate actual working time (total time - pause time)
+- [ ] Display pause history in job timeline
+- [ ] Update site visit report to show:
+  * Total time on site
+  * Total pause time
+  * Actual working time
+- [ ] Add visual indicator when job is paused (orange/amber status)
+- [ ] Test pause/resume functionality with GPS tracking
