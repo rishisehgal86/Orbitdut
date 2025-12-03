@@ -8,6 +8,7 @@ interface Job {
   scheduledDateTime?: Date | null;
   estimatedDuration?: number | null;
   description?: string | null;
+  siteName?: string | null;
   siteAddress?: string | null;
   city?: string | null;
   country?: string | null;
@@ -111,6 +112,7 @@ export function JobDetailCards({ job, viewerType, showPricing = true }: JobDetai
               <div className="flex items-start gap-3">
                 <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div>
+                  {job.siteName && <p className="text-sm font-semibold mb-1">{job.siteName}</p>}
                   <p className="text-sm font-medium">{job.siteAddress || 'Address not provided'}</p>
                   {(job.city || job.country) && (
                     <p className="text-sm text-muted-foreground">

@@ -508,3 +508,7 @@
 ## Phase 56: Fix Site Name Not Being Saved
 - [x] Fix job creation procedure to save siteName field to database
 - [x] Add siteName display to Available Jobs tab in supplier portal
+
+## Phase 57: Add Site Name to Job Detail Pages
+- [x] Add siteName display to supplier job detail page Service Location section
+- [x] Add siteName display to customer job detail page Service Location section
