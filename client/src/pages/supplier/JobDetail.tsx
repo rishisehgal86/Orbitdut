@@ -135,7 +135,7 @@ export default function SupplierJobDetail() {
         </div>
 
         {/* Engineer Assignment Buttons (Supplier-specific) */}
-        {!job.engineerName && job.status === "supplier_accepted" && (
+        {!job.engineerName && (job.status === "supplier_accepted" || job.status === "sent_to_engineer") && (
           <Card>
             <CardHeader>
               <CardTitle>Assign Engineer</CardTitle>

@@ -5,6 +5,8 @@ interface SiteVisitReportData {
   id: number;
   visitDate: Date;
   engineerName: string;
+  timeOnsite?: string | null;
+  timeLeftSite?: string | null;
   issueFault?: string | null;
   actionsPerformed: string;
   recommendations?: string | null;
@@ -34,6 +36,43 @@ export function SiteVisitReport({ report }: SiteVisitReportProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Time Tracking */}
+        {(report.timeOnsite || report.timeLeftSite) && (
+          <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg space-y-3">
+            <h3 className="font-semibold text-sm text-blue-900 dark:text-blue-100">Engineer On-Site Time</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              {report.timeOnsite && (
+                <div>
+                  <p className="font-medium text-blue-800 dark:text-blue-200">Arrived On Site</p>
+                  <p className="text-blue-700 dark:text-blue-300 mt-1">Local: {new Date(report.timeOnsite).toLocaleString()}</p>
+                  <p className="text-blue-600 dark:text-blue-400 text-xs">UTC: {new Date(report.timeOnsite).toUTCString()}</p>
+                </div>
+              )}
+              {report.timeLeftSite && (
+                <div>
+                  <p className="font-medium text-blue-800 dark:text-blue-200">Left Site</p>
+                  <p className="text-blue-700 dark:text-blue-300 mt-1">Local: {new Date(report.timeLeftSite).toLocaleString()}</p>
+                  <p className="text-blue-600 dark:text-blue-400 text-xs">UTC: {new Date(report.timeLeftSite).toUTCString()}</p>
+                </div>
+              )}
+            </div>
+            {report.timeOnsite && report.timeLeftSite && (
+              <div className="pt-2 border-t border-blue-200 dark:border-blue-800">
+                <p className="font-medium text-blue-800 dark:text-blue-200">Total Time On Site</p>
+                <p className="text-blue-700 dark:text-blue-300 mt-1">
+                  {(() => {
+                    const start = new Date(report.timeOnsite);
+                    const end = new Date(report.timeLeftSite);
+                    const diffMs = end.getTime() - start.getTime();
+                    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                    return `${hours}h ${minutes}m`;
+                  })()}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
         {/* Visit Information */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>

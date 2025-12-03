@@ -397,3 +397,16 @@
 - [x] Add recommendations field to SiteVisitReport component interface
 - [x] Add recommendations display section to the component
 - [ ] Test the display in job details page
+
+## Phase 48: Add Time Tracking Display for Completed Jobs
+- [ ] Check database schema for timeOnsite and timeLeftSite fields in site visit report
+- [ ] Create time tracking display component showing arrival, departure, and duration
+- [ ] Display times in both local site time and UTC
+- [ ] Only show for completed jobs (jobs with site visit reports)
+- [ ] Add to both customer and supplier job detail pages
+- [ ] Test the display
+
+## Phase 49: Add Engineer Link Display for Sent to Engineer Status
+- [x] Check supplier job detail page to find where engineer link should be displayed
+- [x] Add engineer link display for jobs in 'sent_to_engineer' status
+- [ ] Test the display in supplier portal

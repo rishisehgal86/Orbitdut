@@ -1826,7 +1826,7 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const { getJobByEngineerToken } = await import("./db");
         const { getDb } = await import("./db");
-        const { siteVisitReports, svrMediaFiles } = await import("../drizzle/schema");
+        const { siteVisitReports, svrMediaFiles, jobStatusHistory } = await import("../drizzle/schema");
         const { eq, desc } = await import("drizzle-orm");
 
         const job = await getJobByEngineerToken(input.token);
@@ -1839,11 +1839,22 @@ export const appRouter = router({
           throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
         }
 
+        // Get on-site and completed timestamps from status history
+        const statusHistory = await db
+          .select()
+          .from(jobStatusHistory)
+          .where(eq(jobStatusHistory.jobId, job.id));
+
+        const onSiteEntry = statusHistory.find(h => h.status === 'on_site');
+        const completedEntry = statusHistory.find(h => h.status === 'completed');
+
         // Create site visit report - map form fields to database schema
         const reportData = {
           jobId: job.id,
           visitDate: new Date(),
           engineerName: job.engineerName || 'Unknown Engineer',
+          timeOnsite: onSiteEntry?.timestamp ? new Date(onSiteEntry.timestamp).toISOString() : null,
+          timeLeftSite: completedEntry?.timestamp ? new Date(completedEntry.timestamp).toISOString() : null,
           issueFault: input.findings || null,
           actionsPerformed: input.workCompleted,
           recommendations: input.recommendations || null,
@@ -1932,7 +1943,7 @@ export const appRouter = router({
         }
 
         // Update job status to completed
-        const { jobs, jobStatusHistory } = await import("../drizzle/schema");
+        const { jobs } = await import("../drizzle/schema");
         
         await db
           .update(jobs)
