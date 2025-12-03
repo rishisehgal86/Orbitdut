@@ -132,6 +132,7 @@ export default function SupplierJobs() {
                       <div className="flex items-start gap-2">
                         <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
                         <div className="text-sm">
+                          {job.siteName && <p className="font-semibold">{job.siteName}</p>}
                           <p className="font-medium">{job.siteAddress}</p>
                           <p className="text-muted-foreground">
                             {job.city}, {job.postalCode}

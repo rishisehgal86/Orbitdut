@@ -1,0 +1,22 @@
+{
+  "query": "SELECT id, siteName, CHAR_LENGTH(siteName) as name_length, siteName IS NULL as is_null FROM jobs WHERE id IN (210001, 210002)",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT id, siteName, CHAR_LENGTH(siteName) as name_length, siteName IS NULL as is_null FROM jobs WHERE id IN (210001, 210002)",
+  "rows": [
+    {
+      "id": "210001",
+      "siteName": "sahara ",
+      "name_length": "7",
+      "is_null": "0"
+    },
+    {
+      "id": "210002",
+      "siteName": "Paatchi",
+      "name_length": "7",
+      "is_null": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tsiteName\tname_length\tis_null\n210001\tsahara \t7\t0\n210002\tPaatchi\t7\t0\n",
+  "stderr": "",
+  "execution_time_ms": 61
+}

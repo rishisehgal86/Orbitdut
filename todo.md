@@ -504,3 +504,7 @@
 
 ## Phase 55: Simplify Request Service Form
 - [x] Remove booking type field from customer request service form (only hourly bookings supported)
+
+## Phase 56: Fix Site Name Not Being Saved
+- [x] Fix job creation procedure to save siteName field to database
+- [x] Add siteName display to Available Jobs tab in supplier portal
