@@ -1,5 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, XCircle, FileText, Image as ImageIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CheckCircle2, XCircle, FileText, Image as ImageIcon, Printer } from "lucide-react";
+import { jsPDF } from "jspdf";
 
 interface SiteVisitReportData {
   id: number;
@@ -27,13 +29,162 @@ interface SiteVisitReportProps {
 }
 
 export function SiteVisitReport({ report }: SiteVisitReportProps) {
+  const handlePrint = async () => {
+    const pdf = new jsPDF();
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 20;
+    let yPos = margin;
+
+    // Header
+    pdf.setFontSize(20);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Site Visit Report", pageWidth / 2, yPos, { align: "center" });
+    yPos += 15;
+
+    // Visit Date and Engineer
+    pdf.setFontSize(10);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(`Visit Date: ${new Date(report.visitDate).toLocaleString()}`, margin, yPos);
+    yPos += 6;
+    pdf.text(`Engineer: ${report.engineerName}`, margin, yPos);
+    yPos += 10;
+
+    // Time Tracking Section
+    if (report.timeOnsite || report.timeLeftSite) {
+      pdf.setFontSize(12);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Engineer On-Site Time", margin, yPos);
+      yPos += 8;
+      pdf.setFontSize(10);
+      pdf.setFont("helvetica", "normal");
+      
+      if (report.timeOnsite) {
+        pdf.text(`Arrived On Site: ${new Date(report.timeOnsite).toLocaleString()}`, margin + 5, yPos);
+        yPos += 5;
+        pdf.setFontSize(8);
+        pdf.text(`UTC: ${new Date(report.timeOnsite).toUTCString()}`, margin + 5, yPos);
+        yPos += 7;
+        pdf.setFontSize(10);
+      }
+      
+      if (report.timeLeftSite) {
+        pdf.text(`Left Site: ${new Date(report.timeLeftSite).toLocaleString()}`, margin + 5, yPos);
+        yPos += 5;
+        pdf.setFontSize(8);
+        pdf.text(`UTC: ${new Date(report.timeLeftSite).toUTCString()}`, margin + 5, yPos);
+        yPos += 7;
+        pdf.setFontSize(10);
+      }
+      
+      if (report.timeOnsite && report.timeLeftSite) {
+        const start = new Date(report.timeOnsite);
+        const end = new Date(report.timeLeftSite);
+        const diffMs = end.getTime() - start.getTime();
+        const hours = Math.floor(diffMs / (1000 * 60 * 60));
+        const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+        pdf.setFont("helvetica", "bold");
+        pdf.text(`Total Time On Site: ${hours}h ${minutes}m`, margin + 5, yPos);
+        pdf.setFont("helvetica", "normal");
+        yPos += 10;
+      }
+    }
+
+    // Issue/Fault Found
+    if (report.issueFault) {
+      pdf.setFontSize(12);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Issue/Fault Found", margin, yPos);
+      yPos += 8;
+      pdf.setFontSize(10);
+      pdf.setFont("helvetica", "normal");
+      const issueLines = pdf.splitTextToSize(report.issueFault, pageWidth - 2 * margin);
+      pdf.text(issueLines, margin + 5, yPos);
+      yPos += issueLines.length * 5 + 5;
+    }
+
+    // Actions Performed
+    pdf.setFontSize(12);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Actions Performed", margin, yPos);
+    yPos += 8;
+    pdf.setFontSize(10);
+    pdf.setFont("helvetica", "normal");
+    const actionsLines = pdf.splitTextToSize(report.actionsPerformed, pageWidth - 2 * margin);
+    pdf.text(actionsLines, margin + 5, yPos);
+    yPos += actionsLines.length * 5 + 5;
+
+    // Recommendations
+    if (report.recommendations) {
+      pdf.setFontSize(12);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Recommendations", margin, yPos);
+      yPos += 8;
+      pdf.setFontSize(10);
+      pdf.setFont("helvetica", "normal");
+      const recLines = pdf.splitTextToSize(report.recommendations, pageWidth - 2 * margin);
+      pdf.text(recLines, margin + 5, yPos);
+      yPos += recLines.length * 5 + 5;
+    }
+
+    // Status
+    pdf.setFontSize(10);
+    pdf.setFont("helvetica", "bold");
+    pdf.text(`Issue Resolved: ${report.issueResolved ? "Yes" : "No"}`, margin, yPos);
+    yPos += 6;
+    pdf.text(`Customer Agreed to Work: ${report.contactAgreed ? "Yes" : "No"}`, margin, yPos);
+    yPos += 10;
+
+    // Signature
+    if (report.clientSignatureData) {
+      pdf.setFontSize(12);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Customer Signature", margin, yPos);
+      yPos += 8;
+      
+      try {
+        pdf.addImage(report.clientSignatureData, "PNG", margin, yPos, 60, 20);
+        yPos += 25;
+      } catch (e) {
+        console.error("Error adding signature to PDF:", e);
+      }
+      
+      if (report.clientSignatory) {
+        pdf.setFontSize(9);
+        pdf.setFont("helvetica", "normal");
+        pdf.text(`Signed by: ${report.clientSignatory}`, margin, yPos);
+        yPos += 5;
+      }
+      if (report.signedAt) {
+        pdf.text(`Date: ${new Date(report.signedAt).toLocaleString()}`, margin, yPos);
+        yPos += 10;
+      }
+    }
+
+    // Photos note
+    if (report.photos && report.photos.length > 0) {
+      pdf.setFontSize(10);
+      pdf.setFont("helvetica", "italic");
+      pdf.text(`${report.photos.length} photo(s) attached to this report`, margin, yPos);
+    }
+
+    // Save PDF
+    pdf.save(`site-visit-report-${report.id}.pdf`);
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="h-5 w-5" />
-          Site Visit Report
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Site Visit Report
+          </CardTitle>
+          <Button onClick={handlePrint} variant="outline" size="sm" className="gap-2">
+            <Printer className="h-4 w-4" />
+            Print Report
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Time Tracking */}
