@@ -167,8 +167,8 @@ export default function SupplierJobDetail() {
           </Card>
         )}
 
-        {/* Engineer Link Display (for all statuses after supplier_accepted) */}
-        {job.status !== "pending_supplier_acceptance" && job.status !== "supplier_accepted" && job.shortCode && (
+        {/* Engineer Link Display (for all statuses after supplier accepts) */}
+        {job.status !== "pending_supplier_acceptance" && job.shortCode && (
           <Card>
             <CardHeader>
               <CardTitle>Engineer Link</CardTitle>
