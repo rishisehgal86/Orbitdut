@@ -561,3 +561,22 @@ export const svrMediaFiles = mysqlTable("svrMediaFiles", {
 
 export type SvrMediaFile = typeof svrMediaFiles.$inferSelect;
 export type InsertSvrMediaFile = typeof svrMediaFiles.$inferInsert;
+
+/**
+ * Job Time Pauses - tracks when engineers pause/resume work during on-site visits
+ */
+export const jobTimePauses = mysqlTable("jobTimePauses", {
+  id: int("id").autoincrement().primaryKey(),
+  jobId: int("jobId").notNull().references(() => jobs.id, { onDelete: "cascade" }),
+  
+  pausedAt: timestamp("pausedAt").notNull(),
+  resumedAt: timestamp("resumedAt"),
+  reason: text("reason"), // Optional reason for pause (e.g., "Lunch break", "Waiting for parts")
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => ({
+  jobIdIdx: index("jobTimePauses_jobId_idx").on(table.jobId),
+}));
+
+export type JobTimePause = typeof jobTimePauses.$inferSelect;
+export type InsertJobTimePause = typeof jobTimePauses.$inferInsert;

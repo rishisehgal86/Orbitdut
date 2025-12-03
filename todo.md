@@ -479,3 +479,16 @@
 - [x] Add company tagline/footer
 - [x] Format header with professional layout
 - [x] Test branded PDF output
+
+
+## Phase 53: Implement Pause/Resume Tracking for Engineers
+- [x] Create jobTimePauses table in database schema (jobId, pausedAt, resumedAt, reason)
+- [x] Run database migration
+- [x] Create pauseWork tRPC procedure
+- [x] Create resumeWork tRPC procedure
+- [x] Add Pause/Resume buttons to engineer job page (visible when on_site)
+- [x] Add visual indicator when job is paused
+- [x] Update JobTimeline to display pause periods
+- [x] Calculate and display actual working time (total time - pause time)
+- [x] Update site visit report to show pause summary
+- [x] Test pause/resume workflow

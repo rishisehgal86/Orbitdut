@@ -1850,6 +1850,30 @@ export const appRouter = router({
         // Use current timestamp as "left site" time since submitting the report means the job is complete
         const currentTime = new Date();
 
+        // Get all pause periods for this job
+        const { jobTimePauses } = await import("../drizzle/schema");
+        const pausePeriods = await db
+          .select()
+          .from(jobTimePauses)
+          .where(eq(jobTimePauses.jobId, job.id));
+
+        // Calculate total pause time in milliseconds
+        const totalPauseMs = pausePeriods.reduce((total, pause) => {
+          if (pause.pausedAt && pause.resumedAt) {
+            const pauseDuration = new Date(pause.resumedAt).getTime() - new Date(pause.pausedAt).getTime();
+            return total + pauseDuration;
+          }
+          return total;
+        }, 0);
+
+        // Calculate total time on site and working time
+        let totalTimeMs = 0;
+        let workingTimeMs = 0;
+        if (onSiteEntry?.timestamp) {
+          totalTimeMs = currentTime.getTime() - new Date(onSiteEntry.timestamp).getTime();
+          workingTimeMs = totalTimeMs - totalPauseMs;
+        }
+
         // Create site visit report - map form fields to database schema
         const reportData = {
           jobId: job.id,
@@ -1964,12 +1988,139 @@ export const appRouter = router({
         return { success: true, reportId: reportId };
       }),
 
+    // Pause work (engineer takes a break)
+    pauseWork: publicProcedure
+      .input(z.object({
+        token: z.string(),
+        reason: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { getJobByEngineerToken } = await import("./db");
+        const { getDb } = await import("./db");
+        const { jobTimePauses } = await import("../drizzle/schema");
+        const { eq, and, isNull } = await import("drizzle-orm");
+
+        const job = await getJobByEngineerToken(input.token);
+        if (!job) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Job not found' });
+        }
+
+        // Check if job is on_site
+        if (job.status !== 'on_site') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Can only pause when on site' });
+        }
+
+        const db = await getDb();
+        if (!db) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        }
+
+        // Check if there's already an active pause (resumedAt is null)
+        const [activePause] = await db
+          .select()
+          .from(jobTimePauses)
+          .where(and(
+            eq(jobTimePauses.jobId, job.id),
+            isNull(jobTimePauses.resumedAt)
+          ))
+          .limit(1);
+
+        if (activePause) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Work is already paused' });
+        }
+
+        // Create new pause record
+        await db.insert(jobTimePauses).values({
+          jobId: job.id,
+          pausedAt: new Date(),
+          reason: input.reason || null,
+        });
+
+        return { success: true };
+      }),
+
+    // Resume work (engineer returns from break)
+    resumeWork: publicProcedure
+      .input(z.object({
+        token: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const { getJobByEngineerToken } = await import("./db");
+        const { getDb } = await import("./db");
+        const { jobTimePauses } = await import("../drizzle/schema");
+        const { eq, and, isNull } = await import("drizzle-orm");
+
+        const job = await getJobByEngineerToken(input.token);
+        if (!job) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Job not found' });
+        }
+
+        const db = await getDb();
+        if (!db) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        }
+
+        // Find the active pause (resumedAt is null)
+        const [activePause] = await db
+          .select()
+          .from(jobTimePauses)
+          .where(and(
+            eq(jobTimePauses.jobId, job.id),
+            isNull(jobTimePauses.resumedAt)
+          ))
+          .limit(1);
+
+        if (!activePause) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'No active pause to resume' });
+        }
+
+        // Update pause record with resume time
+        await db
+          .update(jobTimePauses)
+          .set({ resumedAt: new Date() })
+          .where(eq(jobTimePauses.id, activePause.id));
+
+        return { success: true };
+      }),
+
+    // Get pause status for a job
+    getPauseStatus: publicProcedure
+      .input(z.object({ token: z.string() }))
+      .query(async ({ input }) => {
+        const { getJobByEngineerToken } = await import("./db");
+        const { getDb } = await import("./db");
+        const { jobTimePauses } = await import("../drizzle/schema");
+        const { eq, and, isNull } = await import("drizzle-orm");
+
+        const job = await getJobByEngineerToken(input.token);
+        if (!job) return { isPaused: false };
+
+        const db = await getDb();
+        if (!db) return { isPaused: false };
+
+        // Check for active pause
+        const [activePause] = await db
+          .select()
+          .from(jobTimePauses)
+          .where(and(
+            eq(jobTimePauses.jobId, job.id),
+            isNull(jobTimePauses.resumedAt)
+          ))
+          .limit(1);
+
+        return {
+          isPaused: !!activePause,
+          pausedAt: activePause?.pausedAt || null,
+          reason: activePause?.reason || null,
+        };
+      }),
+
     // Get site visit report by job ID
     getSiteVisitReport: protectedProcedure
       .input(z.object({ jobId: z.number() }))
       .query(async ({ input, ctx }) => {
         const { getDb } = await import("./db");
-        const { jobs, siteVisitReports, svrMediaFiles, supplierUsers } = await import("../drizzle/schema");
+        const { jobs, siteVisitReports, svrMediaFiles, supplierUsers, jobTimePauses } = await import("../drizzle/schema");
         const { eq, and } = await import("drizzle-orm");
 
         const db = await getDb();
@@ -2022,7 +2173,37 @@ export const appRouter = router({
           .from(svrMediaFiles)
           .where(eq(svrMediaFiles.svrId, report.id));
 
-        return { ...report, mediaFiles };
+        // Get pause periods for this job
+        const pausePeriods = await db
+          .select()
+          .from(jobTimePauses)
+          .where(eq(jobTimePauses.jobId, input.jobId));
+
+        // Calculate total pause time
+        const totalPauseMs = pausePeriods.reduce((total, pause) => {
+          if (pause.pausedAt && pause.resumedAt) {
+            const pauseDuration = new Date(pause.resumedAt).getTime() - new Date(pause.pausedAt).getTime();
+            return total + pauseDuration;
+          }
+          return total;
+        }, 0);
+
+        // Calculate total time and working time
+        let totalTimeMs = 0;
+        let workingTimeMs = 0;
+        if (report.timeOnsite && report.timeLeftSite) {
+          totalTimeMs = new Date(report.timeLeftSite).getTime() - new Date(report.timeOnsite).getTime();
+          workingTimeMs = totalTimeMs - totalPauseMs;
+        }
+
+        return { 
+          ...report, 
+          mediaFiles, 
+          pausePeriods,
+          totalTimeMs,
+          totalPauseMs,
+          workingTimeMs
+        };
       }),
 
     // Get job timeline with status history and GPS locations
@@ -2030,7 +2211,7 @@ export const appRouter = router({
       .input(z.object({ jobId: z.number() }))
       .query(async ({ ctx, input }) => {
         const { getDb } = await import("./db");
-        const { jobs, jobStatusHistory, jobLocations } = await import("../drizzle/schema");
+        const { jobs, jobStatusHistory, jobLocations, jobTimePauses } = await import("../drizzle/schema");
         const { eq, and, desc } = await import("drizzle-orm");
         const db = await getDb();
         if (!db) throw new Error("Database not available");
@@ -2083,6 +2264,13 @@ export const appRouter = router({
           ))
           .orderBy(jobLocations.timestamp);
 
+        // Get pause periods
+        const pausePeriods = await db
+          .select()
+          .from(jobTimePauses)
+          .where(eq(jobTimePauses.jobId, input.jobId))
+          .orderBy(jobTimePauses.pausedAt);
+
         // Build timeline events with duration calculations
         const events = statusHistory.map((event, index) => {
           // Find matching GPS location
@@ -2113,7 +2301,7 @@ export const appRouter = router({
           };
         });
 
-        return { events, currentStatus: job.status };
+        return { events, currentStatus: job.status, pausePeriods };
       }),
   }),
 });

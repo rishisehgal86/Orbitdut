@@ -9,6 +9,15 @@ interface SiteVisitReportData {
   engineerName: string;
   timeOnsite?: string | null;
   timeLeftSite?: string | null;
+  totalTimeMs?: number;
+  totalPauseMs?: number;
+  workingTimeMs?: number;
+  pausePeriods?: Array<{
+    id: number;
+    pausedAt: Date;
+    resumedAt?: Date | null;
+    reason?: string | null;
+  }>;
   issueFault?: string | null;
   actionsPerformed: string;
   recommendations?: string | null;
@@ -97,15 +106,31 @@ export function SiteVisitReport({ report }: SiteVisitReportProps) {
       }
       
       if (report.timeOnsite && report.timeLeftSite) {
-        const start = new Date(report.timeOnsite);
-        const end = new Date(report.timeLeftSite);
-        const diffMs = end.getTime() - start.getTime();
+        const diffMs = report.totalTimeMs || (new Date(report.timeLeftSite).getTime() - new Date(report.timeOnsite).getTime());
         const hours = Math.floor(diffMs / (1000 * 60 * 60));
         const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
         pdf.setFont("helvetica", "bold");
         pdf.text(`Total Time On Site: ${hours}h ${minutes}m`, margin + 5, yPos);
+        yPos += 5;
+        
+        if (report.totalPauseMs && report.totalPauseMs > 0) {
+          const pauseHours = Math.floor(report.totalPauseMs / (1000 * 60 * 60));
+          const pauseMinutes = Math.floor((report.totalPauseMs % (1000 * 60 * 60)) / (1000 * 60));
+          pdf.setFont("helvetica", "normal");
+          pdf.text(`Time Paused (Breaks): ${pauseHours}h ${pauseMinutes}m`, margin + 5, yPos);
+          yPos += 5;
+        }
+        
+        if (report.workingTimeMs) {
+          const workHours = Math.floor(report.workingTimeMs / (1000 * 60 * 60));
+          const workMinutes = Math.floor((report.workingTimeMs % (1000 * 60 * 60)) / (1000 * 60));
+          pdf.setFont("helvetica", "bold");
+          pdf.text(`Actual Working Time: ${workHours}h ${workMinutes}m`, margin + 5, yPos);
+          yPos += 5;
+        }
+        
         pdf.setFont("helvetica", "normal");
-        yPos += 10;
+        yPos += 5;
       }
     }
 
@@ -235,18 +260,42 @@ export function SiteVisitReport({ report }: SiteVisitReportProps) {
               )}
             </div>
             {report.timeOnsite && report.timeLeftSite && (
-              <div className="pt-2 border-t border-blue-200 dark:border-blue-800">
-                <p className="font-medium text-blue-800 dark:text-blue-200">Total Time On Site</p>
-                <p className="text-blue-700 dark:text-blue-300 mt-1">
-                  {(() => {
-                    const start = new Date(report.timeOnsite);
-                    const end = new Date(report.timeLeftSite);
-                    const diffMs = end.getTime() - start.getTime();
-                    const hours = Math.floor(diffMs / (1000 * 60 * 60));
-                    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-                    return `${hours}h ${minutes}m`;
-                  })()}
-                </p>
+              <div className="pt-2 border-t border-blue-200 dark:border-blue-800 space-y-2">
+                <div>
+                  <p className="font-medium text-blue-800 dark:text-blue-200">Total Time On Site</p>
+                  <p className="text-blue-700 dark:text-blue-300 mt-1">
+                    {(() => {
+                      const diffMs = report.totalTimeMs || (new Date(report.timeLeftSite).getTime() - new Date(report.timeOnsite).getTime());
+                      const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                      return `${hours}h ${minutes}m`;
+                    })()}
+                  </p>
+                </div>
+                {report.totalPauseMs && report.totalPauseMs > 0 && (
+                  <div>
+                    <p className="font-medium text-amber-800 dark:text-amber-200">Time Paused (Breaks)</p>
+                    <p className="text-amber-700 dark:text-amber-300 mt-1">
+                      {(() => {
+                        const hours = Math.floor(report.totalPauseMs / (1000 * 60 * 60));
+                        const minutes = Math.floor((report.totalPauseMs % (1000 * 60 * 60)) / (1000 * 60));
+                        return `${hours}h ${minutes}m`;
+                      })()}
+                    </p>
+                  </div>
+                )}
+                {report.workingTimeMs && (
+                  <div>
+                    <p className="font-medium text-green-800 dark:text-green-200">Actual Working Time</p>
+                    <p className="text-green-700 dark:text-green-300 mt-1">
+                      {(() => {
+                        const hours = Math.floor(report.workingTimeMs / (1000 * 60 * 60));
+                        const minutes = Math.floor((report.workingTimeMs % (1000 * 60 * 60)) / (1000 * 60));
+                        return `${hours}h ${minutes}m`;
+                      })()}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>

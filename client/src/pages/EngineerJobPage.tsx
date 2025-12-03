@@ -4,7 +4,7 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, MapPin, Clock, CheckCircle2, Navigation, XCircle, Radio, User, Mail, Phone as PhoneIcon, Briefcase } from "lucide-react";
+import { Loader2, MapPin, Clock, CheckCircle2, Navigation, XCircle, Radio, User, Mail, Phone as PhoneIcon, Briefcase, Pause, Play } from "lucide-react";
 import { toast } from "sonner";
 import { SiteVisitReportForm } from "@/components/SiteVisitReportForm";
 import { JobDetailCards } from "@/components/JobDetailCards";
@@ -25,6 +25,11 @@ export default function EngineerJobPage() {
       enabled: !!token,
       retry: false // Don't retry on error
     }
+  );
+
+  const { data: pauseStatus, refetch: refetchPauseStatus } = trpc.jobs.getPauseStatus.useQuery(
+    { token: token || "" },
+    { enabled: !!token && job?.status === 'on_site' }
   );
 
   const claimJobMutation = trpc.jobs.claimJob.useMutation({
@@ -60,6 +65,26 @@ export default function EngineerJobPage() {
   const addLocationMutation = trpc.jobs.addLocationByToken.useMutation({
     onError: (error) => {
       console.error("Failed to save location:", error);
+    },
+  });
+
+  const pauseWorkMutation = trpc.jobs.pauseWork.useMutation({
+    onSuccess: () => {
+      toast.success("Work paused");
+      refetchPauseStatus();
+    },
+    onError: (error) => {
+      toast.error(`Failed to pause: ${error.message}`);
+    },
+  });
+
+  const resumeWorkMutation = trpc.jobs.resumeWork.useMutation({
+    onSuccess: () => {
+      toast.success("Work resumed");
+      refetchPauseStatus();
+    },
+    onError: (error) => {
+      toast.error(`Failed to resume: ${error.message}`);
     },
   });
 
@@ -418,12 +443,56 @@ export default function EngineerJobPage() {
                 )}
 
                 {job.status === 'on_site' && (
-                  <Button
-                    onClick={() => setShowReportForm(true)}
-                    size="lg"
-                  >
-                    <CheckCircle2 className="mr-2 h-4 w-4" /> Complete Job
-                  </Button>
+                  <>
+                    <div className="flex gap-2">
+                      {pauseStatus?.isPaused ? (
+                        <Button
+                          onClick={() => resumeWorkMutation.mutate({ token: token || "" })}
+                          variant="outline"
+                          size="lg"
+                          className="flex-1"
+                        >
+                          {resumeWorkMutation.isPending ? (
+                            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Resuming...</>
+                          ) : (
+                            <><Play className="mr-2 h-4 w-4" /> Resume Work</>
+                          )}
+                        </Button>
+                      ) : (
+                        <Button
+                          onClick={() => pauseWorkMutation.mutate({ token: token || "" })}
+                          variant="outline"
+                          size="lg"
+                          className="flex-1"
+                        >
+                          {pauseWorkMutation.isPending ? (
+                            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Pausing...</>
+                          ) : (
+                            <><Pause className="mr-2 h-4 w-4" /> Pause Work</>
+                          )}
+                        </Button>
+                      )}
+                      <Button
+                        onClick={() => setShowReportForm(true)}
+                        size="lg"
+                        className="flex-1"
+                        disabled={pauseStatus?.isPaused}
+                      >
+                        <CheckCircle2 className="mr-2 h-4 w-4" /> Complete Job
+                      </Button>
+                    </div>
+                    {pauseStatus?.isPaused && (
+                      <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-md">
+                        <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
+                          <Pause className="h-4 w-4" />
+                          <span className="font-medium">Work is paused</span>
+                        </div>
+                        <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                          Paused at {pauseStatus.pausedAt ? new Date(pauseStatus.pausedAt).toLocaleTimeString() : ''}
+                        </p>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
               
