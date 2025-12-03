@@ -526,3 +526,7 @@
 - [x] Fix "Estimated Duration" in Service Information section (showing "180 hours" instead of "3h")
 - [x] Fix "Duration" in Pricing Details section (showing "180 hours" instead of "3h")
 - [x] Fix hourly rate calculation to use hours instead of minutes
+
+## Phase 61: Fix Timezone Detection on Request Service Form
+- [x] Investigate timezone API 400 error when selecting addresses
+- [x] Fix timezone detection to work with Google Places autocomplete - changed from raw fetch to tRPC client

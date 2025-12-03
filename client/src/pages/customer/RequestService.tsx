@@ -265,19 +265,10 @@ export default function RequestService() {
   const fetchTimezoneForLocation = async (lat: number, lng: number) => {
     setFetchingTimezone(true);
     try {
-      // Use fetch to call the tRPC endpoint directly
-      const response = await fetch(
-        `/api/trpc/jobs.getTimezone?input=${encodeURIComponent(
-          JSON.stringify({ latitude: lat, longitude: lng })
-        )}`
-      );
-      
-      if (!response.ok) {
-        throw new Error("Failed to fetch timezone");
-      }
-      
-      const data = await response.json();
-      const result = data.result.data;
+      const result = await trpc.jobs.getTimezone.query({
+        latitude: lat,
+        longitude: lng,
+      });
 
       setFormData((prev) => ({
         ...prev,
