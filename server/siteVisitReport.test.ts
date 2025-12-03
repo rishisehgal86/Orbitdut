@@ -83,11 +83,11 @@ describe("Site Visit Report", () => {
     const mediaFiles = await db
       .select()
       .from(svrMediaFiles)
-      .where(eq(svrMediaFiles.reportId, result.reportId));
+      .where(eq(svrMediaFiles.svrId, result.reportId));
 
     expect(mediaFiles.length).toBe(1);
-    expect(mediaFiles[0].fileType).toBe("photo");
-    expect(mediaFiles[0].fileUrl).toContain("data:image/jpeg;base64");
+    expect(mediaFiles[0].fileType).toBe("image");
+    expect(mediaFiles[0].fileUrl).toContain("data:image/jpeg;base64"); // Base64 data URL
   });
 
   it("should reject report submission without signature", async () => {

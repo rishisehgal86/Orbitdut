@@ -1832,14 +1832,33 @@ export const appRouter = router({
           completedAt: new Date(),
         }).$returningId();
 
-        // Save photos if provided
+        // Save photos if provided (store as base64 in database)
         if (input.photos && input.photos.length > 0) {
-          for (const photoDataUrl of input.photos) {
+          for (let i = 0; i < input.photos.length; i++) {
+            const photoDataUrl = input.photos[i];
+            
+            // Extract mime type from data URL
+            const mimeTypeMatch = photoDataUrl.match(/data:([^;]+);/);
+            const mimeType = mimeTypeMatch ? mimeTypeMatch[1] : 'image/jpeg';
+            
+            // Calculate file size from base64
+            const base64Data = photoDataUrl.split(',')[1];
+            const fileSize = Math.ceil((base64Data.length * 3) / 4); // Approximate size in bytes
+            
+            // Generate file key for reference (not used for storage)
+            const timestamp = Date.now();
+            const randomSuffix = Math.random().toString(36).substring(7);
+            const fileKey = `site-visit-reports/${job.id}/photo-${i + 1}-${timestamp}-${randomSuffix}.jpg`;
+            
+            // Save to database with base64 data URL
             await db.insert(svrMediaFiles).values({
-              reportId: report.id,
-              fileType: 'photo',
-              fileUrl: photoDataUrl,
-              uploadedAt: new Date(),
+              svrId: report.id,
+              fileKey: fileKey,
+              fileUrl: photoDataUrl, // Store base64 data URL directly
+              fileName: `photo-${i + 1}.jpg`,
+              fileType: 'image',
+              mimeType: mimeType,
+              fileSize: fileSize,
             });
           }
         }
@@ -1903,7 +1922,7 @@ export const appRouter = router({
         const mediaFiles = await db
           .select()
           .from(svrMediaFiles)
-          .where(eq(svrMediaFiles.reportId, report.id));
+          .where(eq(svrMediaFiles.svrId, report.id));
 
         return { ...report, mediaFiles };
       }),

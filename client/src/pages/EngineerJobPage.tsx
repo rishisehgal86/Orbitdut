@@ -440,14 +440,12 @@ export default function EngineerJobPage() {
         {/* Site Visit Report Form */}
         {showReportForm && (
           <SiteVisitReportForm
-            jobId={job.id}
-            token={token || ""}
+            jobToken={token || ""}
             onSuccess={() => {
               toast.success("Job completed successfully!");
               refetch();
               setShowReportForm(false);
             }}
-            onCancel={() => setShowReportForm(false)}
           />
         )}
 
