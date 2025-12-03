@@ -4,6 +4,12 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import { eq } from "drizzle-orm";
+import { db } from "./db";
+import { users, jobs, siteVisitReports, svrMediaFiles } from "../drizzle/schema";
+import { generateJobToken } from "./_core/tokens";
+import { invokeLLM } from "./_core/llm";
+import { notifyOwner } from "./_core/notification";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -1822,7 +1828,7 @@ export const appRouter = router({
         }
 
         // Create site visit report - map form fields to database schema
-        const insertResult = await db.insert(siteVisitReports).values({
+        const reportData = {
           jobId: job.id,
           visitDate: new Date(),
           engineerName: job.engineerName || 'Unknown Engineer',
@@ -1833,10 +1839,20 @@ export const appRouter = router({
           clientSignatory: input.customerName,
           clientSignatureData: input.signatureDataUrl,
           signedAt: new Date(),
+        };
+        
+        await db.insert(siteVisitReports).values(reportData);
+        
+        // Query back the inserted record by jobId (since it's unique)
+        const insertedReport = await db.query.siteVisitReports.findFirst({
+          where: eq(siteVisitReports.jobId, job.id)
         });
         
-        // Get the inserted ID from the result
-        const reportId = insertResult[0].insertId;
+        if (!insertedReport) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to create site visit report' });
+        }
+        
+        const reportId = insertedReport.id;
 
         // Save photos if provided (store as base64 in database)
         if (input.photos && input.photos.length > 0) {
