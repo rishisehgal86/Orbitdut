@@ -517,3 +517,7 @@
 - [x] Investigate why siteName is not being saved when customers submit request form
 - [x] Add console logging at each step to trace data flow
 - [x] Test with new job submission to verify siteName is captured - CONFIRMED WORKING
+
+## Phase 59: Fix Customer My Jobs Page Display Issues
+- [x] Fix duration showing as hours instead of converting from minutes (180 minutes showing as "180 hours" instead of "3 hours")
+- [x] Add siteName display to customer My Jobs page
