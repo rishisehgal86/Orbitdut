@@ -521,3 +521,8 @@
 ## Phase 59: Fix Customer My Jobs Page Display Issues
 - [x] Fix duration showing as hours instead of converting from minutes (180 minutes showing as "180 hours" instead of "3 hours")
 - [x] Add siteName display to customer My Jobs page
+
+## Phase 60: Fix Duration Display on Job Detail Pages
+- [x] Fix "Estimated Duration" in Service Information section (showing "180 hours" instead of "3h")
+- [x] Fix "Duration" in Pricing Details section (showing "180 hours" instead of "3h")
+- [x] Fix hourly rate calculation to use hours instead of minutes

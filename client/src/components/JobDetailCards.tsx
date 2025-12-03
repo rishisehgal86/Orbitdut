@@ -44,7 +44,8 @@ export function JobDetailCards({ job, viewerType, showPricing = true }: JobDetai
     ? Math.round(customerPrice * (1 - ORBIDUT_MARGIN_PERCENT / 100))
     : customerPrice;
   const displayPrice = viewerType === 'customer' ? customerPrice : supplierAmount;
-  const hourlyRate = ((displayPrice / 100) / (job.estimatedDuration ?? 1)).toFixed(2);
+  const durationInHours = (job.estimatedDuration ?? 60) / 60; // Convert minutes to hours
+  const hourlyRate = ((displayPrice / 100) / durationInHours).toFixed(2);
   return (
     <>
       {/* Service Information & Location Grid */}
@@ -87,7 +88,14 @@ export function JobDetailCards({ job, viewerType, showPricing = true }: JobDetai
               <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
               <div>
                 <p className="text-sm font-medium">Estimated Duration</p>
-                <p className="text-sm text-muted-foreground">{job.estimatedDuration ?? 0} hours</p>
+                <p className="text-sm text-muted-foreground">
+                  {(() => {
+                    const totalMinutes = job.estimatedDuration ?? 0;
+                    const hours = Math.floor(totalMinutes / 60);
+                    const minutes = totalMinutes % 60;
+                    return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+                  })()}
+                </p>
               </div>
             </div>
             {job.description && (
@@ -141,7 +149,14 @@ export function JobDetailCards({ job, viewerType, showPricing = true }: JobDetai
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Duration</span>
-                  <span className="text-sm font-medium">{job.estimatedDuration ?? 0} hours</span>
+                  <span className="text-sm font-medium">
+                    {(() => {
+                      const totalMinutes = job.estimatedDuration ?? 0;
+                      const hours = Math.floor(totalMinutes / 60);
+                      const minutes = totalMinutes % 60;
+                      return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+                    })()}
+                  </span>
                 </div>
                 {viewerType === 'supplier' && (
                   <>
