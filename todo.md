@@ -536,3 +536,9 @@
 - [x] Fix validation error not clearing when address is selected from autocomplete
 - [x] Ensure red border and error message disappear immediately after selection
 - [x] Test address selection workflow end-to-end - working perfectly, no more double-click needed
+
+## Phase 63: Fix Schedule Timezone Conversion Bug
+- [x] Investigate why 09:00 local time input is being treated as UTC
+- [x] Fix conversion logic to properly interpret time picker input as site local time
+- [x] Ensure display shows correct local time and UTC conversion
+- [x] User confirmed timezone conversion is now working correctly

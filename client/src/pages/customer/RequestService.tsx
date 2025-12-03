@@ -166,23 +166,60 @@ export default function RequestService() {
   useEffect(() => {
     if (formData.scheduledDate && formData.scheduledTime && formData.timezone) {
       try {
-        // Parse local time
-        const localDateTime = `${formData.scheduledDate}T${formData.scheduledTime}`;
-        const localDate = new Date(localDateTime);
+        // User input: "2025-12-19" and "09:00" - they mean 9 AM in the SITE's timezone
+        // We need to show: "Dec 19, 2025 at 9:00 AM" (local) and the correct UTC equivalent
         
-        // Format local time with timezone
+        // Parse the date/time components
+        const [year, month, day] = formData.scheduledDate.split('-').map(Number);
+        const [hour, minute] = formData.scheduledTime.split(':').map(Number);
+        
+        // Create a Date object in the browser's local timezone
+        const localDate = new Date(year, month - 1, day, hour, minute, 0);
+        
+        // Get the timezone offset for the SITE's timezone at this date/time
+        // We do this by formatting the date in both the site's timezone and UTC
+        const siteTimeStr = localDate.toLocaleString('en-US', {
+          timeZone: formData.timezone,
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+        
+        const utcTimeStr = localDate.toLocaleString('en-US', {
+          timeZone: 'UTC',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+        
+        // Calculate the offset between site timezone and UTC
+        const siteDate = new Date(siteTimeStr);
+        const utcDate = new Date(utcTimeStr);
+        const offset = siteDate.getTime() - utcDate.getTime();
+        
+        // Adjust the local date by this offset to get the correct UTC timestamp
+        // The user said "9 AM in site timezone", so we need to shift the Date object
+        // so that when formatted in the site's timezone, it shows 9 AM
+        const adjustedDate = new Date(localDate.getTime() - offset);
+        
+        // Now format for display
         const localFormatted = new Intl.DateTimeFormat('en-US', {
           dateStyle: 'medium',
           timeStyle: 'short',
           timeZone: formData.timezone,
-        }).format(localDate);
+        }).format(adjustedDate);
         
-        // Format UTC time
         const utcFormatted = new Intl.DateTimeFormat('en-US', {
           dateStyle: 'medium',
           timeStyle: 'short',
           timeZone: 'UTC',
-        }).format(localDate);
+        }).format(adjustedDate);
         
         setLocalTimeDisplay(localFormatted);
         setUtcTimeDisplay(utcFormatted + " UTC");
