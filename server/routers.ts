@@ -1090,15 +1090,14 @@ export const appRouter = router({
         const result = await db
           .select()
           .from(jobs)
+          .leftJoin(siteVisitReports, eq(jobs.id, siteVisitReports.jobId))
+          .leftJoin(svrMediaFiles, eq(siteVisitReports.id, svrMediaFiles.svrId))
           .where(
             and(
               eq(jobs.id, input.id),
               or(...conditions)
             )
-          )
-          .leftJoin(siteVisitReports, eq(jobs.id, siteVisitReports.jobId))
-          .leftJoin(svrMediaFiles, eq(siteVisitReports.id, svrMediaFiles.svrId))
-          .limit(1);
+          );
 
         if (result.length === 0) return null;
 
@@ -1847,6 +1846,7 @@ export const appRouter = router({
           engineerName: job.engineerName || 'Unknown Engineer',
           issueFault: input.findings || null,
           actionsPerformed: input.workCompleted,
+          recommendations: input.recommendations || null,
           issueResolved: true, // Assuming completion means issue is resolved
           contactAgreed: true, // Customer signature implies agreement
           clientSignatory: input.customerName,
@@ -1872,6 +1872,7 @@ export const appRouter = router({
               engineerName: reportData.engineerName,
               issueFault: reportData.issueFault,
               actionsPerformed: reportData.actionsPerformed,
+              recommendations: reportData.recommendations,
               issueResolved: reportData.issueResolved,
               contactAgreed: reportData.contactAgreed,
               clientSignatory: reportData.clientSignatory,

@@ -7,6 +7,7 @@ interface SiteVisitReportData {
   engineerName: string;
   issueFault?: string | null;
   actionsPerformed: string;
+  recommendations?: string | null;
   issueResolved: boolean;
   contactAgreed: boolean;
   clientSignatory?: string | null;
@@ -58,6 +59,14 @@ export function SiteVisitReport({ report }: SiteVisitReportProps) {
           <p className="text-sm font-medium text-muted-foreground mb-2">Actions Performed</p>
           <p className="text-sm whitespace-pre-wrap bg-muted p-3 rounded-md">{report.actionsPerformed}</p>
         </div>
+
+        {/* Recommendations */}
+        {report.recommendations && (
+          <div>
+            <p className="text-sm font-medium text-muted-foreground mb-2">Recommendations</p>
+            <p className="text-sm whitespace-pre-wrap bg-muted p-3 rounded-md">{report.recommendations}</p>
+          </div>
+        )}
 
         {/* Resolution & Agreement */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

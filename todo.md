@@ -381,3 +381,19 @@
 - [x] Fetch site visit report data in the supplier job detail page (same getById procedure).
 - [x] Render the `SiteVisitReport` component in the supplier job detail page.
 - [ ] Test the display of the site visit report in both portals.
+
+## Phase 46: Fix Missing Site Visit Report in
+ Job Details
+- [ ] Site visit report not showing in customer job detail page
+- [ ] Site visit report not showing in supplier job detail page
+- [ ] Debug getById query to check if siteVisitReport data is being fetched
+- [ ] Fix the query to properly join and return site visit report data
+- [ ] Test the display in both portals
+
+## Phase 47: Add Missing Recommendations Field to Site Visit Report Display
+- [x] Check database schema for recommendations field name
+- [x] Add recommendations column to database schema and table
+- [x] Update backend to save recommendations field
+- [x] Add recommendations field to SiteVisitReport component interface
+- [x] Add recommendations display section to the component
+- [ ] Test the display in job details page

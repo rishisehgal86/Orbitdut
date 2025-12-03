@@ -521,6 +521,7 @@ export const siteVisitReports = mysqlTable("siteVisitReports", {
   // Work Details
   issueFault: text("issueFault"),
   actionsPerformed: text("actionsPerformed"),
+  recommendations: text("recommendations"),
   issueResolved: boolean("issueResolved").default(false),
   contactAgreed: boolean("contactAgreed").default(false),
   
