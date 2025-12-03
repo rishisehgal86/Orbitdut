@@ -542,3 +542,9 @@
 - [x] Fix conversion logic to properly interpret time picker input as site local time
 - [x] Ensure display shows correct local time and UTC conversion
 - [x] User confirmed timezone conversion is now working correctly
+
+## Phase 64: Fix Supplier Portal Job Details Navigation
+- [x] Investigate why job details cannot be found when clicking from supplier portal
+- [x] Check routing and data fetching logic for job details page - found getById query was filtering out unassigned jobs
+- [x] Fix the navigation or query issue - allow suppliers to view jobs with status 'pending_supplier_acceptance'
+- [x] Test job details navigation from supplier portal - Job #210003 and #210004 both loading successfully

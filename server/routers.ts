@@ -1081,13 +1081,21 @@ export const appRouter = router({
         // Get supplier if user is a supplier
         const supplier = await getSupplierByUserId(ctx.user.id);
         
-        // User can only see jobs they created or jobs assigned to their supplier
+        // User can only see jobs they created or jobs assigned/available to their supplier
         const conditions = [
           eq(jobs.customerId, ctx.user.id), // User is the customer
         ];
         
         if (supplier) {
-          conditions.push(eq(jobs.assignedSupplierId, supplier.supplier.id)); // User's supplier is assigned
+          // Suppliers can see:
+          // 1. Jobs assigned to them
+          // 2. Jobs available for acceptance (pending_supplier_acceptance)
+          conditions.push(
+            or(
+              eq(jobs.assignedSupplierId, supplier.supplier.id), // Assigned to this supplier
+              eq(jobs.status, 'pending_supplier_acceptance') // Available for acceptance
+            )!
+          );
         }
 
         const result = await db
