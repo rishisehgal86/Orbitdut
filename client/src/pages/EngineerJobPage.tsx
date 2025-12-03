@@ -445,7 +445,17 @@ export default function EngineerJobPage() {
 
                 {job.status === 'on_site' && (
                   <>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-3">
+                      {pauseStatus?.isPaused && (
+                        <div className="p-3 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-md">
+                          <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
+                            <Pause className="h-4 w-4" />
+                            <span className="font-medium">Work is paused</span>
+                            <span className="text-sm ml-auto">Paused at {pauseStatus.pausedAt ? new Date(pauseStatus.pausedAt).toLocaleTimeString() : ''}</span>
+                          </div>
+                        </div>
+                      )}
+                      <div className="flex gap-2">
                       {pauseStatus?.isPaused ? (
                         <Button
                           onClick={() => {
@@ -527,18 +537,8 @@ export default function EngineerJobPage() {
                       >
                         <CheckCircle2 className="mr-2 h-4 w-4" /> Complete Job
                       </Button>
-                    </div>
-                    {pauseStatus?.isPaused && (
-                      <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-md">
-                        <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
-                          <Pause className="h-4 w-4" />
-                          <span className="font-medium">Work is paused</span>
-                        </div>
-                        <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                          Paused at {pauseStatus.pausedAt ? new Date(pauseStatus.pausedAt).toLocaleTimeString() : ''}
-                        </p>
                       </div>
-                    )}
+                    </div>
                   </>
                 )}
               </div>

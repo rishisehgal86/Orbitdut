@@ -580,3 +580,7 @@
 - [x] Refactor pause/resume to trigger mutation immediately, capture GPS in background
 - [x] Refactor status updates (on_site, complete) to be instant with background GPS
 - [x] All buttons now respond instantly - status update happens first, GPS captured in background
+
+## Phase 70: Fix Pause Notification Layout
+- [x] Make "Work is paused" notification appear above buttons (not below)
+- [x] Show pause time inline with notification text
