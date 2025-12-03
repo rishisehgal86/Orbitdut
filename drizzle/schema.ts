@@ -526,7 +526,7 @@ export const siteVisitReports = mysqlTable("siteVisitReports", {
   
   // Client Sign-off
   clientSignatory: varchar("clientSignatory", { length: 255 }),
-  clientSignatureData: text("clientSignatureData"), // Base64 signature image
+  clientSignatureData: longtext("clientSignatureData"), // Base64 signature image
   signedAt: timestamp("signedAt"),
   
   createdAt: timestamp("createdAt").defaultNow().notNull(),

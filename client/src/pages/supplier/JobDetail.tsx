@@ -12,6 +12,7 @@ import { JobTimeline } from "@/components/JobTimeline";
 import { JobStatusProgress } from "@/components/JobStatusProgress";
 import { EngineerLocationMap } from "@/components/EngineerLocationMap";
 import { JobDetailCards } from "@/components/JobDetailCards";
+import { SiteVisitReport } from "@/components/SiteVisitReport";
 
 // Wrapper component for JobTimeline with data fetching
 function JobTimelineWrapper({ jobId, currentStatus }: { jobId: number; currentStatus: string }) {
@@ -287,6 +288,9 @@ export default function SupplierJobDetail() {
             siteLongitude={job.siteLongitude}
           />
         )}
+
+        {/* Site Visit Report */}
+        {job.siteVisitReport && <SiteVisitReport report={job.siteVisitReport} />}
 
         {/* Job Timeline - Audit Trail */}
         <JobTimelineWrapper jobId={job.id} currentStatus={job.status} />

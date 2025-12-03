@@ -1,0 +1,95 @@
+{
+  "query": "SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'siteVisitReports' AND TABLE_SCHEMA = DATABASE() ORDER BY ORDINAL_POSITION",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'siteVisitReports' AND TABLE_SCHEMA = DATABASE() ORDER BY ORDINAL_POSITION",
+  "rows": [
+    {
+      "COLUMN_NAME": "id",
+      "DATA_TYPE": "int",
+      "IS_NULLABLE": "NO"
+    },
+    {
+      "COLUMN_NAME": "jobId",
+      "DATA_TYPE": "int",
+      "IS_NULLABLE": "NO"
+    },
+    {
+      "COLUMN_NAME": "visitDate",
+      "DATA_TYPE": "timestamp",
+      "IS_NULLABLE": "NO"
+    },
+    {
+      "COLUMN_NAME": "ticketNumbers",
+      "DATA_TYPE": "text",
+      "IS_NULLABLE": "YES"
+    },
+    {
+      "COLUMN_NAME": "engineerName",
+      "DATA_TYPE": "varchar",
+      "IS_NULLABLE": "NO"
+    },
+    {
+      "COLUMN_NAME": "onsiteContact",
+      "DATA_TYPE": "varchar",
+      "IS_NULLABLE": "YES"
+    },
+    {
+      "COLUMN_NAME": "timeOnsite",
+      "DATA_TYPE": "varchar",
+      "IS_NULLABLE": "YES"
+    },
+    {
+      "COLUMN_NAME": "timeLeftSite",
+      "DATA_TYPE": "varchar",
+      "IS_NULLABLE": "YES"
+    },
+    {
+      "COLUMN_NAME": "issueFault",
+      "DATA_TYPE": "text",
+      "IS_NULLABLE": "YES"
+    },
+    {
+      "COLUMN_NAME": "actionsPerformed",
+      "DATA_TYPE": "text",
+      "IS_NULLABLE": "YES"
+    },
+    {
+      "COLUMN_NAME": "issueResolved",
+      "DATA_TYPE": "tinyint",
+      "IS_NULLABLE": "YES"
+    },
+    {
+      "COLUMN_NAME": "contactAgreed",
+      "DATA_TYPE": "tinyint",
+      "IS_NULLABLE": "YES"
+    },
+    {
+      "COLUMN_NAME": "clientSignatory",
+      "DATA_TYPE": "varchar",
+      "IS_NULLABLE": "YES"
+    },
+    {
+      "COLUMN_NAME": "clientSignatureData",
+      "DATA_TYPE": "text",
+      "IS_NULLABLE": "YES"
+    },
+    {
+      "COLUMN_NAME": "signedAt",
+      "DATA_TYPE": "timestamp",
+      "IS_NULLABLE": "YES"
+    },
+    {
+      "COLUMN_NAME": "createdAt",
+      "DATA_TYPE": "timestamp",
+      "IS_NULLABLE": "NO"
+    },
+    {
+      "COLUMN_NAME": "updatedAt",
+      "DATA_TYPE": "timestamp",
+      "IS_NULLABLE": "NO"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\tDATA_TYPE\tIS_NULLABLE\nid\tint\tNO\njobId\tint\tNO\nvisitDate\ttimestamp\tNO\nticketNumbers\ttext\tYES\nengineerName\tvarchar\tNO\nonsiteContact\tvarchar\tYES\ntimeOnsite\tvarchar\tYES\ntimeLeftSite\tvarchar\tYES\nissueFault\ttext\tYES\nactionsPerformed\ttext\tYES\nissueResolved\ttinyint\tYES\ncontactAgreed\ttinyint\tYES\nclientSignatory\tvarchar\tYES\nclientSignatureData\ttext\tYES\nsignedAt\ttimestamp\tYES\ncreatedAt\ttimestamp\tNO\nupdatedAt\ttimestamp\tNO\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}

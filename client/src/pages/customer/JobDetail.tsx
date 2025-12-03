@@ -11,6 +11,7 @@ import { JobTimeline } from "@/components/JobTimeline";
 import { EngineerLocationMap } from "@/components/EngineerLocationMap";
 import { JobDetailCards } from "@/components/JobDetailCards";
 import { JobStatusProgress } from "@/components/JobStatusProgress";
+import { SiteVisitReport } from "@/components/SiteVisitReport";
 
 // Database status values
 type JobStatus = 
@@ -186,6 +187,9 @@ export default function CustomerJobDetail() {
             siteLongitude={job.siteLongitude}
           />
         )}
+
+        {/* Site Visit Report */}
+        {job.siteVisitReport && <SiteVisitReport report={job.siteVisitReport} />}
 
         {/* Job Timeline - Audit Trail */}
         <JobTimelineWrapper jobId={job.id} currentStatus={job.status} />

@@ -342,3 +342,42 @@
 - [x] Test the corrected implementation - SUCCESS!
 - [x] Still getting database insertion error - used query-back approach successfully
 - [x] FieldPulse pattern still not working - examined their database configuration and schema differences
+## Phase 40: Fix Photo Insertion Preventing Form Submission
+- [x] Site visit report inserts but photo insertion fails, preventing successful form completion
+- [x] Check svrMediaFiles schema and fix field name mismatch
+- [x] Test complete submission with success response
+## Phase 41: Deep Dive into FieldPulse Site Visit Report Implementation
+- [x] Analyze FieldPulse backend tRPC procedure structure and database operations
+- [x] Analyze FieldPulse frontend form submission and mutation handling
+- [x] Identify key differences between FieldPulse and Orbidut implementations
+- [x] Rewrite Orbidut submission flow based on FieldPulse working patterns
+- [x] Test complete end-to-end submission with success response - SUCCESS!
+## Phase 42: Fix Database Column Size for Signature Storage
+- [x] Identified TEXT column size limitation for clientSignatureData (64KB max)
+- [x] Changed clientSignatureData column from TEXT to LONGTEXT (4GB max)
+- [x] Applied ALTER TABLE directly to database
+- [x] Fixed insertId retrieval by using query-back approach (orderBy desc + limit 1)
+- [x] Added eq and desc imports from drizzle-orm
+- [ ] Waiting for user to test site visit report submission with signature and photos
+## Phase 43: Fix Persistent Site Visit Report Database Insertion Error
+- [x] Form submission still failing with "TRPCClientError: Failed query: insert into `siteVisitReports`"
+- [x] Database column changed to LONGTEXT but error persists
+- [x] Query-back approach implemented but insertion still fails
+- [x] Investigated exact SQL error and field constraints
+- [x] Found root cause: unique constraint on jobId with existing report for job 30001
+- [x] Implemented upsert logic: check if report exists, UPDATE if yes, INSERT if no
+- [ ] Test the fix with form submission
+## Phase 44: Fix Job Status Update After Site Visit Report Submission
+- [x] Site visit report submission now working successfully
+- [x] Job status not automatically updating to "completed" after report submission
+- [x] Add job status update logic to submitSiteVisitReport procedure
+- [x] Add status history entry to track completion
+- [ ] Test complete workflow in both supplier and customer portals
+
+## Phase 45: Display Site Visit Report in Job Details
+- [x] Create a `SiteVisitReport` component to display report details.
+- [x] Fetch site visit report data in the customer job detail page (updated getById procedure).
+- [x] Render the `SiteVisitReport` component in the customer job detail page.
+- [x] Fetch site visit report data in the supplier job detail page (same getById procedure).
+- [x] Render the `SiteVisitReport` component in the supplier job detail page.
+- [ ] Test the display of the site visit report in both portals.

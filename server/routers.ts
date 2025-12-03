@@ -1070,7 +1070,7 @@ export const appRouter = router({
       .input(z.object({ id: z.number() }))
       .query(async ({ input, ctx }) => {
         const { getDb, getSupplierByUserId } = await import("./db");
-        const { jobs } = await import("../drizzle/schema");
+        const { jobs, siteVisitReports, svrMediaFiles } = await import("../drizzle/schema");
         const { eq, or, and } = await import("drizzle-orm");
         const db = await getDb();
         if (!db) return null;
@@ -1096,8 +1096,20 @@ export const appRouter = router({
               or(...conditions)
             )
           )
+          .leftJoin(siteVisitReports, eq(jobs.id, siteVisitReports.jobId))
+          .leftJoin(svrMediaFiles, eq(siteVisitReports.id, svrMediaFiles.svrId))
           .limit(1);
-        return result.length > 0 ? result[0] : null;
+
+        if (result.length === 0) return null;
+
+        const jobData = result[0].jobs;
+        const reportData = result[0].siteVisitReports;
+        const photos = result.map(r => r.svrMediaFiles).filter(p => p);
+
+        return {
+          ...jobData,
+          siteVisitReport: reportData ? { ...reportData, photos } : null,
+        };
       }),
 
     // Get available jobs for supplier (in their coverage area)
@@ -1816,6 +1828,7 @@ export const appRouter = router({
         const { getJobByEngineerToken } = await import("./db");
         const { getDb } = await import("./db");
         const { siteVisitReports, svrMediaFiles } = await import("../drizzle/schema");
+        const { eq, desc } = await import("drizzle-orm");
 
         const job = await getJobByEngineerToken(input.token);
         if (!job) {
@@ -1841,18 +1854,50 @@ export const appRouter = router({
           signedAt: new Date(),
         };
         
-        await db.insert(siteVisitReports).values(reportData);
+        // Check if a site visit report already exists for this job
+        const [existingReport] = await db
+          .select()
+          .from(siteVisitReports)
+          .where(eq(siteVisitReports.jobId, job.id))
+          .limit(1);
         
-        // Query back the inserted record by jobId (since it's unique)
-        const insertedReport = await db.query.siteVisitReports.findFirst({
-          where: eq(siteVisitReports.jobId, job.id)
-        });
+        let reportId: number;
         
-        if (!insertedReport) {
-          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to create site visit report' });
+        if (existingReport) {
+          // Update existing report
+          await db
+            .update(siteVisitReports)
+            .set({
+              visitDate: reportData.visitDate,
+              engineerName: reportData.engineerName,
+              issueFault: reportData.issueFault,
+              actionsPerformed: reportData.actionsPerformed,
+              issueResolved: reportData.issueResolved,
+              contactAgreed: reportData.contactAgreed,
+              clientSignatory: reportData.clientSignatory,
+              clientSignatureData: reportData.clientSignatureData,
+              signedAt: reportData.signedAt,
+            })
+            .where(eq(siteVisitReports.id, existingReport.id));
+          
+          reportId = existingReport.id;
+        } else {
+          // Insert new report
+          await db.insert(siteVisitReports).values(reportData);
+          
+          // Query back to get the created report
+          const [createdReport] = await db
+            .select()
+            .from(siteVisitReports)
+            .where(eq(siteVisitReports.jobId, job.id))
+            .limit(1);
+          
+          if (!createdReport) {
+            throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to create site visit report' });
+          }
+          
+          reportId = createdReport.id;
         }
-        
-        const reportId = insertedReport.id;
 
         // Save photos if provided (store as base64 in database)
         if (input.photos && input.photos.length > 0) {
@@ -1878,12 +1923,27 @@ export const appRouter = router({
               fileKey: fileKey,
               fileUrl: photoDataUrl, // Store base64 data URL directly
               fileName: `photo-${i + 1}.jpg`,
-              fileType: 'image',
+              fileType: 'image' as const,
               mimeType: mimeType,
               fileSize: fileSize,
             });
           }
         }
+
+        // Update job status to completed
+        const { jobs, jobStatusHistory } = await import("../drizzle/schema");
+        
+        await db
+          .update(jobs)
+          .set({ status: 'completed' })
+          .where(eq(jobs.id, job.id));
+        
+        // Add status history entry
+        await db.insert(jobStatusHistory).values({
+          jobId: job.id,
+          status: 'completed',
+          timestamp: new Date(),
+        });
 
         return { success: true, reportId: reportId };
       }),
