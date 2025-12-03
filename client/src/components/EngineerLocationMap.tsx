@@ -30,6 +30,7 @@ export function EngineerLocationMap({
   const mapRef = useRef<google.maps.Map | null>(null);
   const engineerMarkerRef = useRef<google.maps.Marker | null>(null);
   const siteMarkerRef = useRef<google.maps.Marker | null>(null);
+  const [mapReady, setMapReady] = useState(false);
 
   // Only fetch location if engineer is en route or on site
   const shouldTrack = jobStatus === "en_route" || jobStatus === "on_site";
@@ -39,9 +40,9 @@ export function EngineerLocationMap({
     { enabled: shouldTrack, refetchInterval: 30000 } // Refresh every 30 seconds
   );
 
-  // Calculate route and ETA
+  // Update markers when location changes
   useEffect(() => {
-    if (!latestLocation || !siteLatitude || !siteLongitude || !mapRef.current) {
+    if (!latestLocation || !siteLatitude || !siteLongitude || !mapRef.current || !mapReady) {
       return;
     }
 
@@ -88,7 +89,24 @@ export function EngineerLocationMap({
       });
     }
 
-    // Calculate ETA using Directions API (no route line displayed)
+    // Fit map to show both markers
+    const bounds = new google.maps.LatLngBounds();
+    bounds.extend({ lat: engineerLat, lng: engineerLng });
+    bounds.extend({ lat: siteLat, lng: siteLng });
+    mapRef.current?.fitBounds(bounds);
+  }, [latestLocation, siteLatitude, siteLongitude, mapReady]);
+
+  // Calculate ETA separately (only when location changes)
+  useEffect(() => {
+    if (!latestLocation || !siteLatitude || !siteLongitude || !window.google) {
+      return;
+    }
+
+    const engineerLat = parseFloat(latestLocation.latitude);
+    const engineerLng = parseFloat(latestLocation.longitude);
+    const siteLat = parseFloat(siteLatitude);
+    const siteLng = parseFloat(siteLongitude);
+
     const directionsService = new google.maps.DirectionsService();
     
     directionsService.route(
@@ -99,7 +117,6 @@ export function EngineerLocationMap({
       },
       (result, status) => {
         if (status === google.maps.DirectionsStatus.OK && result) {
-          // Extract route info for ETA calculation only
           const route = result.routes[0];
           if (route && route.legs[0]) {
             const leg = route.legs[0];
@@ -112,12 +129,6 @@ export function EngineerLocationMap({
         }
       }
     );
-
-    // Fit map to show both markers
-    const bounds = new google.maps.LatLngBounds();
-    bounds.extend({ lat: engineerLat, lng: engineerLng });
-    bounds.extend({ lat: siteLat, lng: siteLng });
-    mapRef.current?.fitBounds(bounds);
   }, [latestLocation, siteLatitude, siteLongitude]);
 
   if (!shouldTrack) {
@@ -190,21 +201,9 @@ export function EngineerLocationMap({
           <MapView
             onMapReady={(map) => {
               mapRef.current = map;
-              
-              // Initial map setup
-              if (latestLocation && siteLatitude && siteLongitude) {
-                const engineerLat = parseFloat(latestLocation.latitude);
-                const engineerLng = parseFloat(latestLocation.longitude);
-                const siteLat = parseFloat(siteLatitude);
-                const siteLng = parseFloat(siteLongitude);
-
-                const bounds = new google.maps.LatLngBounds();
-                bounds.extend({ lat: engineerLat, lng: engineerLng });
-                bounds.extend({ lat: siteLat, lng: siteLng });
-                map.fitBounds(bounds);
-              }
+              setMapReady(true);
             }}
-            style={{ height: "400px", width: "100%" }}
+            className="h-[400px] w-full"
           />
         </div>
 

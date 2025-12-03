@@ -1747,7 +1747,7 @@ export const appRouter = router({
       .input(z.object({ jobId: z.number() }))
       .query(async ({ input, ctx }) => {
         const { getDb } = await import("./db");
-        const { jobs, jobLocations } = await import("../drizzle/schema");
+        const { jobs, jobLocations, supplierUsers } = await import("../drizzle/schema");
         const { eq, desc, and } = await import("drizzle-orm");
 
         const db = await getDb();
@@ -1764,9 +1764,22 @@ export const appRouter = router({
           throw new TRPCError({ code: 'NOT_FOUND', message: 'Job not found' });
         }
 
-        // Check if user is either the customer or the assigned supplier
+        // Check if user is the customer
         const isCustomer = job.customerId === ctx.user.id;
-        const isAssignedSupplier = job.assignedSupplierId === ctx.user.id;
+
+        // Check if user belongs to the assigned supplier company
+        let isAssignedSupplier = false;
+        if (job.assignedSupplierId) {
+          const [supplierUser] = await db
+            .select()
+            .from(supplierUsers)
+            .where(and(
+              eq(supplierUsers.supplierId, job.assignedSupplierId),
+              eq(supplierUsers.userId, ctx.user.id)
+            ))
+            .limit(1);
+          isAssignedSupplier = !!supplierUser;
+        }
 
         if (!isCustomer && !isAssignedSupplier) {
           throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied' });
@@ -1839,7 +1852,7 @@ export const appRouter = router({
       .input(z.object({ jobId: z.number() }))
       .query(async ({ input, ctx }) => {
         const { getDb } = await import("./db");
-        const { jobs, siteVisitReports, svrMediaFiles } = await import("../drizzle/schema");
+        const { jobs, siteVisitReports, svrMediaFiles, supplierUsers } = await import("../drizzle/schema");
         const { eq, and } = await import("drizzle-orm");
 
         const db = await getDb();
@@ -1856,9 +1869,22 @@ export const appRouter = router({
           throw new TRPCError({ code: 'NOT_FOUND', message: 'Job not found' });
         }
 
-        // Check if user is either the customer or the assigned supplier
+        // Check if user is the customer
         const isCustomer = job.customerId === ctx.user.id;
-        const isAssignedSupplier = job.assignedSupplierId === ctx.user.id;
+
+        // Check if user belongs to the assigned supplier company
+        let isAssignedSupplier = false;
+        if (job.assignedSupplierId) {
+          const [supplierUser] = await db
+            .select()
+            .from(supplierUsers)
+            .where(and(
+              eq(supplierUsers.supplierId, job.assignedSupplierId),
+              eq(supplierUsers.userId, ctx.user.id)
+            ))
+            .limit(1);
+          isAssignedSupplier = !!supplierUser;
+        }
 
         if (!isCustomer && !isAssignedSupplier) {
           throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied' });
