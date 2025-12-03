@@ -147,7 +147,9 @@ export default function SupplierJobDetail() {
               </Button>
               <Button
                 onClick={() => {
-                  const link = `${window.location.origin}/engineer/job/${job.engineerToken}`;
+                  const link = job.shortCode 
+                    ? `${window.location.origin}/e/${job.shortCode}`
+                    : `${window.location.origin}/engineer/job/${job.engineerToken}`;
                   navigator.clipboard.writeText(link);
                   toast.success("Engineer link copied to clipboard!");
                 }}
@@ -156,6 +158,37 @@ export default function SupplierJobDetail() {
                 <Copy className="mr-2 h-4 w-4" />
                 Copy Engineer Link (Self-Claim)
               </Button>
+              {job.shortCode && (
+                <p className="text-sm text-muted-foreground text-center">
+                  Short link: <code className="bg-muted px-2 py-1 rounded">/e/{job.shortCode}</code>
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Engineer Link Display (for all statuses after supplier_accepted) */}
+        {job.status !== "pending_supplier_acceptance" && job.status !== "supplier_accepted" && job.shortCode && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Engineer Link</CardTitle>
+              <CardDescription>Share this link with engineers</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              <Button
+                onClick={() => {
+                  const link = `${window.location.origin}/e/${job.shortCode}`;
+                  navigator.clipboard.writeText(link);
+                  toast.success("Engineer link copied to clipboard!");
+                }}
+                variant="outline"
+              >
+                <Copy className="mr-2 h-4 w-4" />
+                Copy Engineer Link
+              </Button>
+              <p className="text-sm text-muted-foreground text-center">
+                Short link: <code className="bg-muted px-2 py-1 rounded">/e/{job.shortCode}</code>
+              </p>
             </CardContent>
           </Card>
         )}

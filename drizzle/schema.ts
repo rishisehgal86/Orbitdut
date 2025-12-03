@@ -309,6 +309,7 @@ export const jobs = mysqlTable("jobs", {
   engineerEmail: varchar("engineerEmail", { length: 320 }),
   engineerPhone: varchar("engineerPhone", { length: 50 }),
   engineerToken: varchar("engineerToken", { length: 64 }).unique(), // Unique token for engineer access
+  shortCode: varchar("shortCode", { length: 8 }).unique(), // Short code for shareable links (e.g., ABC12345)
   
   // Timestamps
   acceptedAt: timestamp("acceptedAt"),

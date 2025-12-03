@@ -991,8 +991,9 @@ export const appRouter = router({
         const db = await getDb();
         if (!db) throw new Error("Database not available");
         
-        // Generate engineer token once at job creation
+        // Generate engineer token and short code once at job creation
         const engineerToken = randomBytes(32).toString('hex');
+        const shortCode = randomBytes(4).toString('hex').toUpperCase(); // 8-character hex code
 
         const [result] = await db.insert(jobs).values({
           // Basic job info
@@ -1046,8 +1047,9 @@ export const appRouter = router({
           isOutOfHours: input.isOutOfHours ? 1 : 0,
           status: "pending_supplier_acceptance",
           
-          // Engineer token (generated once at creation)
+          // Engineer token and short code (generated once at creation)
           engineerToken: engineerToken,
+          shortCode: shortCode,
           
           // Link to customer user
           customerId: ctx.user.id,
@@ -1588,6 +1590,25 @@ export const appRouter = router({
       .query(async ({ input }) => {
         const { getJobByEngineerToken } = await import("./db");
         return await getJobByEngineerToken(input.token);
+      }),
+
+    // Get job by short code (no auth required) - for /e/:shortCode redirect
+    getByShortCode: publicProcedure
+      .input(z.object({ shortCode: z.string() }))
+      .query(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { jobs } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        const db = await getDb();
+        if (!db) return null;
+
+        const result = await db
+          .select()
+          .from(jobs)
+          .where(eq(jobs.shortCode, input.shortCode))
+          .limit(1);
+        
+        return result.length > 0 ? result[0] : null;
       }),
 
     // Update job status by engineer token (no auth required)

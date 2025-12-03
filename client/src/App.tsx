@@ -29,6 +29,7 @@ import CustomerJobDetail from "./pages/customer/JobDetail";
 import CustomerProfile from "./pages/customer/Profile";
 import CustomerSettings from "./pages/customer/Settings";
 import EngineerJobPage from "./pages/EngineerJobPage";
+import ShortLinkRedirect from "./pages/ShortLinkRedirect";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -62,7 +63,10 @@ function Router() {
       <Route path={"/supplier/jobs"} component={SupplierJobs} />
       <Route path={"/supplier/jobs/:id"} component={SupplierJobDetail} />
       <Route path={"/supplier/coverage"} component={SupplierCoverage} />
-      <Route path="/engineer/job/:token" component={EngineerJobPage} />          <Route path="/supplier/coverage/availability" component={ServiceAvailability} />      <Route path={"/404"} component={NotFound} />
+      <Route path="/e/:shortCode" component={ShortLinkRedirect} />
+      <Route path="/engineer/job/:token" component={EngineerJobPage} />
+      <Route path="/supplier/coverage/availability" component={ServiceAvailability} />
+      <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
     </Switch>

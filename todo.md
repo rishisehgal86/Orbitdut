@@ -313,3 +313,11 @@
 - [x] Keep only pins (engineer and site) visible
 - [x] Keep ETA and distance calculation (but no visual route line)
 - [x] Test map display
+
+## Phase 35: Implement Short Engineer Links
+- [x] Add shortCode field to jobs table (6-8 character alphanumeric)
+- [x] Generate short code at job creation
+- [x] Create /e/:shortCode route that redirects to /engineer/job/:token
+- [x] Update supplier portal to show short link format
+- [x] Make engineer link visible for all statuses after sent_to_engineer
+- [x] Test short link generation and routing
