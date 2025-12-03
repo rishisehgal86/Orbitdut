@@ -1753,17 +1753,22 @@ export const appRouter = router({
         const db = await getDb();
         if (!db) return null;
 
-        // Verify the job belongs to the current user (customer)
+        // Verify the job belongs to the current user (customer or assigned supplier)
         const [job] = await db
           .select()
           .from(jobs)
-          .where(and(
-            eq(jobs.id, input.jobId),
-            eq(jobs.customerId, ctx.user.id)
-          ))
+          .where(eq(jobs.id, input.jobId))
           .limit(1);
 
         if (!job) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Job not found' });
+        }
+
+        // Check if user is either the customer or the assigned supplier
+        const isCustomer = job.customerId === ctx.user.id;
+        const isAssignedSupplier = job.assignedSupplierId === ctx.user.id;
+
+        if (!isCustomer && !isAssignedSupplier) {
           throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied' });
         }
 
@@ -1840,17 +1845,22 @@ export const appRouter = router({
         const db = await getDb();
         if (!db) return null;
 
-        // Verify the job belongs to the current user (customer)
+        // Verify the job belongs to the current user (customer or assigned supplier)
         const [job] = await db
           .select()
           .from(jobs)
-          .where(and(
-            eq(jobs.id, input.jobId),
-            eq(jobs.customerId, ctx.user.id)
-          ))
+          .where(eq(jobs.id, input.jobId))
           .limit(1);
 
         if (!job) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Job not found' });
+        }
+
+        // Check if user is either the customer or the assigned supplier
+        const isCustomer = job.customerId === ctx.user.id;
+        const isAssignedSupplier = job.assignedSupplierId === ctx.user.id;
+
+        if (!isCustomer && !isAssignedSupplier) {
           throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied' });
         }
 

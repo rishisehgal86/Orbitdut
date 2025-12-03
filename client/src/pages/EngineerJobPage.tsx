@@ -166,6 +166,19 @@ export default function EngineerJobPage() {
     }
   }, [job]);
 
+  // Auto-start GPS tracking when page loads if job is en_route or on_site
+  useEffect(() => {
+    if (!job || !token || isTracking) return;
+
+    if (job.status === 'en_route') {
+      console.log('Auto-starting GPS tracking: en_route');
+      startTracking('en_route');
+    } else if (job.status === 'on_site') {
+      console.log('Auto-starting GPS tracking: on_site');
+      startTracking('on_site');
+    }
+  }, [job?.status, token]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
