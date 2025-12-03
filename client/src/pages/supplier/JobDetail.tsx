@@ -167,32 +167,6 @@ export default function SupplierJobDetail() {
           </Card>
         )}
 
-        {/* Engineer Link Display (for all statuses after supplier accepts) */}
-        {job.status !== "pending_supplier_acceptance" && job.shortCode && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Engineer Link</CardTitle>
-              <CardDescription>Share this link with engineers</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              <Button
-                onClick={() => {
-                  const link = `${window.location.origin}/e/${job.shortCode}`;
-                  navigator.clipboard.writeText(link);
-                  toast.success("Engineer link copied to clipboard!");
-                }}
-                variant="outline"
-              >
-                <Copy className="mr-2 h-4 w-4" />
-                Copy Engineer Link
-              </Button>
-              <p className="text-sm text-muted-foreground text-center">
-                Short link: <code className="bg-muted px-2 py-1 rounded">/e/{job.shortCode}</code>
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Assign Engineer Dialog */}
         <AssignEngineerDialog
           jobId={jobId}
@@ -234,6 +208,38 @@ export default function SupplierJobDetail() {
             )}
           </CardContent>
         </Card>
+
+        {/* Engineer Link - Compact Version */}
+        {job.status !== "pending_supplier_acceptance" && job.engineerToken && (
+          <Card>
+            <CardContent className="py-3">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium">Engineer Link</p>
+                  {job.shortCode && (
+                    <p className="text-xs text-muted-foreground truncate">
+                      {window.location.origin}/e/{job.shortCode}
+                    </p>
+                  )}
+                </div>
+                <Button
+                  onClick={() => {
+                    const link = job.shortCode 
+                      ? `${window.location.origin}/e/${job.shortCode}`
+                      : `${window.location.origin}/engineer/job/${job.engineerToken}`;
+                    navigator.clipboard.writeText(link);
+                    toast.success("Engineer link copied!");
+                  }}
+                  size="sm"
+                  variant="outline"
+                >
+                  <Copy className="mr-1.5 h-3.5 w-3.5" />
+                  Copy
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Shared Job Details */}
         <JobDetailCards job={job} viewerType="supplier" />
