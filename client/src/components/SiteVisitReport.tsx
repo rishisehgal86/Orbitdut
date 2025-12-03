@@ -272,30 +272,28 @@ export function SiteVisitReport({ report }: SiteVisitReportProps) {
                     })()}
                   </p>
                 </div>
-                {report.totalPauseMs && report.totalPauseMs > 0 && (
-                  <div>
-                    <p className="font-medium text-amber-800 dark:text-amber-200">Time Paused (Breaks)</p>
-                    <p className="text-amber-700 dark:text-amber-300 mt-1">
-                      {(() => {
-                        const hours = Math.floor(report.totalPauseMs / (1000 * 60 * 60));
-                        const minutes = Math.floor((report.totalPauseMs % (1000 * 60 * 60)) / (1000 * 60));
-                        return `${hours}h ${minutes}m`;
-                      })()}
-                    </p>
-                  </div>
-                )}
-                {report.workingTimeMs && (
-                  <div>
-                    <p className="font-medium text-green-800 dark:text-green-200">Actual Working Time</p>
-                    <p className="text-green-700 dark:text-green-300 mt-1">
-                      {(() => {
-                        const hours = Math.floor(report.workingTimeMs / (1000 * 60 * 60));
-                        const minutes = Math.floor((report.workingTimeMs % (1000 * 60 * 60)) / (1000 * 60));
-                        return `${hours}h ${minutes}m`;
-                      })()}
-                    </p>
-                  </div>
-                )}
+                <div>
+                  <p className="font-medium text-amber-800 dark:text-amber-200">Time Paused (Breaks)</p>
+                  <p className="text-amber-700 dark:text-amber-300 mt-1">
+                    {(() => {
+                      const pauseMs = report.totalPauseMs || 0;
+                      const hours = Math.floor(pauseMs / (1000 * 60 * 60));
+                      const minutes = Math.floor((pauseMs % (1000 * 60 * 60)) / (1000 * 60));
+                      return `${hours}h ${minutes}m`;
+                    })()}
+                  </p>
+                </div>
+                <div>
+                  <p className="font-medium text-green-800 dark:text-green-200">Actual Working Time</p>
+                  <p className="text-green-700 dark:text-green-300 mt-1">
+                    {(() => {
+                      const workMs = report.workingTimeMs || 0;
+                      const hours = Math.floor(workMs / (1000 * 60 * 60));
+                      const minutes = Math.floor((workMs % (1000 * 60 * 60)) / (1000 * 60));
+                      return `${hours}h ${minutes}m`;
+                    })()}
+                  </p>
+                </div>
               </div>
             )}
           </div>

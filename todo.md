@@ -584,3 +584,9 @@
 ## Phase 70: Fix Pause Notification Layout
 - [x] Make "Work is paused" notification appear above buttons (not below)
 - [x] Show pause time inline with notification text
+
+## Phase 71: Show Pause Time in Site Visit Report
+- [x] Verify backend returns totalPauseMs and workingTimeMs in site visit report
+- [x] Update SiteVisitReport component to always display pause time (even if 0h 0m)
+- [x] Show: Total Time, Time Paused, Actual Working Time in Engineer On-Site Time section
+- [x] Handle null/undefined values gracefully with fallback to 0
