@@ -529,4 +529,5 @@
 
 ## Phase 61: Fix Timezone Detection on Request Service Form
 - [x] Investigate timezone API 400 error when selecting addresses
-- [x] Fix timezone detection to work with Google Places autocomplete - changed from raw fetch to tRPC client
+- [x] Fix timezone detection to work with Google Places autocomplete - changed to use tRPC utils.client.jobs.getTimezone.query()
+- [x] Test timezone detection with Times Square address - working correctly, shows "Timezone detected: Eastern Standard Time"

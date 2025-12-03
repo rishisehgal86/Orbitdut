@@ -261,11 +261,14 @@ export default function RequestService() {
     }
   };
 
+  // Get tRPC utils for imperative queries
+  const utils = trpc.useUtils();
+
   // Fetch timezone from Google Maps Timezone API
   const fetchTimezoneForLocation = async (lat: number, lng: number) => {
     setFetchingTimezone(true);
     try {
-      const result = await trpc.jobs.getTimezone.query({
+      const result = await utils.client.jobs.getTimezone.query({
         latitude: lat,
         longitude: lng,
       });
