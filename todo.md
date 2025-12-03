@@ -531,3 +531,8 @@
 - [x] Investigate timezone API 400 error when selecting addresses
 - [x] Fix timezone detection to work with Google Places autocomplete - changed to use tRPC utils.client.jobs.getTimezone.query()
 - [x] Test timezone detection with Times Square address - working correctly, shows "Timezone detected: Eastern Standard Time"
+
+## Phase 62: Fix Address Validation Double-Click Issue
+- [x] Fix validation error not clearing when address is selected from autocomplete
+- [x] Ensure red border and error message disappear immediately after selection
+- [x] Test address selection workflow end-to-end - working perfectly, no more double-click needed
