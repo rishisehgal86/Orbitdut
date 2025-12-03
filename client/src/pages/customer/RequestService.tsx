@@ -300,6 +300,10 @@ export default function RequestService() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Debug: Log what we're storing (BEFORE validation)
+    console.log('🔍 Request form - formData.siteName:', formData.siteName);
+    console.log('🔍 Request form - Full formData:', formData);
+
     if (!formData.latitude || !formData.longitude) {
       toast.error("Please select an address from the suggestions");
       return;
@@ -309,7 +313,7 @@ export default function RequestService() {
       toast.error("Timezone information is missing. Please reselect the address.");
       return;
     }
-
+    
     // Store form data in session storage
     sessionStorage.setItem("jobRequest", JSON.stringify(formData));
     

@@ -1001,6 +1001,9 @@ export const appRouter = router({
         const engineerToken = randomBytes(32).toString('hex');
         const shortCode = randomBytes(4).toString('hex').toUpperCase(); // 8-character hex code
 
+        // Debug: Log what we received
+        console.log('🔍 Backend - input.siteName:', input.siteName);
+
         const [result] = await db.insert(jobs).values({
           // Basic job info
           jobToken: input.jobToken,

@@ -41,6 +41,10 @@ export default function RequestServicePricing() {
       const outOfHoursMultiplier = isOutOfHours ? 1.5 : 1;
       const calculatedPrice = Math.round(baseRate * durationHours * outOfHoursMultiplier * 100); // In cents
 
+      // Debug: Log what we're about to send
+      console.log('🔍 Pricing page - formData.siteName:', formData.siteName);
+      console.log('🔍 Pricing page - siteName value being sent:', formData.siteName || undefined);
+      
       const result = await createJob.mutateAsync({
         // Basic job info
         jobToken,

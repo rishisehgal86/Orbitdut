@@ -512,3 +512,8 @@
 ## Phase 57: Add Site Name to Job Detail Pages
 - [x] Add siteName display to supplier job detail page Service Location section
 - [x] Add siteName display to customer job detail page Service Location section
+
+## Phase 58: Fix Site Name Data Capture
+- [x] Investigate why siteName is not being saved when customers submit request form
+- [x] Add console logging at each step to trace data flow
+- [x] Test with new job submission to verify siteName is captured - CONFIRMED WORKING
