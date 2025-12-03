@@ -168,7 +168,7 @@ export default function SupplierJobDetail() {
         )}
 
         {/* Engineer Link Display (for all statuses after supplier accepts) */}
-        {job.status !== "pending_supplier_acceptance" && job.shortCode && (
+        {job.status !== "pending_supplier_acceptance" && job.engineerToken && (
           <Card>
             <CardHeader>
               <CardTitle>Engineer Link</CardTitle>
@@ -177,7 +177,9 @@ export default function SupplierJobDetail() {
             <CardContent className="flex flex-col gap-3">
               <Button
                 onClick={() => {
-                  const link = `${window.location.origin}/e/${job.shortCode}`;
+                  const link = job.shortCode 
+                    ? `${window.location.origin}/e/${job.shortCode}`
+                    : `${window.location.origin}/engineer/job/${job.engineerToken}`;
                   navigator.clipboard.writeText(link);
                   toast.success("Engineer link copied to clipboard!");
                 }}
@@ -186,9 +188,11 @@ export default function SupplierJobDetail() {
                 <Copy className="mr-2 h-4 w-4" />
                 Copy Engineer Link
               </Button>
-              <p className="text-sm text-muted-foreground text-center">
-                Short link: <code className="bg-muted px-2 py-1 rounded">/e/{job.shortCode}</code>
-              </p>
+              {job.shortCode && (
+                <p className="text-sm text-muted-foreground text-center">
+                  Short link: <code className="bg-muted px-2 py-1 rounded">/e/{job.shortCode}</code>
+                </p>
+              )}
             </CardContent>
           </Card>
         )}
