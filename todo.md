@@ -595,3 +595,9 @@
 - [x] Found and removed 2 remaining references to captureCurrentLocation
 - [x] Replaced with handleStatusUpdate calls which include GPS capture
 - [x] All GPS capture now uses inline implementation in handleStatusUpdate
+
+## Phase 73: Update PDF Print to Include Pause Time
+- [x] Checked PDF generation code in SiteVisitReport component
+- [x] Updated PDF to always show pause time breakdown (Total Time, Time Paused, Actual Working Time)
+- [x] Removed conditional rendering - now matches on-screen display
+- [x] Added null/undefined handling with fallback to 0 for PDF generation

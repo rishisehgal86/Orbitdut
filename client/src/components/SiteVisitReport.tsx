@@ -113,21 +113,19 @@ export function SiteVisitReport({ report }: SiteVisitReportProps) {
         pdf.text(`Total Time On Site: ${hours}h ${minutes}m`, margin + 5, yPos);
         yPos += 5;
         
-        if (report.totalPauseMs && report.totalPauseMs > 0) {
-          const pauseHours = Math.floor(report.totalPauseMs / (1000 * 60 * 60));
-          const pauseMinutes = Math.floor((report.totalPauseMs % (1000 * 60 * 60)) / (1000 * 60));
-          pdf.setFont("helvetica", "normal");
-          pdf.text(`Time Paused (Breaks): ${pauseHours}h ${pauseMinutes}m`, margin + 5, yPos);
-          yPos += 5;
-        }
+        const pauseMs = report.totalPauseMs || 0;
+        const pauseHours = Math.floor(pauseMs / (1000 * 60 * 60));
+        const pauseMinutes = Math.floor((pauseMs % (1000 * 60 * 60)) / (1000 * 60));
+        pdf.setFont("helvetica", "normal");
+        pdf.text(`Time Paused (Breaks): ${pauseHours}h ${pauseMinutes}m`, margin + 5, yPos);
+        yPos += 5;
         
-        if (report.workingTimeMs) {
-          const workHours = Math.floor(report.workingTimeMs / (1000 * 60 * 60));
-          const workMinutes = Math.floor((report.workingTimeMs % (1000 * 60 * 60)) / (1000 * 60));
-          pdf.setFont("helvetica", "bold");
-          pdf.text(`Actual Working Time: ${workHours}h ${workMinutes}m`, margin + 5, yPos);
-          yPos += 5;
-        }
+        const workMs = report.workingTimeMs || 0;
+        const workHours = Math.floor(workMs / (1000 * 60 * 60));
+        const workMinutes = Math.floor((workMs % (1000 * 60 * 60)) / (1000 * 60));
+        pdf.setFont("helvetica", "bold");
+        pdf.text(`Actual Working Time: ${workHours}h ${workMinutes}m`, margin + 5, yPos);
+        yPos += 5;
         
         pdf.setFont("helvetica", "normal");
         yPos += 5;
