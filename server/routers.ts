@@ -1881,6 +1881,8 @@ export const appRouter = router({
             .set({
               visitDate: reportData.visitDate,
               engineerName: reportData.engineerName,
+              timeOnsite: reportData.timeOnsite,
+              timeLeftSite: reportData.timeLeftSite,
               issueFault: reportData.issueFault,
               actionsPerformed: reportData.actionsPerformed,
               recommendations: reportData.recommendations,

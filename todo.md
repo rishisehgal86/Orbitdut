@@ -399,11 +399,12 @@
 - [ ] Test the display in job details page
 
 ## Phase 48: Add Time Tracking Display for Completed Jobs
-- [ ] Check database schema for timeOnsite and timeLeftSite fields in site visit report
-- [ ] Create time tracking display component showing arrival, departure, and duration
-- [ ] Display times in both local site time and UTC
-- [ ] Only show for completed jobs (jobs with site visit reports)
-- [ ] Add to both customer and supplier job detail pages
+- [x] Check database schema for timeOnsite and timeLeftSite fields in site visit report
+- [x] Create time tracking display component showing arrival, departure, and duration
+- [x] Display times in both local site time and UTC
+- [x] Only show for completed jobs (jobs with site visit reports)
+- [x] Add to both customer and supplier job detail pages (via SiteVisitReport component)
+- [x] Backend logic to capture timestamps from job status history
 - [ ] Test the display
 
 ## Phase 49: Add Engineer Link Display for Sent to Engineer Status
