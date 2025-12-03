@@ -1,6 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Calendar, Clock, DollarSign, FileText, MapPin, User, Link2 } from "lucide-react";
+import { LocationMapDialog } from "@/components/LocationMapDialog";
+import { useState } from "react";
 
 interface Job {
   id: number;
@@ -13,6 +15,8 @@ interface Job {
   city?: string | null;
   country?: string | null;
   postalCode?: string | null;
+  siteLatitude?: string | null;
+  siteLongitude?: string | null;
   calculatedPrice?: number | null;
   currency?: string | null;
   siteContactName?: string | null;
@@ -34,6 +38,7 @@ interface JobDetailCardsProps {
 }
 
 export function JobDetailCards({ job, viewerType, showPricing = true }: JobDetailCardsProps) {
+  const [mapDialogOpen, setMapDialogOpen] = useState(false);
   // Calculate pricing based on viewer type
   // For customers: show full price they paid (calculatedPrice)
   // For suppliers: show amount they receive (calculatedPrice - Orbidut margin)
@@ -117,9 +122,25 @@ export function JobDetailCards({ job, viewerType, showPricing = true }: JobDetai
               <CardTitle>Service Location</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-start gap-3">
+              <div 
+                className="flex items-start gap-3 cursor-pointer hover:bg-accent/50 -m-6 p-6 rounded-lg transition-colors"
+                onClick={() => {
+                  if (job.siteLatitude && job.siteLongitude) {
+                    setMapDialogOpen(true);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    if (job.siteLatitude && job.siteLongitude) {
+                      setMapDialogOpen(true);
+                    }
+                  }
+                }}
+              >
                 <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div>
+                <div className="flex-1">
                   {job.siteName && <p className="text-sm font-semibold mb-1">{job.siteName}</p>}
                   <p className="text-sm font-medium">{job.siteAddress || 'Address not provided'}</p>
                   {(job.city || job.country) && (
@@ -130,8 +151,25 @@ export function JobDetailCards({ job, viewerType, showPricing = true }: JobDetai
                   {job.postalCode && (
                     <p className="text-sm text-muted-foreground">{job.postalCode}</p>
                   )}
+                  {job.siteLatitude && job.siteLongitude && (
+                    <p className="text-xs text-primary mt-1">Click to view map</p>
+                  )}
                 </div>
               </div>
+
+              {/* Map Dialog */}
+              {job.siteLatitude && job.siteLongitude && (
+                <LocationMapDialog
+                  open={mapDialogOpen}
+                  onOpenChange={setMapDialogOpen}
+                  location={{
+                    name: job.siteName || 'Service Location',
+                    address: job.siteAddress || '',
+                    latitude: parseFloat(job.siteLatitude),
+                    longitude: parseFloat(job.siteLongitude),
+                  }}
+                />
+              )}
             </CardContent>
           </Card>
 

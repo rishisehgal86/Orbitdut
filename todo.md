@@ -548,3 +548,9 @@
 - [x] Check routing and data fetching logic for job details page - found getById query was filtering out unassigned jobs
 - [x] Fix the navigation or query issue - allow suppliers to view jobs with status 'pending_supplier_acceptance'
 - [x] Test job details navigation from supplier portal - Job #210003 and #210004 both loading successfully
+
+## Phase 65: Add Map Popup to Service Location in Job Details
+- [x] Create map popup dialog component with Google Maps integration
+- [x] Add pin marker to show exact service location on map
+- [x] Make service location section clickable to open map popup
+- [x] Test map popup on supplier job details pages - tested with Job #210004 (New York) and Job #210003 (Dubai), both working perfectly
