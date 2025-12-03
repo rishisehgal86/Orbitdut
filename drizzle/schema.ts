@@ -1,4 +1,4 @@
-import { boolean, decimal, foreignKey, index, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { boolean, decimal, foreignKey, index, int, longtext, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -546,8 +546,8 @@ export const svrMediaFiles = mysqlTable("svrMediaFiles", {
   svrId: int("svrId").notNull().references(() => siteVisitReports.id, { onDelete: "cascade" }),
   
   // File Information
-  fileKey: varchar("fileKey", { length: 500 }).notNull(), // S3 key
-  fileUrl: varchar("fileUrl", { length: 1000 }).notNull(), // S3 URL
+  fileKey: varchar("fileKey", { length: 500 }).notNull(), // File reference key
+  fileUrl: longtext("fileUrl").notNull(), // Base64 data URL for local storage
   fileName: varchar("fileName", { length: 255 }).notNull(),
   fileType: mysqlEnum("fileType", ["image", "video"]).notNull(),
   mimeType: varchar("mimeType", { length: 100 }).notNull(),

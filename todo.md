@@ -321,3 +321,10 @@
 - [x] Update supplier portal to show short link format
 - [x] Make engineer link visible for all statuses after sent_to_engineer
 - [x] Test short link generation and routing
+
+## Phase 37: Fix Site Visit Report Database Insertion
+- [x] Fix submitSiteVisitReport procedure - map form fields to correct schema fields
+- [x] Replace .$returningId() with proper Drizzle ORM .execute() method
+- [x] Change fileUrl to LONGTEXT for base64 image storage
+- [x] Test site visit report submission with photos and signature
+- [x] Verify all form fields are saved correctly to database

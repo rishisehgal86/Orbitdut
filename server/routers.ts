@@ -1821,16 +1821,22 @@ export const appRouter = router({
           throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
         }
 
-        // Create site visit report
-        const [report] = await db.insert(siteVisitReports).values({
+        // Create site visit report - map form fields to database schema
+        const insertResult = await db.insert(siteVisitReports).values({
           jobId: job.id,
-          workCompleted: input.workCompleted,
-          findings: input.findings || null,
-          recommendations: input.recommendations || null,
-          customerName: input.customerName,
-          customerSignature: input.signatureDataUrl,
-          completedAt: new Date(),
-        }).$returningId();
+          visitDate: new Date(),
+          engineerName: job.engineerName || 'Unknown Engineer',
+          issueFault: input.findings || null,
+          actionsPerformed: input.workCompleted,
+          issueResolved: true, // Assuming completion means issue is resolved
+          contactAgreed: true, // Customer signature implies agreement
+          clientSignatory: input.customerName,
+          clientSignatureData: input.signatureDataUrl,
+          signedAt: new Date(),
+        });
+        
+        // Get the inserted ID from the result
+        const reportId = insertResult[0].insertId;
 
         // Save photos if provided (store as base64 in database)
         if (input.photos && input.photos.length > 0) {
@@ -1852,7 +1858,7 @@ export const appRouter = router({
             
             // Save to database with base64 data URL
             await db.insert(svrMediaFiles).values({
-              svrId: report.id,
+              svrId: reportId,
               fileKey: fileKey,
               fileUrl: photoDataUrl, // Store base64 data URL directly
               fileName: `photo-${i + 1}.jpg`,
@@ -1863,7 +1869,7 @@ export const appRouter = router({
           }
         }
 
-        return { success: true, reportId: report.id };
+        return { success: true, reportId: reportId };
       }),
 
     // Get site visit report by job ID
