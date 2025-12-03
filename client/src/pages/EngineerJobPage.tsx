@@ -409,11 +409,7 @@ export default function EngineerJobPage() {
               <div className="flex flex-wrap gap-3">
                 {job.status === 'engineer_accepted' && (
                   <Button
-                    onClick={() => {
-                      captureCurrentLocation('en_route');
-                      updateStatusMutation.mutate({ token: token || "", status: 'en_route' });
-                      startTracking('en_route');
-                    }}
+                    onClick={() => handleStatusUpdate('en_route')}
                     disabled={updateStatusMutation.isPending}
                     size="lg"
                   >
@@ -427,11 +423,7 @@ export default function EngineerJobPage() {
 
                 {job.status === 'en_route' && (
                   <Button
-                    onClick={() => {
-                      captureCurrentLocation('on_site');
-                      updateStatusMutation.mutate({ token: token || "", status: 'on_site' });
-                      startTracking('on_site');
-                    }}
+                    onClick={() => handleStatusUpdate('on_site')}
                     disabled={updateStatusMutation.isPending}
                     size="lg"
                   >

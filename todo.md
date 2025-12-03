@@ -590,3 +590,8 @@
 - [x] Update SiteVisitReport component to always display pause time (even if 0h 0m)
 - [x] Show: Total Time, Time Paused, Actual Working Time in Engineer On-Site Time section
 - [x] Handle null/undefined values gracefully with fallback to 0
+
+## Phase 72: Fix captureCurrentLocation Reference Error
+- [x] Found and removed 2 remaining references to captureCurrentLocation
+- [x] Replaced with handleStatusUpdate calls which include GPS capture
+- [x] All GPS capture now uses inline implementation in handleStatusUpdate
