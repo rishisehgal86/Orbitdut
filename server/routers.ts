@@ -2004,6 +2004,9 @@ export const appRouter = router({
       .input(z.object({
         token: z.string(),
         reason: z.string().optional(),
+        latitude: z.string().optional(),
+        longitude: z.string().optional(),
+        accuracy: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
         const { getJobByEngineerToken } = await import("./db");
@@ -2040,11 +2043,32 @@ export const appRouter = router({
           throw new TRPCError({ code: 'BAD_REQUEST', message: 'Work is already paused' });
         }
 
+        // Save GPS location if provided
+        if (input.latitude && input.longitude) {
+          const { jobLocations } = await import("../drizzle/schema");
+          await db.insert(jobLocations).values({
+            jobId: job.id,
+            latitude: input.latitude,
+            longitude: input.longitude,
+            accuracy: input.accuracy || null,
+            trackingType: "milestone",
+            createdAt: new Date(),
+          });
+        }
+
         // Create new pause record
         await db.insert(jobTimePauses).values({
           jobId: job.id,
           pausedAt: new Date(),
           reason: input.reason || null,
+        });
+
+        // Add status history entry for timeline
+        const { addJobStatusHistory } = await import("./db");
+        await addJobStatusHistory({
+          jobId: job.id,
+          status: "paused",
+          notes: input.reason || "Work paused",
         });
 
         return { success: true };
@@ -2054,6 +2078,9 @@ export const appRouter = router({
     resumeWork: publicProcedure
       .input(z.object({
         token: z.string(),
+        latitude: z.string().optional(),
+        longitude: z.string().optional(),
+        accuracy: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
         const { getJobByEngineerToken } = await import("./db");
@@ -2085,11 +2112,32 @@ export const appRouter = router({
           throw new TRPCError({ code: 'BAD_REQUEST', message: 'No active pause to resume' });
         }
 
+        // Save GPS location if provided
+        if (input.latitude && input.longitude) {
+          const { jobLocations } = await import("../drizzle/schema");
+          await db.insert(jobLocations).values({
+            jobId: job.id,
+            latitude: input.latitude,
+            longitude: input.longitude,
+            accuracy: input.accuracy || null,
+            trackingType: "milestone",
+            createdAt: new Date(),
+          });
+        }
+
         // Update pause record with resume time
         await db
           .update(jobTimePauses)
           .set({ resumedAt: new Date() })
           .where(eq(jobTimePauses.id, activePause.id));
+
+        // Add status history entry for timeline
+        const { addJobStatusHistory } = await import("./db");
+        await addJobStatusHistory({
+          jobId: job.id,
+          status: "resumed",
+          notes: "Work resumed",
+        });
 
         return { success: true };
       }),
@@ -2284,9 +2332,9 @@ export const appRouter = router({
 
         // Build timeline events with duration calculations
         const events = statusHistory.map((event, index) => {
-          // Find matching GPS location
+          // Find matching GPS location (within 2 minutes of status change)
           const location = locations.find(loc => 
-            Math.abs(new Date(loc.timestamp).getTime() - new Date(event.timestamp).getTime()) < 60000 // Within 1 minute
+            Math.abs(new Date(loc.timestamp).getTime() - new Date(event.timestamp).getTime()) < 120000 // Within 2 minutes
           );
 
           // Calculate duration in this status (time until next status change)

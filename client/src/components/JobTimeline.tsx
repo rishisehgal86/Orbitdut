@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, MapPin, CheckCircle2, Navigation, Radio, XCircle, FileText, UserCheck, Send, UserPlus } from "lucide-react";
+import { Clock, MapPin, CheckCircle2, Navigation, Radio, XCircle, FileText, UserCheck, Send, UserPlus, Pause, Play } from "lucide-react";
 
 interface TimelineEvent {
   id: number;
@@ -38,6 +38,10 @@ export function JobTimeline({ events, currentStatus }: JobTimelineProps) {
         return <Navigation className="h-5 w-5 text-blue-600" />;
       case "on_site":
         return <Radio className="h-5 w-5 text-purple-600" />;
+      case "paused":
+        return <Pause className="h-5 w-5 text-amber-600" />;
+      case "resumed":
+        return <Play className="h-5 w-5 text-green-600" />;
       case "completed":
         return <CheckCircle2 className="h-5 w-5 text-green-600" />;
       case "cancelled":
@@ -66,6 +70,10 @@ export function JobTimeline({ events, currentStatus }: JobTimelineProps) {
         return "bg-blue-100 text-blue-800";
       case "on_site":
         return "bg-purple-100 text-purple-800";
+      case "paused":
+        return "bg-amber-100 text-amber-800";
+      case "resumed":
+        return "bg-green-100 text-green-800";
       case "completed":
         return "bg-green-100 text-green-800";
       default:
@@ -93,6 +101,8 @@ export function JobTimeline({ events, currentStatus }: JobTimelineProps) {
       declined: "Declined",
       en_route: "Engineer En Route",
       on_site: "Engineer On Site",
+      paused: "Work Paused",
+      resumed: "Work Resumed",
       completed: "Completed",
       cancelled: "Cancelled",
     };

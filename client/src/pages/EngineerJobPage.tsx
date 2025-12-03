@@ -88,34 +88,7 @@ export default function EngineerJobPage() {
     },
   });
 
-  // Capture current location once (for milestones)
-  const captureCurrentLocation = (milestone: string) => {
-    if (!navigator.geolocation || !token) {
-      console.warn("Geolocation not supported or no token");
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        addLocationMutation.mutate({
-          token,
-          latitude: position.coords.latitude.toString(),
-          longitude: position.coords.longitude.toString(),
-          accuracy: position.coords.accuracy.toString(),
-          trackingType: "milestone",
-        });
-        console.log(`Location captured for: ${milestone}`);
-      },
-      (error) => {
-        console.error("Failed to capture location:", error);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
-      }
-    );
-  };
+  // Note: GPS capture is now handled inline in handleStatusUpdate, pause, and resume handlers
 
   // Start continuous GPS tracking
   const startTracking = (trackingType: "en_route" | "on_site") => {
@@ -162,24 +135,52 @@ export default function EngineerJobPage() {
   const handleStatusUpdate = (status: "accepted" | "declined" | "en_route" | "on_site" | "completed") => {
     if (!token) return;
 
-    // Capture location at milestone
-    if (status === "accepted") {
-      captureCurrentLocation("Job accepted");
-    } else if (status === "en_route") {
-      captureCurrentLocation("En route to site");
-      // Start continuous tracking when en route
-      setTimeout(() => startTracking("en_route"), 1000);
-    } else if (status === "on_site") {
-      captureCurrentLocation("Arrived on site");
-      // Stop en_route tracking, start on_site tracking
-      stopTracking();
-      setTimeout(() => startTracking("on_site"), 1000);
-    } else if (status === "completed") {
-      captureCurrentLocation("Job completed");
-      stopTracking();
-    }
-
+    // Update status immediately for instant response
     updateStatusMutation.mutate({ token, status });
+
+    // Capture GPS in background (non-blocking)
+    const captureGPSInBackground = () => {
+      if (!navigator.geolocation) return;
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          // Save GPS location in background
+          addLocationMutation.mutate({
+            token,
+            latitude: position.coords.latitude.toString(),
+            longitude: position.coords.longitude.toString(),
+            accuracy: position.coords.accuracy.toString(),
+            trackingType: "milestone",
+          });
+        },
+        (error) => {
+          console.error("Background GPS capture failed:", error);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 1000,
+          maximumAge: 0,
+        }
+      );
+    };
+
+    // Handle different status transitions
+    if (status === "accepted" || status === "declined") {
+      captureGPSInBackground();
+    } else if (status === "en_route") {
+      captureGPSInBackground();
+      // Start continuous tracking when en route
+      setTimeout(() => startTracking("en_route"), 500);
+    } else if (status === "on_site") {
+      // Stop en_route tracking first
+      stopTracking();
+      captureGPSInBackground();
+      // Start on_site tracking
+      setTimeout(() => startTracking("on_site"), 500);
+    } else if (status === "completed") {
+      stopTracking();
+      captureGPSInBackground();
+    }
   };
 
   // Pre-fill engineer details when manually assigned
@@ -447,7 +448,30 @@ export default function EngineerJobPage() {
                     <div className="flex gap-2">
                       {pauseStatus?.isPaused ? (
                         <Button
-                          onClick={() => resumeWorkMutation.mutate({ token: token || "" })}
+                          onClick={() => {
+                            if (!token) return;
+                            
+                            // Trigger resume immediately for instant response
+                            resumeWorkMutation.mutate({ token });
+                            
+                            // Capture GPS in background
+                            if (navigator.geolocation) {
+                              navigator.geolocation.getCurrentPosition(
+                                (position) => {
+                                  // Update with GPS coordinates in background
+                                  addLocationMutation.mutate({
+                                    token,
+                                    latitude: position.coords.latitude.toString(),
+                                    longitude: position.coords.longitude.toString(),
+                                    accuracy: position.coords.accuracy.toString(),
+                                    trackingType: "milestone",
+                                  });
+                                },
+                                (error) => console.error("Background GPS failed:", error),
+                                { enableHighAccuracy: true, timeout: 1000, maximumAge: 0 }
+                              );
+                            }
+                          }}
                           variant="outline"
                           size="lg"
                           className="flex-1"
@@ -460,7 +484,30 @@ export default function EngineerJobPage() {
                         </Button>
                       ) : (
                         <Button
-                          onClick={() => pauseWorkMutation.mutate({ token: token || "" })}
+                          onClick={() => {
+                            if (!token) return;
+                            
+                            // Trigger pause immediately for instant response
+                            pauseWorkMutation.mutate({ token });
+                            
+                            // Capture GPS in background
+                            if (navigator.geolocation) {
+                              navigator.geolocation.getCurrentPosition(
+                                (position) => {
+                                  // Update with GPS coordinates in background
+                                  addLocationMutation.mutate({
+                                    token,
+                                    latitude: position.coords.latitude.toString(),
+                                    longitude: position.coords.longitude.toString(),
+                                    accuracy: position.coords.accuracy.toString(),
+                                    trackingType: "milestone",
+                                  });
+                                },
+                                (error) => console.error("Background GPS failed:", error),
+                                { enableHighAccuracy: true, timeout: 1000, maximumAge: 0 }
+                              );
+                            }
+                          }}
                           variant="outline"
                           size="lg"
                           className="flex-1"

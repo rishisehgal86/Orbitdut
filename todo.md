@@ -564,3 +564,19 @@
 ## Phase 67: Make Site Contact and Assigned Engineer Side-by-Side
 - [x] Move Site Contact and Assigned Engineer into same responsive 2-column grid
 - [x] Test responsive layout - working correctly with md:grid-cols-2 (mobile: stacked, desktop: side-by-side)
+
+
+## Phase 68: Enhanced GPS Location Tracking at All Milestones
+- [x] Analyze current GPS tracking implementation (currently only tracks en_route)
+- [x] Update updateStatusByToken backend to capture GPS coordinates for on_site, completed statuses
+- [x] Update pauseWork backend to capture GPS coordinates when pausing
+- [x] Update resumeWork backend to capture GPS coordinates when resuming
+- [x] Update engineer UI to get current position before status changes
+- [x] Update JobTimeline component to display GPS coordinates for all milestone events (on_site, pause, resume, completed)
+- [ ] Test complete workflow: en_route → on_site → pause → resume → complete (all with GPS data)
+
+## Phase 69: Make All Buttons Instant (GPS Capture Non-Blocking)
+- [x] Reduce GPS timeout to 1 second for faster response (pause, resume, status updates)
+- [x] Refactor pause/resume to trigger mutation immediately, capture GPS in background
+- [x] Refactor status updates (on_site, complete) to be instant with background GPS
+- [x] All buttons now respond instantly - status update happens first, GPS captured in background

@@ -1,0 +1,60 @@
+{
+  "query": "SELECT \n  jsh.jobId,\n  jsh.status,\n  jsh.timestamp as status_time,\n  jl.latitude,\n  jl.longitude,\n  jl.trackingType,\n  jl.timestamp as gps_time,\n  TIMESTAMPDIFF(SECOND, jsh.timestamp, jl.timestamp) as time_diff_seconds\nFROM jobStatusHistory jsh\nLEFT JOIN jobLocations jl ON jsh.jobId = jl.jobId \n  AND jl.trackingType = 'milestone'\n  AND ABS(TIMESTAMPDIFF(SECOND, jsh.timestamp, jl.timestamp)) < 120\nWHERE jsh.jobId = (SELECT id FROM jobs ORDER BY id DESC LIMIT 1)\nORDER BY jsh.timestamp DESC\nLIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT \n  jsh.jobId,\n  jsh.status,\n  jsh.timestamp as status_time,\n  jl.latitude,\n  jl.longitude,\n  jl.trackingType,\n  jl.timestamp as gps_time,\n  TIMESTAMPDIFF(SECOND, jsh.timestamp, jl.timestamp) as time_diff_seconds\nFROM jobStatusHistory jsh\nLEFT JOIN jobLocations jl ON jsh.jobId = jl.jobId \n  AND jl.trackingType = 'milestone'\n  AND ABS(TIMESTAMPDIFF(SECOND, jsh.timestamp, jl.timestamp)) < 120\nWHERE jsh.jobId = (SELECT id FROM jobs ORDER BY id DESC LIMIT 1)\nORDER BY jsh.timestamp DESC\nLIMIT 10;",
+  "rows": [
+    {
+      "jobId": "210004",
+      "status": "on_site",
+      "status_time": "2025-12-03 22:00:33",
+      "latitude": "NULL",
+      "longitude": "NULL",
+      "trackingType": "NULL",
+      "gps_time": "NULL",
+      "time_diff_seconds": "NULL"
+    },
+    {
+      "jobId": "210004",
+      "status": "en_route",
+      "status_time": "2025-12-03 21:55:21",
+      "latitude": "51.569745582151434",
+      "longitude": "-0.55754207535431",
+      "trackingType": "milestone",
+      "gps_time": "2025-12-03 21:55:24",
+      "time_diff_seconds": "3"
+    },
+    {
+      "jobId": "210004",
+      "status": "engineer_accepted",
+      "status_time": "2025-12-03 21:54:35",
+      "latitude": "51.569745582151434",
+      "longitude": "-0.55754207535431",
+      "trackingType": "milestone",
+      "gps_time": "2025-12-03 21:55:24",
+      "time_diff_seconds": "49"
+    },
+    {
+      "jobId": "210004",
+      "status": "sent_to_engineer",
+      "status_time": "2025-12-03 21:50:50",
+      "latitude": "NULL",
+      "longitude": "NULL",
+      "trackingType": "NULL",
+      "gps_time": "NULL",
+      "time_diff_seconds": "NULL"
+    },
+    {
+      "jobId": "210004",
+      "status": "supplier_accepted",
+      "status_time": "2025-12-03 21:49:53",
+      "latitude": "NULL",
+      "longitude": "NULL",
+      "trackingType": "NULL",
+      "gps_time": "NULL",
+      "time_diff_seconds": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "jobId\tstatus\tstatus_time\tlatitude\tlongitude\ttrackingType\tgps_time\ttime_diff_seconds\n210004\ton_site\t2025-12-03 22:00:33\tNULL\tNULL\tNULL\tNULL\tNULL\n210004\ten_route\t2025-12-03 21:55:21\t51.569745582151434\t-0.55754207535431\tmilestone\t2025-12-03 21:55:24\t3\n210004\tengineer_accepted\t2025-12-03 21:54:35\t51.569745582151434\t-0.55754207535431\tmilestone\t2025-12-03 21:55:24\t49\n210004\tsent_to_engineer\t2025-12-03 21:50:50\tNULL\tNULL\tNULL\tNULL\tNULL\n210004\tsupplier_accepted\t2025-12-03 21:49:53\tNULL\tNULL\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 85
+}
