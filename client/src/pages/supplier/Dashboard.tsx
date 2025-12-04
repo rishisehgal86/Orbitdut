@@ -2,12 +2,16 @@ import SupplierLayout from "@/components/SupplierLayout";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, Briefcase, CheckCircle, Clock, DollarSign, Loader2, Eye } from "lucide-react";
+import { AlertCircle, Briefcase, CheckCircle, Clock, DollarSign, Loader2, Eye, AlertTriangle } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function SupplierDashboard() {
+  const { data: profile } = trpc.suppliers.getProfile.useQuery();
   const { data: availableJobs, isLoading: loadingAvailable } = trpc.jobs.getAvailableForSupplier.useQuery();
   const { data: myJobs, isLoading: loadingMy } = trpc.jobs.getSupplierJobs.useQuery();
+
+  const isVerified = profile?.isVerified === 1;
 
   const isLoading = loadingAvailable || loadingMy;
 
@@ -31,6 +35,24 @@ export default function SupplierDashboard() {
             Welcome to your supplier portal. Manage your jobs, rates, and coverage areas.
           </p>
         </div>
+
+        {/* Verification Banner */}
+        {!isVerified && (
+          <Alert variant="destructive" className="border-amber-500 bg-amber-50 text-amber-900">
+            <AlertTriangle className="h-5 w-5 text-amber-600" />
+            <AlertTitle className="text-amber-900 font-semibold">Verification Required</AlertTitle>
+            <AlertDescription className="text-amber-800">
+              Your supplier account is not yet verified. You must complete the verification process before you can accept jobs.
+              <div className="mt-3">
+                <Link href="/supplier/verification">
+                  <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white">
+                    Complete Verification
+                  </Button>
+                </Link>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Stats Overview - Logical workflow order */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

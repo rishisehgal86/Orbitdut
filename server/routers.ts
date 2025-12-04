@@ -2447,6 +2447,9 @@ export const appRouter = router({
         const { supplierVerification, suppliers } = await import("../drizzle/schema");
         const { eq } = await import("drizzle-orm");
 
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
         // TODO: Add admin role check
 
         // Update verification status
@@ -2467,7 +2470,20 @@ export const appRouter = router({
           })
           .where(eq(suppliers.id, input.supplierId));
 
-        // TODO: Send email notification to supplier
+        // Get supplier details for email
+        const supplier = await db.select()
+          .from(suppliers)
+          .where(eq(suppliers.id, input.supplierId))
+          .limit(1);
+
+        // Send approval email notification
+        if (supplier[0]) {
+          const { sendVerificationApprovedEmail } = await import("./_core/email");
+          await sendVerificationApprovedEmail(
+            supplier[0].contactEmail,
+            supplier[0].companyName
+          ).catch(err => console.error("Failed to send approval email:", err));
+        }
 
         return { success: true };
       }),
@@ -2483,6 +2499,9 @@ export const appRouter = router({
       .mutation(async ({ input, ctx }) => {
         const { supplierVerification, suppliers } = await import("../drizzle/schema");
         const { eq } = await import("drizzle-orm");
+
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
 
         // TODO: Add admin role check
 
@@ -2504,7 +2523,27 @@ export const appRouter = router({
           })
           .where(eq(suppliers.id, input.supplierId));
 
-        // TODO: Send email notification to supplier with rejection reason
+        // Get supplier details and verification for email
+        const supplier = await db.select()
+          .from(suppliers)
+          .where(eq(suppliers.id, input.supplierId))
+          .limit(1);
+
+        const verification = await db.select()
+          .from(supplierVerification)
+          .where(eq(supplierVerification.supplierId, input.supplierId))
+          .limit(1);
+
+        // Send rejection email notification
+        if (supplier[0]) {
+          const { sendVerificationRejectedEmail } = await import("./_core/email");
+          await sendVerificationRejectedEmail(
+            supplier[0].contactEmail,
+            supplier[0].companyName,
+            input.reason,
+            verification[0]?.adminNotes || undefined
+          ).catch(err => console.error("Failed to send rejection email:", err));
+        }
 
         return { success: true };
       }),

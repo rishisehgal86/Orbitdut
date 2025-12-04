@@ -5,16 +5,29 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
-import { Calendar, CheckCircle, Clock, DollarSign, Eye, Loader2, MapPin } from "lucide-react";
-import { Link } from "wouter";
+import { Calendar, CheckCircle, Clock, DollarSign, Eye, Loader2, MapPin, AlertTriangle } from "lucide-react";
+import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useEffect } from "react";
 
 export default function SupplierJobs() {
+  const [, setLocation] = useLocation();
+  const { data: profile } = trpc.suppliers.getProfile.useQuery();
   const { data: availableJobs, isLoading: loadingAvailable, refetch: refetchAvailable } =
     trpc.jobs.getAvailableForSupplier.useQuery();
   const { data: myJobs, isLoading: loadingMy, refetch: refetchMy } =
     trpc.jobs.getSupplierJobs.useQuery();
   const acceptJob = trpc.jobs.acceptJobAsSupplier.useMutation();
+
+  const isVerified = profile?.isVerified === 1;
+
+  // Redirect unverified suppliers to verification page
+  useEffect(() => {
+    if (profile && !isVerified) {
+      setLocation("/supplier/verification");
+    }
+  }, [profile, isVerified, setLocation]);
 
   const handleAcceptJob = async (jobId: number) => {
     try {
