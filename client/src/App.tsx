@@ -30,6 +30,13 @@ import CustomerProfile from "./pages/customer/Profile";
 import CustomerSettings from "./pages/customer/Settings";
 import EngineerJobPage from "./pages/EngineerJobPage";
 import ShortLinkRedirect from "./pages/ShortLinkRedirect";
+import VerificationStatus from "./pages/VerificationStatus";
+import AdminDashboard from "./pages/admin/Dashboard";
+import AdminVerifications from "./pages/admin/Verifications";
+import VerificationDetail from "./pages/admin/VerificationDetail";
+import AdminJobs from "./pages/admin/Jobs";
+import AdminUsers from "./pages/admin/Users";
+import AdminTeam from "./pages/admin/Team";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -62,11 +69,17 @@ function Router() {
       <Route path={"/supplier/rates"} component={CurrentRates} />
       <Route path={"/supplier/jobs"} component={SupplierJobs} />
       <Route path={"/supplier/jobs/:id"} component={SupplierJobDetail} />
-      <Route path={"/supplier/coverage"} component={SupplierCoverage} />
-      <Route path="/e/:shortCode" component={ShortLinkRedirect} />
+      <Route path={"/supplier/coverage"} component={SupplierCoverage} />      <Route path="/e/:shortCode" component={ShortLinkRedirect} />
       <Route path="/engineer/job/:token" component={EngineerJobPage} />
       <Route path="/supplier/coverage/availability" component={ServiceAvailability} />
-      <Route path={"/404"} component={NotFound} />
+      <Route path="/supplier/verification" component={VerificationStatus} />
+      <Route path="/admin" component={AdminDashboard} />
+      <Route path="/admin/verifications" component={AdminVerifications} />
+      <Route path="/admin/verifications/:supplierId" component={VerificationDetail} />
+      <Route path="/admin/jobs" component={AdminJobs} />
+      <Route path="/admin/users" component={AdminUsers} />
+      <Route path="/admin/team" component={AdminTeam} />
+      <Route path="/404" component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
     </Switch>

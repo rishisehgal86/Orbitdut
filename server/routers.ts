@@ -5,7 +5,7 @@ import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
-import { db } from "./db";
+import { getDb } from "./db";
 import { users, jobs, siteVisitReports, svrMediaFiles } from "../drizzle/schema";
 import { generateJobToken } from "./_core/tokens";
 import { invokeLLM } from "./_core/llm";
@@ -2114,6 +2114,432 @@ export const appRouter = router({
         });
 
         return { events, currentStatus: job.status };
+      }),
+  }),
+
+  // Supplier Verification System
+  verification: router({
+    // Get verification status for current supplier
+    getStatus: protectedProcedure.query(async ({ ctx }) => {
+      const { getSupplierByUserId } = await import("./db");
+      const { supplierVerification, supplierCompanyProfile, verificationDocuments } = await import("../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+
+      // Get supplier
+      const supplier = await getSupplierByUserId(ctx.user.id);
+      if (!supplier) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Supplier not found" });
+      }
+
+      // Get or create verification record
+      let verification = await db.select().from(supplierVerification)
+        .where(eq(supplierVerification.supplierId, supplier.id))
+        .limit(1)
+        .then(rows => rows[0]);
+
+      if (!verification) {
+        await db.insert(supplierVerification).values({
+          supplierId: supplier.id,
+          status: "not_started",
+        });
+        verification = await db.select().from(supplierVerification)
+          .where(eq(supplierVerification.supplierId, supplier.id))
+          .limit(1)
+          .then(rows => rows[0]);
+      }
+
+      // Get company profile
+      const profile = await db.select().from(supplierCompanyProfile)
+        .where(eq(supplierCompanyProfile.supplierId, supplier.id))
+        .limit(1)
+        .then(rows => rows[0] || null);
+
+      // Get documents
+      const documents = await db.select().from(verificationDocuments)
+        .where(eq(verificationDocuments.supplierId, supplier.id));
+
+      return {
+        verification,
+        profile,
+        documents,
+        isVerified: supplier.isVerified === 1,
+      };
+    }),
+
+    // Submit company profile
+    submitCompanyProfile: protectedProcedure
+      .input(
+        z.object({
+          companyName: z.string().min(1),
+          registrationNumber: z.string().optional(),
+          yearFounded: z.number().optional(),
+          headquarters: z.string().optional(),
+          regionalOffices: z.array(z.object({
+            city: z.string(),
+            country: z.string(),
+            address: z.string(),
+          })).optional(),
+          ownershipStructure: z.enum(["private", "group", "subsidiary"]),
+          parentCompany: z.string().optional(),
+          missionStatement: z.string().optional(),
+          coreValues: z.string().optional(),
+          companyOverview: z.string().optional(),
+          numberOfEmployees: z.number().optional(),
+          annualRevenue: z.number().optional(),
+          websiteUrl: z.string().optional(),
+          linkedInUrl: z.string().optional(),
+          primaryContactName: z.string().optional(),
+          primaryContactTitle: z.string().optional(),
+          primaryContactEmail: z.string().email().optional(),
+          primaryContactPhone: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const { getSupplierByUserId } = await import("./db");
+        const { supplierCompanyProfile, supplierVerification } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+
+        const supplier = await getSupplierByUserId(ctx.user.id);
+        if (!supplier) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Supplier not found" });
+        }
+
+        // Check if profile exists
+        const existing = await db.select().from(supplierCompanyProfile)
+          .where(eq(supplierCompanyProfile.supplierId, supplier.id))
+          .limit(1)
+          .then(rows => rows[0]);
+
+        if (existing) {
+          // Update existing profile
+          await db.update(supplierCompanyProfile)
+            .set({
+              ...input,
+              updatedAt: new Date(),
+            })
+            .where(eq(supplierCompanyProfile.supplierId, supplier.id));
+        } else {
+          // Create new profile
+          await db.insert(supplierCompanyProfile).values({
+            supplierId: supplier.id,
+            ...input,
+          });
+        }
+
+        // Update verification status to in_progress
+        await db.update(supplierVerification)
+          .set({ status: "in_progress" })
+          .where(eq(supplierVerification.supplierId, supplier.id));
+
+        return { success: true };
+      }),
+
+    // Upload verification document
+    uploadDocument: protectedProcedure
+      .input(
+        z.object({
+          documentType: z.enum([
+            "insurance_liability",
+            "insurance_indemnity",
+            "insurance_workers_comp",
+            "dpa_signed",
+            "nda_signed",
+            "non_compete_signed",
+            "security_compliance",
+            "engineer_vetting_policy",
+            "other",
+          ]),
+          documentName: z.string(),
+          fileData: z.string(), // base64
+          mimeType: z.string(),
+          fileSize: z.number(),
+          expiryDate: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const { getSupplierByUserId } = await import("./db");
+        const { verificationDocuments, supplierVerification } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        const { storagePut } = await import("./storage");
+
+        const supplier = await getSupplierByUserId(ctx.user.id);
+        if (!supplier) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Supplier not found" });
+        }
+
+        // Upload to S3
+        const fileBuffer = Buffer.from(input.fileData.split(",")[1], "base64");
+        const fileKey = `verification/${supplier.id}/${input.documentType}/${Date.now()}-${input.documentName}`;
+        const { url: fileUrl } = await storagePut(fileKey, fileBuffer, input.mimeType);
+
+        // Save to database
+        await db.insert(verificationDocuments).values({
+          supplierId: supplier.id,
+          documentType: input.documentType,
+          documentName: input.documentName,
+          fileUrl,
+          fileKey,
+          fileSize: input.fileSize,
+          mimeType: input.mimeType,
+          uploadedBy: ctx.user.id,
+          expiryDate: input.expiryDate ? new Date(input.expiryDate) : null,
+          status: "pending_review",
+        });
+
+        // Update verification status
+        await db.update(supplierVerification)
+          .set({ status: "in_progress" })
+          .where(eq(supplierVerification.supplierId, supplier.id));
+
+        return { success: true, fileUrl };
+      }),
+
+    // Submit for verification review
+    submitForReview: protectedProcedure.mutation(async ({ ctx }) => {
+      const { getSupplierByUserId } = await import("./db");
+      const { supplierVerification, supplierCompanyProfile, verificationDocuments } = await import("../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+
+      const supplier = await getSupplierByUserId(ctx.user.id);
+      if (!supplier) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Supplier not found" });
+      }
+
+      // Validate: must have company profile
+      const profile = await db.select().from(supplierCompanyProfile)
+        .where(eq(supplierCompanyProfile.supplierId, supplier.id))
+        .limit(1)
+        .then(rows => rows[0]);
+
+      if (!profile) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Company profile not completed" });
+      }
+
+      // Validate: must have required documents
+      const documents = await db.select().from(verificationDocuments)
+        .where(eq(verificationDocuments.supplierId, supplier.id));
+
+      const requiredDocs = [
+        "insurance_liability",
+        "insurance_indemnity",
+        "insurance_workers_comp",
+        "dpa_signed",
+        "nda_signed",
+        "non_compete_signed",
+      ];
+
+      const uploadedTypes = documents.map(d => d.documentType);
+      const missingDocs = requiredDocs.filter(type => !uploadedTypes.includes(type));
+
+      if (missingDocs.length > 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Missing required documents: ${missingDocs.join(", ")}`,
+        });
+      }
+
+      // Update verification status
+      await db.update(supplierVerification)
+        .set({
+          status: "pending_review",
+          submittedAt: new Date(),
+        })
+        .where(eq(supplierVerification.supplierId, supplier.id));
+
+      // TODO: Send email notification to admin team
+
+      return { success: true };
+    }),
+
+    // Get uploaded documents
+    getDocuments: protectedProcedure.query(async ({ ctx }) => {
+      const { getSupplierByUserId } = await import("./db");
+      const { verificationDocuments } = await import("../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+
+      const supplier = await getSupplierByUserId(ctx.user.id);
+      if (!supplier) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Supplier not found" });
+      }
+
+      const documents = await db.select().from(verificationDocuments)
+        .where(eq(verificationDocuments.supplierId, supplier.id));
+
+      return documents;
+    }),
+  }),
+
+  // Admin Verification Review
+  admin: router({
+    // Get pending verifications queue
+    getPendingVerifications: protectedProcedure.query(async ({ ctx }) => {
+      const { supplierVerification, suppliers } = await import("../drizzle/schema");
+      const { eq, inArray } = await import("drizzle-orm");
+
+      // TODO: Add admin role check
+      // if (ctx.user.role !== "admin") {
+      //   throw new TRPCError({ code: "FORBIDDEN", message: "Admin access required" });
+      // }
+
+      // Get all pending/under_review verifications
+      const verifications = await db.select({
+        id: supplierVerification.id,
+        supplierId: supplierVerification.supplierId,
+        status: supplierVerification.status,
+        submittedAt: supplierVerification.submittedAt,
+        companyName: suppliers.companyName,
+        contactEmail: suppliers.contactEmail,
+      })
+        .from(supplierVerification)
+        .leftJoin(suppliers, eq(supplierVerification.supplierId, suppliers.id))
+        .where(inArray(supplierVerification.status, ["pending_review", "under_review"]));
+
+      return verifications;
+    }),
+
+    // Get verification details for review
+    getVerificationDetails: protectedProcedure
+      .input(z.object({ supplierId: z.number() }))
+      .query(async ({ input, ctx }) => {
+        const { supplierVerification, supplierCompanyProfile, verificationDocuments, suppliers } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+
+        // TODO: Add admin role check
+
+        // Get supplier
+        const supplier = await db.select().from(suppliers)
+          .where(eq(suppliers.id, input.supplierId))
+          .limit(1)
+          .then(rows => rows[0]);
+
+        if (!supplier) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Supplier not found" });
+        }
+
+        // Get verification record
+        const verification = await db.select().from(supplierVerification)
+          .where(eq(supplierVerification.supplierId, input.supplierId))
+          .limit(1)
+          .then(rows => rows[0]);
+
+        // Get company profile
+        const profile = await db.select().from(supplierCompanyProfile)
+          .where(eq(supplierCompanyProfile.supplierId, input.supplierId))
+          .limit(1)
+          .then(rows => rows[0] || null);
+
+        // Get documents
+        const documents = await db.select().from(verificationDocuments)
+          .where(eq(verificationDocuments.supplierId, input.supplierId));
+
+        return {
+          supplier,
+          verification,
+          profile,
+          documents,
+        };
+      }),
+
+    // Approve verification
+    approveVerification: protectedProcedure
+      .input(z.object({ supplierId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const { supplierVerification, suppliers } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+
+        // TODO: Add admin role check
+
+        // Update verification status
+        await db.update(supplierVerification)
+          .set({
+            status: "approved",
+            reviewedBy: ctx.user.id,
+            reviewedAt: new Date(),
+            approvedAt: new Date(),
+          })
+          .where(eq(supplierVerification.supplierId, input.supplierId));
+
+        // Update supplier isVerified flag
+        await db.update(suppliers)
+          .set({
+            isVerified: 1,
+            verificationStatus: "verified",
+          })
+          .where(eq(suppliers.id, input.supplierId));
+
+        // TODO: Send email notification to supplier
+
+        return { success: true };
+      }),
+
+    // Reject verification
+    rejectVerification: protectedProcedure
+      .input(
+        z.object({
+          supplierId: z.number(),
+          reason: z.string().min(1),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const { supplierVerification, suppliers } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+
+        // TODO: Add admin role check
+
+        // Update verification status
+        await db.update(supplierVerification)
+          .set({
+            status: "rejected",
+            reviewedBy: ctx.user.id,
+            reviewedAt: new Date(),
+            rejectionReason: input.reason,
+          })
+          .where(eq(supplierVerification.supplierId, input.supplierId));
+
+        // Update supplier status
+        await db.update(suppliers)
+          .set({
+            isVerified: 0,
+            verificationStatus: "rejected",
+          })
+          .where(eq(suppliers.id, input.supplierId));
+
+        // TODO: Send email notification to supplier with rejection reason
+
+        return { success: true };
+      }),
+
+    // Add admin note
+    addNote: protectedProcedure
+      .input(
+        z.object({
+          supplierId: z.number(),
+          note: z.string().min(1),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const { supplierVerification } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+
+        // TODO: Add admin role check
+
+        // Get existing notes
+        const verification = await db.select().from(supplierVerification)
+          .where(eq(supplierVerification.supplierId, input.supplierId))
+          .limit(1)
+          .then(rows => rows[0]);
+
+        const existingNotes = verification?.adminNotes || "";
+        const timestamp = new Date().toISOString();
+        const newNote = `[${timestamp}] ${ctx.user.name || ctx.user.email}: ${input.note}`;
+        const updatedNotes = existingNotes ? `${existingNotes}\n\n${newNote}` : newNote;
+
+        // Update notes
+        await db.update(supplierVerification)
+          .set({ adminNotes: updatedNotes })
+          .where(eq(supplierVerification.supplierId, input.supplierId));
+
+        return { success: true };
       }),
   }),
 });

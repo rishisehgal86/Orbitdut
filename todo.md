@@ -750,3 +750,83 @@
 - [ ] Verify all charts and analytics display correctly
 - [ ] Test export functionality
 - [ ] Save checkpoint and push to GitHub
+
+## Phase 85: Implement Supplier Verification & Superadmin Dashboard (In Progress)
+
+### Database Schema Implementation
+- [x] Create supplierCompanyProfile table in drizzle/schema.ts
+- [x] Create verificationDocuments table in drizzle/schema.ts
+- [x] Create supplierVerification table in drizzle/schema.ts
+- [x] Create adminOrganization table in drizzle/schema.ts
+- [x] Create adminUsers table in drizzle/schema.ts
+- [x] Add isVerified field to suppliers table
+- [x] Run database migration (SQL execution)
+
+### Backend Procedures - Supplier Verification
+- [x] Create getVerificationStatus procedure (supplier checks their status)
+- [x] Create submitCompanyProfile procedure (save questionnaire)
+- [x] Create uploadVerificationDocument procedure (upload docs to S3)
+- [x] Create submitForVerification procedure (final submission)
+- [x] Create getVerificationDocuments procedure (list uploaded docs)
+- [ ] Add access control: block unverified suppliers from viewing/accepting jobs
+
+### Backend Procedures - Admin Verification Review
+- [ ] Create superadminProcedure middleware (check admin organization membership)
+- [x] Create getPendingVerifications procedure (admin queue)
+- [x] Create getVerificationDetails procedure (admin review page)
+- [x] Create approveVerification procedure (approve supplier)
+- [x] Create rejectVerification procedure (reject with reason)
+- [x] Create addVerificationNote procedure (internal admin notes)
+
+### Backend Procedures - Admin Organization
+- [ ] Create getAdminUsers procedure (list admin team)
+- [ ] Create inviteAdminUser procedure (send invitation)
+- [ ] Create updateAdminRole procedure (change permissions)
+- [ ] Create revokeAdminAccess procedure (remove admin)
+
+### Supplier Portal UI - Verification Wizard
+- [x] Create VerificationWizard component (5-step flow)
+- [x] Step 1: Company Profile form (all questionnaire fields)
+- [x] Step 2: Insurance certificates upload (3 types with expiry dates)
+- [x] Step 3: Legal agreements (generate templates, upload signed)
+- [x] Step 4: Optional documents (security compliance, vetting policy)
+- [x] Step 5: Review and submit
+- [x] Create VerificationStatus component (dashboard showing status)
+- [ ] Add verification banner to supplier dashboard (if unverified)
+- [ ] Block "Available Jobs" page access for unverified suppliers
+
+### Admin Portal UI - Layout & Navigation
+- [x] Create AdminLayout component (similar to DashboardLayout)
+- [x] Create admin navigation sidebar with sections:
+  - [x] Dashboard (overview)
+  - [x] Verifications (pending queue)
+  - [x] Jobs (all jobs monitoring)
+  - [x] Users (customers, suppliers, engineers)
+  - [x] Admin Team (organization management)
+- [x] Create /admin route in App.tsx
+- [ ] Add role-based route protection (only admin users can access)
+
+### Admin Portal UI - Verification Review
+- [x] Create VerificationQueue page (table of pending verifications)
+- [x] Create VerificationReview page (detailed review interface)
+- [ ] Document preview component (inline PDF/image viewer)
+- [x] Approve/Reject dialog with reason field
+- [ ] Request additional documents dialog
+- [ ] Internal notes section (admin-only)
+- [ ] Email notification on approval/rejection
+
+### Admin Portal UI - Platform Overview
+- [x] Create AdminDashboard page (platform statistics)
+- [x] Statistics cards (total jobs, customers, suppliers, revenue)
+- [ ] Real-time metrics (jobs today, active jobs, completed today)
+- [ ] Create AllJobs page (table with advanced filtering)
+- [ ] Create UserManagement page (customers and suppliers tables)
+- [ ] Create AdminTeam page (manage admin organization users)
+
+### Testing
+- [ ] Test supplier verification submission flow end-to-end
+- [ ] Test admin verification review and approval
+- [ ] Test access control (unverified suppliers blocked)
+- [ ] Test admin role-based permissions
+- [ ] Test document upload and storage
+- [ ] Test email notifications

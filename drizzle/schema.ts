@@ -1,4 +1,4 @@
-import { boolean, decimal, foreignKey, index, int, longtext, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { boolean, decimal, foreignKey, index, int, json, longtext, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -79,6 +79,7 @@ export const suppliers = mysqlTable("suppliers", {
   country: varchar("country", { length: 2 }).notNull(), // ISO 3166-1 alpha-2
   taxId: varchar("taxId", { length: 100 }),
   verificationStatus: mysqlEnum("verificationStatus", ["pending", "verified", "rejected"]).default("pending").notNull(),
+  isVerified: int("isVerified", { unsigned: true }).default(0).notNull(), // 0 = not verified, 1 = verified
   stripeAccountId: varchar("stripeAccountId", { length: 255 }),
   isActive: int("isActive", { unsigned: true }).default(1).notNull(), // 1 = active, 0 = inactive
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -561,3 +562,188 @@ export const svrMediaFiles = mysqlTable("svrMediaFiles", {
 
 export type SvrMediaFile = typeof svrMediaFiles.$inferSelect;
 export type InsertSvrMediaFile = typeof svrMediaFiles.$inferInsert;
+
+/**
+ * Supplier Company Profile - stores detailed company information for verification
+ */
+export const supplierCompanyProfile = mysqlTable("supplierCompanyProfile", {
+  id: int("id").autoincrement().primaryKey(),
+  supplierId: int("supplierId").notNull().references(() => suppliers.id, { onDelete: "cascade" }).unique(),
+  
+  // Company Overview
+  companyName: varchar("companyName", { length: 255 }).notNull(),
+  registrationNumber: varchar("registrationNumber", { length: 100 }),
+  yearFounded: int("yearFounded"),
+  
+  // Locations
+  headquarters: text("headquarters"), // Full address
+  regionalOffices: json("regionalOffices").$type<Array<{city: string, country: string, address: string}>>(), // Array of office locations
+  
+  // Ownership
+  ownershipStructure: mysqlEnum("ownershipStructure", ["private", "group", "subsidiary"]).notNull(),
+  parentCompany: varchar("parentCompany", { length: 255 }), // If subsidiary
+  
+  // Company Description
+  missionStatement: text("missionStatement"),
+  coreValues: text("coreValues"),
+  companyOverview: text("companyOverview"), // What the company does
+  
+  // Additional Info
+  numberOfEmployees: int("numberOfEmployees"),
+  annualRevenue: int("annualRevenue"), // in USD
+  websiteUrl: varchar("websiteUrl", { length: 500 }),
+  linkedInUrl: varchar("linkedInUrl", { length: 500 }),
+  
+  // Primary Contact
+  primaryContactName: varchar("primaryContactName", { length: 255 }),
+  primaryContactTitle: varchar("primaryContactTitle", { length: 255 }),
+  primaryContactEmail: varchar("primaryContactEmail", { length: 320 }),
+  primaryContactPhone: varchar("primaryContactPhone", { length: 50 }),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  supplierIdIdx: index("supplierCompanyProfile_supplierId_idx").on(table.supplierId),
+}));
+
+export type SupplierCompanyProfile = typeof supplierCompanyProfile.$inferSelect;
+export type InsertSupplierCompanyProfile = typeof supplierCompanyProfile.$inferInsert;
+
+/**
+ * Verification Documents - stores all uploaded documents for supplier verification
+ */
+export const verificationDocuments = mysqlTable("verificationDocuments", {
+  id: int("id").autoincrement().primaryKey(),
+  supplierId: int("supplierId").notNull().references(() => suppliers.id, { onDelete: "cascade" }),
+  
+  // Document Type
+  documentType: mysqlEnum("documentType", [
+    "insurance_liability",
+    "insurance_indemnity", 
+    "insurance_workers_comp",
+    "dpa_signed",
+    "nda_signed",
+    "non_compete_signed",
+    "security_compliance",
+    "engineer_vetting_policy",
+    "other"
+  ]).notNull(),
+  
+  // File Information
+  documentName: varchar("documentName", { length: 255 }).notNull(), // Original filename
+  fileUrl: varchar("fileUrl", { length: 500 }).notNull(), // S3 URL
+  fileKey: varchar("fileKey", { length: 500 }).notNull(), // S3 key
+  fileSize: int("fileSize").notNull(), // in bytes
+  mimeType: varchar("mimeType", { length: 100 }).notNull(),
+  
+  // Upload Info
+  uploadedAt: timestamp("uploadedAt").defaultNow().notNull(),
+  uploadedBy: int("uploadedBy").references(() => users.id), // User who uploaded
+  
+  // Expiry (for insurance certificates)
+  expiryDate: timestamp("expiryDate"),
+  
+  // Review Status
+  status: mysqlEnum("status", ["pending_review", "approved", "rejected", "expired"]).default("pending_review").notNull(),
+  reviewedBy: int("reviewedBy").references(() => users.id), // Admin who reviewed
+  reviewedAt: timestamp("reviewedAt"),
+  reviewNotes: text("reviewNotes"), // Admin notes on approval/rejection
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  supplierIdIdx: index("verificationDocuments_supplierId_idx").on(table.supplierId),
+  documentTypeIdx: index("verificationDocuments_documentType_idx").on(table.documentType),
+  statusIdx: index("verificationDocuments_status_idx").on(table.status),
+}));
+
+export type VerificationDocument = typeof verificationDocuments.$inferSelect;
+export type InsertVerificationDocument = typeof verificationDocuments.$inferInsert;
+
+/**
+ * Supplier Verification - tracks overall verification status and admin review
+ */
+export const supplierVerification = mysqlTable("supplierVerification", {
+  id: int("id").autoincrement().primaryKey(),
+  supplierId: int("supplierId").notNull().references(() => suppliers.id, { onDelete: "cascade" }).unique(),
+  
+  // Verification Status
+  status: mysqlEnum("status", [
+    "not_started",
+    "in_progress",
+    "pending_review",
+    "under_review",
+    "approved",
+    "rejected",
+    "resubmission_required"
+  ]).default("not_started").notNull(),
+  
+  // Submission
+  submittedAt: timestamp("submittedAt"),
+  
+  // Admin Review
+  reviewedBy: int("reviewedBy").references(() => users.id), // Admin who reviewed
+  reviewedAt: timestamp("reviewedAt"),
+  rejectionReason: text("rejectionReason"), // Why rejected
+  adminNotes: text("adminNotes"), // Internal notes for admin team
+  
+  // Approval
+  approvedAt: timestamp("approvedAt"),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  supplierIdIdx: index("supplierVerification_supplierId_idx").on(table.supplierId),
+  statusIdx: index("supplierVerification_status_idx").on(table.status),
+}));
+
+export type SupplierVerification = typeof supplierVerification.$inferSelect;
+export type InsertSupplierVerification = typeof supplierVerification.$inferInsert;
+
+/**
+ * Admin Organization - represents the Orbidut admin organization
+ */
+export const adminOrganization = mysqlTable("adminOrganization", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(), // e.g., "Orbidut Admin Team"
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AdminOrganization = typeof adminOrganization.$inferSelect;
+export type InsertAdminOrganization = typeof adminOrganization.$inferInsert;
+
+/**
+ * Admin Users - links users to admin organization with roles
+ */
+export const adminUsers = mysqlTable("adminUsers", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  organizationId: int("organizationId").notNull().references(() => adminOrganization.id, { onDelete: "cascade" }),
+  
+  // Role: owner (full access), admin (platform management), viewer (read-only)
+  role: mysqlEnum("role", ["owner", "admin", "viewer"]).default("viewer").notNull(),
+  
+  // Permissions (JSON object for granular control)
+  permissions: json("permissions").$type<{
+    canApproveSuppliers?: boolean;
+    canManageUsers?: boolean;
+    canViewFinancials?: boolean;
+    canManageJobs?: boolean;
+    canManageAdmins?: boolean; // Only owners
+  }>(),
+  
+  invitedBy: int("invitedBy").references(() => users.id), // Who invited this admin
+  invitedAt: timestamp("invitedAt").defaultNow().notNull(),
+  
+  isActive: int("isActive", { unsigned: true }).default(1).notNull(), // 1 = active, 0 = revoked
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  userIdIdx: index("adminUsers_userId_idx").on(table.userId),
+  organizationIdIdx: index("adminUsers_organizationId_idx").on(table.organizationId),
+  uniqueUserOrg: index("adminUsers_unique").on(table.userId, table.organizationId),
+}));
+
+export type AdminUser = typeof adminUsers.$inferSelect;
+export type InsertAdminUser = typeof adminUsers.$inferInsert;
