@@ -838,3 +838,15 @@
   - Issue: 5-10MB limit, data lost on cache clear
   - Future: Move to database BLOB storage or external document management service
   - Affects: Insurance certificate uploads, e-signed legal agreements, optional documents
+
+## Verification Wizard - Immediate Priority
+
+- [ ] Block "My Jobs" page access until verification is approved
+  - Prevent suppliers from viewing jobs if verification status is not "approved"
+  - Show message explaining verification is required
+  - Redirect to verification status page
+
+- [ ] Prevent re-opening of verification wizard after submission
+  - Check verification status before allowing wizard access
+  - If status is "pending_review", "under_review", or "approved", redirect to status page
+  - Only allow wizard access if status is "not_started" or "resubmission_required"
