@@ -166,60 +166,23 @@ export default function RequestService() {
   useEffect(() => {
     if (formData.scheduledDate && formData.scheduledTime && formData.timezone) {
       try {
-        // User input: "2025-12-19" and "09:00" - they mean 9 AM in the SITE's timezone
-        // We need to show: "Dec 19, 2025 at 9:00 AM" (local) and the correct UTC equivalent
+        // Parse local time
+        const localDateTime = `${formData.scheduledDate}T${formData.scheduledTime}`;
+        const localDate = new Date(localDateTime);
         
-        // Parse the date/time components
-        const [year, month, day] = formData.scheduledDate.split('-').map(Number);
-        const [hour, minute] = formData.scheduledTime.split(':').map(Number);
-        
-        // Create a Date object in the browser's local timezone
-        const localDate = new Date(year, month - 1, day, hour, minute, 0);
-        
-        // Get the timezone offset for the SITE's timezone at this date/time
-        // We do this by formatting the date in both the site's timezone and UTC
-        const siteTimeStr = localDate.toLocaleString('en-US', {
-          timeZone: formData.timezone,
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false
-        });
-        
-        const utcTimeStr = localDate.toLocaleString('en-US', {
-          timeZone: 'UTC',
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false
-        });
-        
-        // Calculate the offset between site timezone and UTC
-        const siteDate = new Date(siteTimeStr);
-        const utcDate = new Date(utcTimeStr);
-        const offset = siteDate.getTime() - utcDate.getTime();
-        
-        // Adjust the local date by this offset to get the correct UTC timestamp
-        // The user said "9 AM in site timezone", so we need to shift the Date object
-        // so that when formatted in the site's timezone, it shows 9 AM
-        const adjustedDate = new Date(localDate.getTime() - offset);
-        
-        // Now format for display
+        // Format local time with timezone
         const localFormatted = new Intl.DateTimeFormat('en-US', {
           dateStyle: 'medium',
           timeStyle: 'short',
           timeZone: formData.timezone,
-        }).format(adjustedDate);
+        }).format(localDate);
         
+        // Format UTC time
         const utcFormatted = new Intl.DateTimeFormat('en-US', {
           dateStyle: 'medium',
           timeStyle: 'short',
           timeZone: 'UTC',
-        }).format(adjustedDate);
+        }).format(localDate);
         
         setLocalTimeDisplay(localFormatted);
         setUtcTimeDisplay(utcFormatted + " UTC");
@@ -280,13 +243,6 @@ export default function RequestService() {
           longitude: lng.toString(),
         }));
 
-        // Clear address validation error since we now have coordinates
-        setErrors((prev) => {
-          const newErrors = { ...prev };
-          delete newErrors.address;
-          return newErrors;
-        });
-
         // Fetch timezone from Google Maps API
         fetchTimezoneForLocation(lat, lng);
 
@@ -305,17 +261,23 @@ export default function RequestService() {
     }
   };
 
-  // Get tRPC utils for imperative queries
-  const utils = trpc.useUtils();
-
   // Fetch timezone from Google Maps Timezone API
   const fetchTimezoneForLocation = async (lat: number, lng: number) => {
     setFetchingTimezone(true);
     try {
-      const result = await utils.client.jobs.getTimezone.query({
-        latitude: lat,
-        longitude: lng,
-      });
+      // Use fetch to call the tRPC endpoint directly
+      const response = await fetch(
+        `/api/trpc/jobs.getTimezone?input=${encodeURIComponent(
+          JSON.stringify({ latitude: lat, longitude: lng })
+        )}`
+      );
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch timezone");
+      }
+      
+      const data = await response.json();
+      const result = data.result.data;
 
       setFormData((prev) => ({
         ...prev,
@@ -338,10 +300,6 @@ export default function RequestService() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Debug: Log what we're storing (BEFORE validation)
-    console.log('🔍 Request form - formData.siteName:', formData.siteName);
-    console.log('🔍 Request form - Full formData:', formData);
-
     if (!formData.latitude || !formData.longitude) {
       toast.error("Please select an address from the suggestions");
       return;
@@ -351,7 +309,7 @@ export default function RequestService() {
       toast.error("Timezone information is missing. Please reselect the address.");
       return;
     }
-    
+
     // Store form data in session storage
     sessionStorage.setItem("jobRequest", JSON.stringify(formData));
     
@@ -501,7 +459,27 @@ export default function RequestService() {
                 />
               </div>
 
-              <div className="flex items-center space-x-2">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="bookingType">Booking Type</Label>
+                  <Select
+                    value={formData.bookingType}
+                    onValueChange={(value: "full_day" | "hourly" | "multi_day") =>
+                      setFormData({ ...formData, bookingType: value })
+                    }
+                  >
+                    <SelectTrigger id="bookingType">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="hourly">Hourly</SelectItem>
+                      <SelectItem value="full_day">Full Day</SelectItem>
+                      <SelectItem value="multi_day">Multi-Day</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center space-x-2 pt-8">
                   <input
                     type="checkbox"
                     id="downTime"
@@ -515,6 +493,7 @@ export default function RequestService() {
                     🚨 Urgent - Causing Downtime
                   </Label>
                 </div>
+              </div>
             </CardContent>
           </Card>
 

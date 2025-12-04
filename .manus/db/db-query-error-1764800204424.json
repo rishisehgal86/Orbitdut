@@ -1,8 +1,0 @@
-{
-  "query": "\nSELECT \n  j.id as job_id,\n  j.status,\n  svr.id as report_id,\n  svr.timeOnsite,\n  svr.timeLeftSite,\n  svr.totalTimeMs,\n  svr.totalPauseMs,\n  svr.workingTimeMs,\n  (SELECT COUNT(*) FROM jobTimePauses WHERE jobId = j.id) as pause_count,\n  (SELECT SUM(TIMESTAMPDIFF(SECOND, pausedAt, resumedAt)) \n   FROM jobTimePauses \n   WHERE jobId = j.id AND resumedAt IS NOT NULL) as total_pause_seconds\nFROM jobs j\nLEFT JOIN siteVisitReports svr ON svr.jobId = j.id\nWHERE j.id = 210004;\n",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute \nSELECT \n  j.id as job_id,\n  j.status,\n  svr.id as report_id,\n  svr.timeOnsite,\n  svr.timeLeftSite,\n  svr.totalTimeMs,\n  svr.totalPauseMs,\n  svr.workingTimeMs,\n  (SELECT COUNT(*) FROM jobTimePauses WHERE jobId = j.id) as pause_count,\n  (SELECT SUM(TIMESTAMPDIFF(SECOND, pausedAt, resumedAt)) \n   FROM jobTimePauses \n   WHERE jobId = j.id AND resumedAt IS NOT NULL) as total_pause_seconds\nFROM jobs j\nLEFT JOIN siteVisitReports svr ON svr.jobId = j.id\nWHERE j.id = 210004;\n",
-  "returncode": 1,
-  "logs": [
-    "ERROR 1054 (42S22) at line 2: Unknown column 'svr.totaltimems' in 'field list'"
-  ]
-}

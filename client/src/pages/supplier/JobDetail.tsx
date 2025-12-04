@@ -179,76 +179,104 @@ export default function SupplierJobDetail() {
         {/* Job Status Progress */}
         <JobStatusProgress currentStatus={job.status} />
 
-        {/* Compact Info Grid - Customer & Engineer Link */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Customer Information (Supplier-specific) */}
+        {/* Customer Information (Supplier-specific) */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Customer Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-start gap-3">
+              <User className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div>
+                <p className="font-medium">{job.customerName}</p>
+                <p className="text-sm text-muted-foreground">{job.customerEmail}</p>
+              </div>
+            </div>
+
+            {job.customerPhone && (
+              <div className="flex items-start gap-3">
+                <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="font-medium">Phone</p>
+                  <a
+                    href={`tel:${job.customerPhone}`}
+                    className="text-sm text-primary hover:underline"
+                  >
+                    {job.customerPhone}
+                  </a>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Engineer Link - Compact Version */}
+        {job.status !== "pending_supplier_acceptance" && job.engineerToken && (
+          <Card>
+            <CardContent className="py-3">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium">Engineer Link</p>
+                  {job.shortCode && (
+                    <p className="text-xs text-muted-foreground truncate">
+                      {window.location.origin}/e/{job.shortCode}
+                    </p>
+                  )}
+                </div>
+                <Button
+                  onClick={() => {
+                    const link = job.shortCode 
+                      ? `${window.location.origin}/e/${job.shortCode}`
+                      : `${window.location.origin}/engineer/job/${job.engineerToken}`;
+                    navigator.clipboard.writeText(link);
+                    toast.success("Engineer link copied!");
+                  }}
+                  size="sm"
+                  variant="outline"
+                >
+                  <Copy className="mr-1.5 h-3.5 w-3.5" />
+                  Copy
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Shared Job Details */}
+        <JobDetailCards job={job} viewerType="supplier" />
+
+        {/* Engineer Information */}
+        {job.engineerName && (
           <Card>
             <CardHeader>
-              <CardTitle>Customer Information</CardTitle>
+              <CardTitle>Assigned Engineer</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-start gap-3">
                 <User className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="font-medium">{job.customerName}</p>
-                  <p className="text-sm text-muted-foreground">{job.customerEmail}</p>
+                  <p className="font-medium">{job.engineerName}</p>
+                  <p className="text-sm text-muted-foreground">{job.engineerEmail}</p>
                 </div>
               </div>
 
-              {job.customerPhone && (
+              {job.engineerPhone && (
                 <div className="flex items-start gap-3">
                   <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
                     <p className="font-medium">Phone</p>
                     <a
-                      href={`tel:${job.customerPhone}`}
+                      href={`tel:${job.engineerPhone}`}
                       className="text-sm text-primary hover:underline"
                     >
-                      {job.customerPhone}
+                      {job.engineerPhone}
                     </a>
                   </div>
                 </div>
               )}
             </CardContent>
           </Card>
-
-          {/* Engineer Link - Compact Version */}
-          {job.status !== "pending_supplier_acceptance" && job.engineerToken && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Engineer Link</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    {job.shortCode && (
-                      <p className="text-sm text-muted-foreground truncate">
-                        {window.location.origin}/e/{job.shortCode}
-                      </p>
-                    )}
-                  </div>
-                  <Button
-                    onClick={() => {
-                      const link = job.shortCode 
-                        ? `${window.location.origin}/e/${job.shortCode}`
-                        : `${window.location.origin}/engineer/job/${job.engineerToken}`;
-                      navigator.clipboard.writeText(link);
-                      toast.success("Engineer link copied!");
-                    }}
-                    size="sm"
-                    variant="outline"
-                  >
-                    <Copy className="mr-1.5 h-3.5 w-3.5" />
-                    Copy
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* Shared Job Details */}
-        <JobDetailCards job={job} viewerType="supplier" />
+        )}
 
         {/* Engineer Location Tracking */}
         {(job.status === "en_route" || job.status === "on_site") && (

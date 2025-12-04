@@ -1,8 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Calendar, Clock, DollarSign, FileText, MapPin, User, Link2, Phone } from "lucide-react";
-import { LocationMapDialog } from "@/components/LocationMapDialog";
-import { useState } from "react";
+import { Calendar, Clock, DollarSign, FileText, MapPin, User, Link2 } from "lucide-react";
 
 interface Job {
   id: number;
@@ -10,13 +8,10 @@ interface Job {
   scheduledDateTime?: Date | null;
   estimatedDuration?: number | null;
   description?: string | null;
-  siteName?: string | null;
   siteAddress?: string | null;
   city?: string | null;
   country?: string | null;
   postalCode?: string | null;
-  siteLatitude?: string | null;
-  siteLongitude?: string | null;
   calculatedPrice?: number | null;
   currency?: string | null;
   siteContactName?: string | null;
@@ -29,9 +24,6 @@ interface Job {
   equipmentNeeded?: string | null;
   videoConferenceLink?: string | null;
   notes?: string | null;
-  engineerName?: string | null;
-  engineerEmail?: string | null;
-  engineerPhone?: string | null;
 }
 
 interface JobDetailCardsProps {
@@ -41,7 +33,6 @@ interface JobDetailCardsProps {
 }
 
 export function JobDetailCards({ job, viewerType, showPricing = true }: JobDetailCardsProps) {
-  const [mapDialogOpen, setMapDialogOpen] = useState(false);
   // Calculate pricing based on viewer type
   // For customers: show full price they paid (calculatedPrice)
   // For suppliers: show amount they receive (calculatedPrice - Orbidut margin)
@@ -52,8 +43,7 @@ export function JobDetailCards({ job, viewerType, showPricing = true }: JobDetai
     ? Math.round(customerPrice * (1 - ORBIDUT_MARGIN_PERCENT / 100))
     : customerPrice;
   const displayPrice = viewerType === 'customer' ? customerPrice : supplierAmount;
-  const durationInHours = (job.estimatedDuration ?? 60) / 60; // Convert minutes to hours
-  const hourlyRate = ((displayPrice / 100) / durationInHours).toFixed(2);
+  const hourlyRate = ((displayPrice / 100) / (job.estimatedDuration ?? 1)).toFixed(2);
   return (
     <>
       {/* Service Information & Location Grid */}
@@ -96,14 +86,7 @@ export function JobDetailCards({ job, viewerType, showPricing = true }: JobDetai
               <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
               <div>
                 <p className="text-sm font-medium">Estimated Duration</p>
-                <p className="text-sm text-muted-foreground">
-                  {(() => {
-                    const totalMinutes = job.estimatedDuration ?? 0;
-                    const hours = Math.floor(totalMinutes / 60);
-                    const minutes = totalMinutes % 60;
-                    return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
-                  })()}
-                </p>
+                <p className="text-sm text-muted-foreground">{job.estimatedDuration ?? 0} hours</p>
               </div>
             </div>
             {job.description && (
@@ -125,26 +108,9 @@ export function JobDetailCards({ job, viewerType, showPricing = true }: JobDetai
               <CardTitle>Service Location</CardTitle>
             </CardHeader>
             <CardContent>
-              <div 
-                className="flex items-start gap-3 cursor-pointer hover:bg-accent/50 -m-6 p-6 rounded-lg transition-colors"
-                onClick={() => {
-                  if (job.siteLatitude && job.siteLongitude) {
-                    setMapDialogOpen(true);
-                  }
-                }}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    if (job.siteLatitude && job.siteLongitude) {
-                      setMapDialogOpen(true);
-                    }
-                  }
-                }}
-              >
+              <div className="flex items-start gap-3">
                 <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div className="flex-1">
-                  {job.siteName && <p className="text-sm font-semibold mb-1">{job.siteName}</p>}
+                <div>
                   <p className="text-sm font-medium">{job.siteAddress || 'Address not provided'}</p>
                   {(job.city || job.country) && (
                     <p className="text-sm text-muted-foreground">
@@ -154,25 +120,8 @@ export function JobDetailCards({ job, viewerType, showPricing = true }: JobDetai
                   {job.postalCode && (
                     <p className="text-sm text-muted-foreground">{job.postalCode}</p>
                   )}
-                  {job.siteLatitude && job.siteLongitude && (
-                    <p className="text-xs text-primary mt-1">Click to view map</p>
-                  )}
                 </div>
               </div>
-
-              {/* Map Dialog */}
-              {job.siteLatitude && job.siteLongitude && (
-                <LocationMapDialog
-                  open={mapDialogOpen}
-                  onOpenChange={setMapDialogOpen}
-                  location={{
-                    name: job.siteName || 'Service Location',
-                    address: job.siteAddress || '',
-                    latitude: parseFloat(job.siteLatitude),
-                    longitude: parseFloat(job.siteLongitude),
-                  }}
-                />
-              )}
             </CardContent>
           </Card>
 
@@ -190,14 +139,7 @@ export function JobDetailCards({ job, viewerType, showPricing = true }: JobDetai
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Duration</span>
-                  <span className="text-sm font-medium">
-                    {(() => {
-                      const totalMinutes = job.estimatedDuration ?? 0;
-                      const hours = Math.floor(totalMinutes / 60);
-                      const minutes = totalMinutes % 60;
-                      return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
-                    })()}
-                  </span>
+                  <span className="text-sm font-medium">{job.estimatedDuration ?? 0} hours</span>
                 </div>
                 {viewerType === 'supplier' && (
                   <>
@@ -258,39 +200,6 @@ export function JobDetailCards({ job, viewerType, showPricing = true }: JobDetai
                   <div>
                     <p className="font-medium">Contact Number</p>
                     <p className="text-sm text-muted-foreground">{job.siteContactNumber}</p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Assigned Engineer */}
-        {job.engineerName && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Assigned Engineer</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-start gap-3">
-                <User className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="font-medium">{job.engineerName}</p>
-                  <p className="text-sm text-muted-foreground">{job.engineerEmail}</p>
-                </div>
-              </div>
-
-              {job.engineerPhone && (
-                <div className="flex items-start gap-3">
-                  <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="font-medium">Phone</p>
-                    <a
-                      href={`tel:${job.engineerPhone}`}
-                      className="text-sm text-primary hover:underline"
-                    >
-                      {job.engineerPhone}
-                    </a>
                   </div>
                 </div>
               )}

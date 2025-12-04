@@ -4,7 +4,7 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, MapPin, Clock, CheckCircle2, Navigation, XCircle, Radio, User, Mail, Phone as PhoneIcon, Briefcase, Pause, Play } from "lucide-react";
+import { Loader2, MapPin, Clock, CheckCircle2, Navigation, XCircle, Radio, User, Mail, Phone as PhoneIcon, Briefcase } from "lucide-react";
 import { toast } from "sonner";
 import { SiteVisitReportForm } from "@/components/SiteVisitReportForm";
 import { JobDetailCards } from "@/components/JobDetailCards";
@@ -25,11 +25,6 @@ export default function EngineerJobPage() {
       enabled: !!token,
       retry: false // Don't retry on error
     }
-  );
-
-  const { data: pauseStatus, refetch: refetchPauseStatus } = trpc.jobs.getPauseStatus.useQuery(
-    { token: token || "" },
-    { enabled: !!token && job?.status === 'on_site' }
   );
 
   const claimJobMutation = trpc.jobs.claimJob.useMutation({
@@ -68,27 +63,34 @@ export default function EngineerJobPage() {
     },
   });
 
-  const pauseWorkMutation = trpc.jobs.pauseWork.useMutation({
-    onSuccess: () => {
-      toast.success("Work paused");
-      refetchPauseStatus();
-    },
-    onError: (error) => {
-      toast.error(`Failed to pause: ${error.message}`);
-    },
-  });
+  // Capture current location once (for milestones)
+  const captureCurrentLocation = (milestone: string) => {
+    if (!navigator.geolocation || !token) {
+      console.warn("Geolocation not supported or no token");
+      return;
+    }
 
-  const resumeWorkMutation = trpc.jobs.resumeWork.useMutation({
-    onSuccess: () => {
-      toast.success("Work resumed");
-      refetchPauseStatus();
-    },
-    onError: (error) => {
-      toast.error(`Failed to resume: ${error.message}`);
-    },
-  });
-
-  // Note: GPS capture is now handled inline in handleStatusUpdate, pause, and resume handlers
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        addLocationMutation.mutate({
+          token,
+          latitude: position.coords.latitude.toString(),
+          longitude: position.coords.longitude.toString(),
+          accuracy: position.coords.accuracy.toString(),
+          trackingType: "milestone",
+        });
+        console.log(`Location captured for: ${milestone}`);
+      },
+      (error) => {
+        console.error("Failed to capture location:", error);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
+    );
+  };
 
   // Start continuous GPS tracking
   const startTracking = (trackingType: "en_route" | "on_site") => {
@@ -135,52 +137,24 @@ export default function EngineerJobPage() {
   const handleStatusUpdate = (status: "accepted" | "declined" | "en_route" | "on_site" | "completed") => {
     if (!token) return;
 
-    // Update status immediately for instant response
-    updateStatusMutation.mutate({ token, status });
-
-    // Capture GPS in background (non-blocking)
-    const captureGPSInBackground = () => {
-      if (!navigator.geolocation) return;
-
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          // Save GPS location in background
-          addLocationMutation.mutate({
-            token,
-            latitude: position.coords.latitude.toString(),
-            longitude: position.coords.longitude.toString(),
-            accuracy: position.coords.accuracy.toString(),
-            trackingType: "milestone",
-          });
-        },
-        (error) => {
-          console.error("Background GPS capture failed:", error);
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 1000,
-          maximumAge: 0,
-        }
-      );
-    };
-
-    // Handle different status transitions
-    if (status === "accepted" || status === "declined") {
-      captureGPSInBackground();
+    // Capture location at milestone
+    if (status === "accepted") {
+      captureCurrentLocation("Job accepted");
     } else if (status === "en_route") {
-      captureGPSInBackground();
+      captureCurrentLocation("En route to site");
       // Start continuous tracking when en route
-      setTimeout(() => startTracking("en_route"), 500);
+      setTimeout(() => startTracking("en_route"), 1000);
     } else if (status === "on_site") {
-      // Stop en_route tracking first
+      captureCurrentLocation("Arrived on site");
+      // Stop en_route tracking, start on_site tracking
       stopTracking();
-      captureGPSInBackground();
-      // Start on_site tracking
-      setTimeout(() => startTracking("on_site"), 500);
+      setTimeout(() => startTracking("on_site"), 1000);
     } else if (status === "completed") {
+      captureCurrentLocation("Job completed");
       stopTracking();
-      captureGPSInBackground();
     }
+
+    updateStatusMutation.mutate({ token, status });
   };
 
   // Pre-fill engineer details when manually assigned
@@ -409,7 +383,11 @@ export default function EngineerJobPage() {
               <div className="flex flex-wrap gap-3">
                 {job.status === 'engineer_accepted' && (
                   <Button
-                    onClick={() => handleStatusUpdate('en_route')}
+                    onClick={() => {
+                      captureCurrentLocation('en_route');
+                      updateStatusMutation.mutate({ token: token || "", status: 'en_route' });
+                      startTracking('en_route');
+                    }}
                     disabled={updateStatusMutation.isPending}
                     size="lg"
                   >
@@ -423,7 +401,11 @@ export default function EngineerJobPage() {
 
                 {job.status === 'en_route' && (
                   <Button
-                    onClick={() => handleStatusUpdate('on_site')}
+                    onClick={() => {
+                      captureCurrentLocation('on_site');
+                      updateStatusMutation.mutate({ token: token || "", status: 'on_site' });
+                      startTracking('on_site');
+                    }}
                     disabled={updateStatusMutation.isPending}
                     size="lg"
                   >
@@ -436,102 +418,12 @@ export default function EngineerJobPage() {
                 )}
 
                 {job.status === 'on_site' && (
-                  <>
-                    <div className="flex flex-col gap-3">
-                      {pauseStatus?.isPaused && (
-                        <div className="p-3 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-md">
-                          <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
-                            <Pause className="h-4 w-4" />
-                            <span className="font-medium">Work is paused</span>
-                            <span className="text-sm ml-auto">Paused at {pauseStatus.pausedAt ? new Date(pauseStatus.pausedAt).toLocaleTimeString() : ''}</span>
-                          </div>
-                        </div>
-                      )}
-                      <div className="flex gap-2">
-                      {pauseStatus?.isPaused ? (
-                        <Button
-                          onClick={() => {
-                            if (!token) return;
-                            
-                            // Trigger resume immediately for instant response
-                            resumeWorkMutation.mutate({ token });
-                            
-                            // Capture GPS in background
-                            if (navigator.geolocation) {
-                              navigator.geolocation.getCurrentPosition(
-                                (position) => {
-                                  // Update with GPS coordinates in background
-                                  addLocationMutation.mutate({
-                                    token,
-                                    latitude: position.coords.latitude.toString(),
-                                    longitude: position.coords.longitude.toString(),
-                                    accuracy: position.coords.accuracy.toString(),
-                                    trackingType: "milestone",
-                                  });
-                                },
-                                (error) => console.error("Background GPS failed:", error),
-                                { enableHighAccuracy: true, timeout: 1000, maximumAge: 0 }
-                              );
-                            }
-                          }}
-                          variant="outline"
-                          size="lg"
-                          className="flex-1"
-                        >
-                          {resumeWorkMutation.isPending ? (
-                            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Resuming...</>
-                          ) : (
-                            <><Play className="mr-2 h-4 w-4" /> Resume Work</>
-                          )}
-                        </Button>
-                      ) : (
-                        <Button
-                          onClick={() => {
-                            if (!token) return;
-                            
-                            // Trigger pause immediately for instant response
-                            pauseWorkMutation.mutate({ token });
-                            
-                            // Capture GPS in background
-                            if (navigator.geolocation) {
-                              navigator.geolocation.getCurrentPosition(
-                                (position) => {
-                                  // Update with GPS coordinates in background
-                                  addLocationMutation.mutate({
-                                    token,
-                                    latitude: position.coords.latitude.toString(),
-                                    longitude: position.coords.longitude.toString(),
-                                    accuracy: position.coords.accuracy.toString(),
-                                    trackingType: "milestone",
-                                  });
-                                },
-                                (error) => console.error("Background GPS failed:", error),
-                                { enableHighAccuracy: true, timeout: 1000, maximumAge: 0 }
-                              );
-                            }
-                          }}
-                          variant="outline"
-                          size="lg"
-                          className="flex-1"
-                        >
-                          {pauseWorkMutation.isPending ? (
-                            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Pausing...</>
-                          ) : (
-                            <><Pause className="mr-2 h-4 w-4" /> Pause Work</>
-                          )}
-                        </Button>
-                      )}
-                      <Button
-                        onClick={() => setShowReportForm(true)}
-                        size="lg"
-                        className="flex-1"
-                        disabled={pauseStatus?.isPaused}
-                      >
-                        <CheckCircle2 className="mr-2 h-4 w-4" /> Complete Job
-                      </Button>
-                      </div>
-                    </div>
-                  </>
+                  <Button
+                    onClick={() => setShowReportForm(true)}
+                    size="lg"
+                  >
+                    <CheckCircle2 className="mr-2 h-4 w-4" /> Complete Job
+                  </Button>
                 )}
               </div>
               

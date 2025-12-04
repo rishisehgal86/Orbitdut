@@ -1,7 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { CheckCircle2, XCircle, FileText, Image as ImageIcon, Printer } from "lucide-react";
-import { jsPDF } from "jspdf";
+import { CheckCircle2, XCircle, FileText, Image as ImageIcon } from "lucide-react";
 
 interface SiteVisitReportData {
   id: number;
@@ -9,15 +7,6 @@ interface SiteVisitReportData {
   engineerName: string;
   timeOnsite?: string | null;
   timeLeftSite?: string | null;
-  totalTimeMs?: number;
-  totalPauseMs?: number;
-  workingTimeMs?: number;
-  pausePeriods?: Array<{
-    id: number;
-    pausedAt: Date;
-    resumedAt?: Date | null;
-    reason?: string | null;
-  }>;
   issueFault?: string | null;
   actionsPerformed: string;
   recommendations?: string | null;
@@ -38,203 +27,13 @@ interface SiteVisitReportProps {
 }
 
 export function SiteVisitReport({ report }: SiteVisitReportProps) {
-  const handlePrint = async () => {
-    const pdf = new jsPDF();
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const margin = 20;
-    let yPos = margin;
-
-    // Orbidut Brand Header
-    // Blue header bar
-    pdf.setFillColor(37, 99, 235); // Orbidut blue (#2563eb)
-    pdf.rect(0, 0, pageWidth, 25, 'F');
-    
-    // Orbidut logo/name
-    pdf.setFontSize(18);
-    pdf.setFont("helvetica", "bold");
-    pdf.setTextColor(255, 255, 255); // White text
-    pdf.text("ORBIDUT", margin, 16);
-    
-    // Tagline
-    pdf.setFontSize(8);
-    pdf.setFont("helvetica", "normal");
-    pdf.text("Connecting You with Trusted Service Providers", margin, 21);
-    
-    yPos = 35;
-    
-    // Report Title
-    pdf.setTextColor(0, 0, 0); // Black text
-    pdf.setFontSize(20);
-    pdf.setFont("helvetica", "bold");
-    pdf.text("Site Visit Report", pageWidth / 2, yPos, { align: "center" });
-    yPos += 15;
-
-    // Visit Date and Engineer
-    pdf.setFontSize(10);
-    pdf.setFont("helvetica", "normal");
-    pdf.text(`Visit Date: ${new Date(report.visitDate).toLocaleString()}`, margin, yPos);
-    yPos += 6;
-    pdf.text(`Engineer: ${report.engineerName}`, margin, yPos);
-    yPos += 10;
-
-    // Time Tracking Section
-    if (report.timeOnsite || report.timeLeftSite) {
-      pdf.setFontSize(12);
-      pdf.setFont("helvetica", "bold");
-      pdf.text("Engineer On-Site Time", margin, yPos);
-      yPos += 8;
-      pdf.setFontSize(10);
-      pdf.setFont("helvetica", "normal");
-      
-      if (report.timeOnsite) {
-        pdf.text(`Arrived On Site: ${new Date(report.timeOnsite).toLocaleString()}`, margin + 5, yPos);
-        yPos += 5;
-        pdf.setFontSize(8);
-        pdf.text(`UTC: ${new Date(report.timeOnsite).toUTCString()}`, margin + 5, yPos);
-        yPos += 7;
-        pdf.setFontSize(10);
-      }
-      
-      if (report.timeLeftSite) {
-        pdf.text(`Left Site: ${new Date(report.timeLeftSite).toLocaleString()}`, margin + 5, yPos);
-        yPos += 5;
-        pdf.setFontSize(8);
-        pdf.text(`UTC: ${new Date(report.timeLeftSite).toUTCString()}`, margin + 5, yPos);
-        yPos += 7;
-        pdf.setFontSize(10);
-      }
-      
-      if (report.timeOnsite && report.timeLeftSite) {
-        const diffMs = report.totalTimeMs || (new Date(report.timeLeftSite).getTime() - new Date(report.timeOnsite).getTime());
-        const hours = Math.floor(diffMs / (1000 * 60 * 60));
-        const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-        pdf.setFont("helvetica", "bold");
-        pdf.text(`Total Time On Site: ${hours}h ${minutes}m`, margin + 5, yPos);
-        yPos += 5;
-        
-        const pauseMs = report.totalPauseMs || 0;
-        const pauseHours = Math.floor(pauseMs / (1000 * 60 * 60));
-        const pauseMinutes = Math.floor((pauseMs % (1000 * 60 * 60)) / (1000 * 60));
-        pdf.setFont("helvetica", "normal");
-        pdf.text(`Time Paused (Breaks): ${pauseHours}h ${pauseMinutes}m`, margin + 5, yPos);
-        yPos += 5;
-        
-        const workMs = report.workingTimeMs || 0;
-        const workHours = Math.floor(workMs / (1000 * 60 * 60));
-        const workMinutes = Math.floor((workMs % (1000 * 60 * 60)) / (1000 * 60));
-        pdf.setFont("helvetica", "bold");
-        pdf.text(`Actual Working Time: ${workHours}h ${workMinutes}m`, margin + 5, yPos);
-        yPos += 5;
-        
-        pdf.setFont("helvetica", "normal");
-        yPos += 5;
-      }
-    }
-
-    // Issue/Fault Found
-    if (report.issueFault) {
-      pdf.setFontSize(12);
-      pdf.setFont("helvetica", "bold");
-      pdf.text("Issue/Fault Found", margin, yPos);
-      yPos += 8;
-      pdf.setFontSize(10);
-      pdf.setFont("helvetica", "normal");
-      const issueLines = pdf.splitTextToSize(report.issueFault, pageWidth - 2 * margin);
-      pdf.text(issueLines, margin + 5, yPos);
-      yPos += issueLines.length * 5 + 5;
-    }
-
-    // Actions Performed
-    pdf.setFontSize(12);
-    pdf.setFont("helvetica", "bold");
-    pdf.text("Actions Performed", margin, yPos);
-    yPos += 8;
-    pdf.setFontSize(10);
-    pdf.setFont("helvetica", "normal");
-    const actionsLines = pdf.splitTextToSize(report.actionsPerformed, pageWidth - 2 * margin);
-    pdf.text(actionsLines, margin + 5, yPos);
-    yPos += actionsLines.length * 5 + 5;
-
-    // Recommendations
-    if (report.recommendations) {
-      pdf.setFontSize(12);
-      pdf.setFont("helvetica", "bold");
-      pdf.text("Recommendations", margin, yPos);
-      yPos += 8;
-      pdf.setFontSize(10);
-      pdf.setFont("helvetica", "normal");
-      const recLines = pdf.splitTextToSize(report.recommendations, pageWidth - 2 * margin);
-      pdf.text(recLines, margin + 5, yPos);
-      yPos += recLines.length * 5 + 5;
-    }
-
-    // Status
-    pdf.setFontSize(10);
-    pdf.setFont("helvetica", "bold");
-    pdf.text(`Issue Resolved: ${report.issueResolved ? "Yes" : "No"}`, margin, yPos);
-    yPos += 6;
-    pdf.text(`Customer Agreed to Work: ${report.contactAgreed ? "Yes" : "No"}`, margin, yPos);
-    yPos += 10;
-
-    // Signature
-    if (report.clientSignatureData) {
-      pdf.setFontSize(12);
-      pdf.setFont("helvetica", "bold");
-      pdf.text("Customer Signature", margin, yPos);
-      yPos += 8;
-      
-      try {
-        pdf.addImage(report.clientSignatureData, "PNG", margin, yPos, 60, 20);
-        yPos += 25;
-      } catch (e) {
-        console.error("Error adding signature to PDF:", e);
-      }
-      
-      if (report.clientSignatory) {
-        pdf.setFontSize(9);
-        pdf.setFont("helvetica", "normal");
-        pdf.text(`Signed by: ${report.clientSignatory}`, margin, yPos);
-        yPos += 5;
-      }
-      if (report.signedAt) {
-        pdf.text(`Date: ${new Date(report.signedAt).toLocaleString()}`, margin, yPos);
-        yPos += 10;
-      }
-    }
-
-    // Photos note
-    if (report.photos && report.photos.length > 0) {
-      pdf.setFontSize(10);
-      pdf.setFont("helvetica", "italic");
-      pdf.text(`${report.photos.length} photo(s) attached to this report`, margin, yPos);
-    }
-
-    // Footer with branding
-    const footerY = pageHeight - 15;
-    pdf.setFontSize(8);
-    pdf.setFont("helvetica", "normal");
-    pdf.setTextColor(100, 100, 100);
-    pdf.text("Generated by Orbidut Marketplace", pageWidth / 2, footerY, { align: "center" });
-    pdf.text(`Report ID: ${report.id} | ${new Date().toLocaleDateString()}`, pageWidth / 2, footerY + 4, { align: "center" });
-    
-    // Save PDF
-    pdf.save(`orbidut-site-visit-report-${report.id}.pdf`);
-  };
-
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Site Visit Report
-          </CardTitle>
-          <Button onClick={handlePrint} variant="outline" size="sm" className="gap-2">
-            <Printer className="h-4 w-4" />
-            Print Report
-          </Button>
-        </div>
+        <CardTitle className="flex items-center gap-2">
+          <FileText className="h-5 w-5" />
+          Site Visit Report
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Time Tracking */}
@@ -258,40 +57,18 @@ export function SiteVisitReport({ report }: SiteVisitReportProps) {
               )}
             </div>
             {report.timeOnsite && report.timeLeftSite && (
-              <div className="pt-2 border-t border-blue-200 dark:border-blue-800 space-y-2">
-                <div>
-                  <p className="font-medium text-blue-800 dark:text-blue-200">Total Time On Site</p>
-                  <p className="text-blue-700 dark:text-blue-300 mt-1">
-                    {(() => {
-                      const diffMs = report.totalTimeMs || (new Date(report.timeLeftSite).getTime() - new Date(report.timeOnsite).getTime());
-                      const hours = Math.floor(diffMs / (1000 * 60 * 60));
-                      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-                      return `${hours}h ${minutes}m`;
-                    })()}
-                  </p>
-                </div>
-                <div>
-                  <p className="font-medium text-amber-800 dark:text-amber-200">Time Paused (Breaks)</p>
-                  <p className="text-amber-700 dark:text-amber-300 mt-1">
-                    {(() => {
-                      const pauseMs = report.totalPauseMs || 0;
-                      const hours = Math.floor(pauseMs / (1000 * 60 * 60));
-                      const minutes = Math.floor((pauseMs % (1000 * 60 * 60)) / (1000 * 60));
-                      return `${hours}h ${minutes}m`;
-                    })()}
-                  </p>
-                </div>
-                <div>
-                  <p className="font-medium text-green-800 dark:text-green-200">Actual Working Time</p>
-                  <p className="text-green-700 dark:text-green-300 mt-1">
-                    {(() => {
-                      const workMs = report.workingTimeMs || 0;
-                      const hours = Math.floor(workMs / (1000 * 60 * 60));
-                      const minutes = Math.floor((workMs % (1000 * 60 * 60)) / (1000 * 60));
-                      return `${hours}h ${minutes}m`;
-                    })()}
-                  </p>
-                </div>
+              <div className="pt-2 border-t border-blue-200 dark:border-blue-800">
+                <p className="font-medium text-blue-800 dark:text-blue-200">Total Time On Site</p>
+                <p className="text-blue-700 dark:text-blue-300 mt-1">
+                  {(() => {
+                    const start = new Date(report.timeOnsite);
+                    const end = new Date(report.timeLeftSite);
+                    const diffMs = end.getTime() - start.getTime();
+                    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                    return `${hours}h ${minutes}m`;
+                  })()}
+                </p>
               </div>
             )}
           </div>

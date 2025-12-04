@@ -187,7 +187,6 @@ export default function CustomerJobs() {
                     <div className="flex items-start gap-2">
                       <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
                       <div className="text-sm">
-                        {job.siteName && <p className="font-semibold mb-0.5">{job.siteName}</p>}
                         <p className="font-medium">{job.siteAddress}</p>
                         <p className="text-muted-foreground">
                           {job.city}, {job.country}
@@ -212,14 +211,7 @@ export default function CustomerJobs() {
                       <Clock className="h-4 w-4 text-muted-foreground mt-0.5" />
                       <div className="text-sm">
                         <p className="font-medium">Duration</p>
-                        <p className="text-muted-foreground">
-                          {(() => {
-                            const totalMinutes = job.estimatedDuration ?? 0;
-                            const hours = Math.floor(totalMinutes / 60);
-                            const minutes = totalMinutes % 60;
-                            return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
-                          })()}
-                        </p>
+                        <p className="text-muted-foreground">{job.estimatedDuration} hours</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-2">

@@ -463,141 +463,290 @@
 - [ ] Add visual indicator when job is paused (orange/amber status)
 - [ ] Test pause/resume functionality with GPS tracking
 
+## Superadmin Dashboard - Full Platform Visibility
 
-## Phase 51: Implement Print Function for Completed Jobs
-- [x] Add Print button to SiteVisitReport component
-- [x] Install jsPDF library for PDF generation
-- [x] Create PDF generation function with professional layout
-- [x] Include all report sections: job details, time tracking, findings, actions, signature, photos
-- [x] Style PDF for print-ready output
-- [x] Test PDF generation and download
+### Phase 74: Superadmin Organization & Multi-User Access Control
+- [ ] Database schema for admin organization:
+  - [ ] Create adminOrganization table (organizationId, name, createdAt)
+  - [ ] Create adminUsers table (userId, organizationId, role: owner/admin/viewer, permissions)
+  - [ ] Add organizationId to users table for admin users
+- [ ] Role-based access control:
+  - [ ] Owner: Full access including user management
+  - [ ] Admin: Full platform access except user management
+  - [ ] Viewer: Read-only access to all data
+- [ ] Backend procedures:
+  - [ ] Create superadminProcedure middleware (checks organizationId)
+  - [ ] Add admin user invitation system
+  - [ ] Add admin user permission management
+- [ ] Frontend:
+  - [ ] Add /admin route and AdminLayout component
+  - [ ] Create admin navigation sidebar
+  - [ ] Add admin user management page
+  - [ ] Implement role-based UI visibility
 
+### Phase 75: Platform Overview Dashboard
+- [ ] Total platform statistics card:
+  - [ ] Total jobs (all time)
+  - [ ] Total customers
+  - [ ] Total suppliers
+  - [ ] Total engineers
+  - [ ] Total revenue
+  - [ ] Platform margin collected
+- [ ] Real-time metrics:
+  - [ ] Jobs created today/this week/this month
+  - [ ] Active jobs (in progress)
+  - [ ] Completed jobs today
+  - [ ] Average job completion time
+- [ ] Revenue charts:
+  - [ ] Revenue over time (line chart)
+  - [ ] Revenue by service type (pie chart)
+  - [ ] Revenue by region (bar chart)
 
-## Phase 52: Add Orbidut Branding to PDF Report
-- [x] Add Orbidut logo to PDF header
-- [x] Add brand colors (blue accent)
-- [x] Add company tagline/footer
-- [x] Format header with professional layout
-- [x] Test branded PDF output
+### Phase 76: Job Management & Monitoring
+- [ ] All jobs table with advanced filtering:
+  - [ ] Filter by status (all statuses)
+  - [ ] Filter by service type
+  - [ ] Filter by date range
+  - [ ] Filter by customer/supplier
+  - [ ] Search by job ID, customer name, location
+- [ ] Job detail view with full visibility:
+  - [ ] All job information
+  - [ ] Customer details
+  - [ ] Supplier details
+  - [ ] Engineer details
+  - [ ] Payment status
+  - [ ] Timeline and GPS tracking
+  - [ ] Site visit report
+- [ ] Job actions:
+  - [ ] Manually reassign job to different supplier
+  - [ ] Cancel job with reason
+  - [ ] Refund customer
+  - [ ] Mark job as disputed
 
+### Phase 77: Supplier Verification & Approval Workflow
+- [ ] Database schema for verification:
+  - [ ] Add supplierVerification table (supplierId, status, submittedAt, reviewedAt, reviewedBy, rejectionReason, adminNotes)
+  - [ ] Add supplierCompanyProfile table:
+    - [ ] supplierId (FK)
+    - [ ] companyName, registrationNumber, yearFounded
+    - [ ] headquarters (address, city, country)
+    - [ ] regionalOffices (JSON array of office locations)
+    - [ ] ownershipStructure (enum: private, group, subsidiary)
+    - [ ] parentCompany (if subsidiary)
+    - [ ] missionStatement (TEXT)
+    - [ ] coreValues (TEXT)
+    - [ ] companyOverview (TEXT - what the company does)
+    - [ ] numberOfEmployees, annualRevenue (optional)
+    - [ ] websiteUrl, linkedInUrl
+    - [ ] primaryContactName, primaryContactTitle, primaryContactEmail, primaryContactPhone
+    - [ ] createdAt, updatedAt
+  - [ ] Add verificationDocuments table:
+    - [ ] supplierId (FK)
+    - [ ] documentType (enum: insurance_liability, insurance_indemnity, insurance_workers_comp, dpa_signed, nda_signed, non_compete_signed, security_compliance, engineer_vetting_policy, other)
+    - [ ] documentName (original filename)
+    - [ ] fileUrl (S3 URL)
+    - [ ] fileKey (S3 key)
+    - [ ] fileSize, mimeType
+    - [ ] uploadedAt, uploadedBy
+    - [ ] expiryDate (for insurance certificates)
+    - [ ] status (enum: pending_review, approved, rejected, expired)
+    - [ ] reviewedBy, reviewedAt, reviewNotes
+  - [ ] Add verificationStatus enum: pending, under_review, approved, rejected, resubmission_required
+  - [ ] Add isVerified and verificationStatus fields to suppliers table
+- [ ] Document types required:
+  - [ ] **1. Company Profile Questionnaire** (stored in supplierCompanyProfile table):
+    - [ ] Company name, registration number, year founded
+    - [ ] Headquarters + regional offices
+    - [ ] Ownership structure (private, group, subsidiary)
+    - [ ] Mission statement & core values
+    - [ ] High-level summary of what the company does
+  - [ ] **2. Insurance Certificates** (uploaded documents):
+    - [ ] Public liability insurance
+    - [ ] Professional indemnity insurance
+    - [ ] Workers' compensation insurance
+    - [ ] Track expiry dates and send renewal reminders
+  - [ ] **3. Data Processing Agreement (DPA)** - Orbidut provides template:
+    - [ ] Generate DPA PDF with supplier details pre-filled
+    - [ ] Supplier downloads, signs, and uploads signed copy
+    - [ ] Store signed DPA in verificationDocuments
+  - [ ] **4. Non-Disclosure Agreement (NDA)** - Orbidut provides template:
+    - [ ] Generate NDA PDF with supplier details
+    - [ ] Supplier signs and uploads
+    - [ ] Store signed NDA
+  - [ ] **5. Non-Compete Agreement** - Orbidut provides template:
+    - [ ] Generate non-compete PDF
+    - [ ] Supplier signs and uploads
+    - [ ] Store signed agreement
+  - [ ] **6. Security Compliance Documents** (optional):
+    - [ ] ISO 27001, SOC 2, or other security certifications
+    - [ ] Mark as optional in UI
+  - [ ] **7. Engineer Vetting Policy** - Orbidut may provide template:
+    - [ ] Supplier's process for vetting engineers
+    - [ ] Background checks, qualifications verification
+    - [ ] Can use Orbidut template or upload own policy
+- [ ] Supplier-side verification submission:
+  - [ ] Create multi-step verification wizard in supplier portal:
+    - [ ] **Step 1: Company Profile Questionnaire**
+      - [ ] Form with all company profile fields
+      - [ ] Validation for required fields
+      - [ ] Save progress (can complete later)
+    - [ ] **Step 2: Insurance Certificates Upload**
+      - [ ] Upload public liability insurance (with expiry date)
+      - [ ] Upload professional indemnity insurance (with expiry date)
+      - [ ] Upload workers' compensation insurance (with expiry date)
+      - [ ] File validation (PDF/image, max 10MB per file)
+    - [ ] **Step 3: Legal Agreements**
+      - [ ] Generate and download DPA template (pre-filled with supplier info)
+      - [ ] Upload signed DPA
+      - [ ] Generate and download NDA template
+      - [ ] Upload signed NDA
+      - [ ] Generate and download Non-Compete template
+      - [ ] Upload signed Non-Compete
+    - [ ] **Step 4: Optional Documents**
+      - [ ] Upload security compliance certificates (optional)
+      - [ ] Upload engineer vetting policy (or use Orbidut template)
+    - [ ] **Step 5: Review & Submit**
+      - [ ] Summary of all entered information
+      - [ ] List of all uploaded documents
+      - [ ] Checkbox: "I confirm all information is accurate"
+      - [ ] Submit for review button
+  - [ ] Verification status dashboard:
+    - [ ] Show current status (pending/under review/approved/rejected)
+    - [ ] Progress indicator showing completed steps
+    - [ ] Show rejection reasons if rejected
+    - [ ] Allow resubmission with updated documents
+    - [ ] Show which specific documents need resubmission
+  - [ ] Document expiry tracking:
+    - [ ] Show insurance expiry dates
+    - [ ] Send email reminders 30 days before expiry
+    - [ ] Allow uploading renewed certificates
+    - [ ] Flag expired documents in admin review
+- [ ] Superadmin verification review:
+  - [ ] Pending verifications dashboard with count badge
+  - [ ] Verification queue table (newest first, filterable by status)
+  - [ ] Detailed verification review page:
+    - [ ] View all uploaded documents (inline preview or download)
+    - [ ] View business details form
+    - [ ] View supplier profile (coverage, rates, contact info)
+    - [ ] Approve/Reject buttons with reason field
+    - [ ] Request additional documents option
+    - [ ] Add internal notes visible only to admins
+  - [ ] Bulk actions (approve/reject multiple suppliers)
+  - [ ] Email notifications:
+    - [ ] Notify supplier when verification approved
+    - [ ] Notify supplier when verification rejected (with reasons)
+    - [ ] Notify supplier when additional documents needed
+- [ ] Access control based on verification:
+  - [ ] Unverified suppliers cannot see available jobs
+  - [ ] Unverified suppliers see "Verification Pending" banner
+  - [ ] Only verified suppliers can accept jobs
+  - [ ] Show verification badge on supplier profiles
 
-## Phase 53: Implement Pause/Resume Tracking for Engineers
-- [x] Create jobTimePauses table in database schema (jobId, pausedAt, resumedAt, reason)
-- [x] Run database migration
-- [x] Create pauseWork tRPC procedure
-- [x] Create resumeWork tRPC procedure
-- [x] Add Pause/Resume buttons to engineer job page (visible when on_site)
-- [x] Add visual indicator when job is paused
-- [x] Update JobTimeline to display pause periods
-- [x] Calculate and display actual working time (total time - pause time)
-- [x] Update site visit report to show pause summary
-- [x] Test pause/resume workflow
+### Phase 78: User Management
+- [ ] Customers table:
+  - [ ] View all customers
+  - [ ] Customer details (jobs, spending, join date)
+  - [ ] Suspend/activate customer accounts
+  - [ ] View customer job history
+  - [ ] Export customer data
+- [ ] Suppliers table:
+  - [ ] View all suppliers (verified and unverified)
+  - [ ] Filter by verification status
+  - [ ] Supplier details (coverage, rates, jobs completed, verification status)
+  - [ ] Suspend/activate supplier accounts
+  - [ ] View supplier performance metrics
+  - [ ] Manually verify/unverify suppliers
+- [ ] Engineers list:
+  - [ ] View all engineers (extracted from jobs)
+  - [ ] Engineer performance (jobs completed, ratings, on-time %)
+- [ ] Admin users management (Organization owners only):
+  - [ ] View all admin users in organization
+  - [ ] Invite new admin users via email
+  - [ ] Change admin user roles (owner/admin/viewer)
+  - [ ] Revoke admin access
+  - [ ] View admin activity logs
 
+### Phase 79: Financial Management
+- [ ] Payment tracking:
+  - [ ] All transactions table
+  - [ ] Payment status (pending, completed, refunded)
+  - [ ] Platform margin per transaction
+  - [ ] Export financial reports (CSV)
+- [ ] Payout management:
+  - [ ] Pending payouts to suppliers
+  - [ ] Completed payouts
+  - [ ] Failed payouts with retry option
+- [ ] Revenue analytics:
+  - [ ] Total revenue by time period
+  - [ ] Revenue by service type
+  - [ ] Revenue by region/country
+  - [ ] Top earning suppliers
+  - [ ] Top spending customers
 
-## Phase 54: Fix Supplier Job Access Issue
-- [ ] Debug getJobDetails procedure to check supplier access control
-- [ ] Fix supplier access verification for assigned jobs
-- [ ] Test supplier can view job details after assignment
+### Phase 80: Platform Configuration
+- [ ] Service type management:
+  - [ ] Add/edit/remove service types
+  - [ ] Set platform margin percentage per service
+- [ ] Response time options:
+  - [ ] Add/edit/remove response time tiers
+- [ ] Geographic settings:
+  - [ ] Manage country list
+  - [ ] Add/remove regions
+- [ ] Email template management:
+  - [ ] Edit email notification templates
+  - [ ] Preview emails before sending
+- [ ] Platform settings:
+  - [ ] Set platform-wide margin percentage
+  - [ ] Configure payment processing
+  - [ ] Set minimum/maximum job durations
 
-- [x] Fix duration display in supplier jobs list to show hours and minutes format (e.g., "2h 0m" instead of "120 minutes")
-- [x] Add site name, duration, and payment details to My Jobs cards
+### Phase 81: Analytics & Reporting
+- [ ] Performance metrics:
+  - [ ] Average job completion time
+  - [ ] Customer satisfaction (from reviews)
+  - [ ] Supplier performance scores
+  - [ ] Engineer on-time percentage
+- [ ] Growth metrics:
+  - [ ] New customers per week/month
+  - [ ] New suppliers per week/month
+  - [ ] Job volume trends
+  - [ ] Revenue growth rate
+- [ ] Geographic analytics:
+  - [ ] Jobs by country/city
+  - [ ] Revenue by region
+  - [ ] Supplier coverage heatmap
+- [ ] Export capabilities:
+  - [ ] Export all reports to CSV/Excel
+  - [ ] Schedule automated reports via email
 
-## Phase 55: Simplify Request Service Form
-- [x] Remove booking type field from customer request service form (only hourly bookings supported)
+### Phase 82: Support & Dispute Management
+- [ ] Support ticket system:
+  - [ ] View all support tickets
+  - [ ] Assign tickets to team members
+  - [ ] Respond to tickets
+  - [ ] Close/resolve tickets
+- [ ] Dispute resolution:
+  - [ ] View disputed jobs
+  - [ ] Review evidence (site visit reports, photos, GPS)
+  - [ ] Make rulings (refund customer, pay supplier, split)
+  - [ ] Track dispute outcomes
 
-## Phase 56: Fix Site Name Not Being Saved
-- [x] Fix job creation procedure to save siteName field to database
-- [x] Add siteName display to Available Jobs tab in supplier portal
+### Phase 83: Audit & Logs
+- [ ] Activity logs:
+  - [ ] User login/logout events
+  - [ ] Job status changes
+  - [ ] Payment transactions
+  - [ ] Admin actions
+- [ ] System health monitoring:
+  - [ ] Database connection status
+  - [ ] Email delivery status
+  - [ ] GPS tracking success rate
+  - [ ] API response times
 
-## Phase 57: Add Site Name to Job Detail Pages
-- [x] Add siteName display to supplier job detail page Service Location section
-- [x] Add siteName display to customer job detail page Service Location section
-
-## Phase 58: Fix Site Name Data Capture
-- [x] Investigate why siteName is not being saved when customers submit request form
-- [x] Add console logging at each step to trace data flow
-- [x] Test with new job submission to verify siteName is captured - CONFIRMED WORKING
-
-## Phase 59: Fix Customer My Jobs Page Display Issues
-- [x] Fix duration showing as hours instead of converting from minutes (180 minutes showing as "180 hours" instead of "3 hours")
-- [x] Add siteName display to customer My Jobs page
-
-## Phase 60: Fix Duration Display on Job Detail Pages
-- [x] Fix "Estimated Duration" in Service Information section (showing "180 hours" instead of "3h")
-- [x] Fix "Duration" in Pricing Details section (showing "180 hours" instead of "3h")
-- [x] Fix hourly rate calculation to use hours instead of minutes
-
-## Phase 61: Fix Timezone Detection on Request Service Form
-- [x] Investigate timezone API 400 error when selecting addresses
-- [x] Fix timezone detection to work with Google Places autocomplete - changed to use tRPC utils.client.jobs.getTimezone.query()
-- [x] Test timezone detection with Times Square address - working correctly, shows "Timezone detected: Eastern Standard Time"
-
-## Phase 62: Fix Address Validation Double-Click Issue
-- [x] Fix validation error not clearing when address is selected from autocomplete
-- [x] Ensure red border and error message disappear immediately after selection
-- [x] Test address selection workflow end-to-end - working perfectly, no more double-click needed
-
-## Phase 63: Fix Schedule Timezone Conversion Bug
-- [x] Investigate why 09:00 local time input is being treated as UTC
-- [x] Fix conversion logic to properly interpret time picker input as site local time
-- [x] Ensure display shows correct local time and UTC conversion
-- [x] User confirmed timezone conversion is now working correctly
-
-## Phase 64: Fix Supplier Portal Job Details Navigation
-- [x] Investigate why job details cannot be found when clicking from supplier portal
-- [x] Check routing and data fetching logic for job details page - found getById query was filtering out unassigned jobs
-- [x] Fix the navigation or query issue - allow suppliers to view jobs with status 'pending_supplier_acceptance'
-- [x] Test job details navigation from supplier portal - Job #210003 and #210004 both loading successfully
-
-## Phase 65: Add Map Popup to Service Location in Job Details
-- [x] Create map popup dialog component with Google Maps integration
-- [x] Add pin marker to show exact service location on map
-- [x] Make service location section clickable to open map popup
-- [x] Test map popup on supplier job details pages - tested with Job #210004 (New York) and Job #210003 (Dubai), both working perfectly
-
-## Phase 66: Reorganize Job Details Page Layout
-- [x] Review current section order in job details page
-- [x] Make Customer Information, Engineer Link, and Assigned Engineer half-width (2 columns) while maintaining current order
-- [x] Keep Job Status, Service Information, and Job Timeline full-width
-- [x] Test responsive layout on Job #210004 - working correctly with better space utilization
-
-## Phase 67: Make Site Contact and Assigned Engineer Side-by-Side
-- [x] Move Site Contact and Assigned Engineer into same responsive 2-column grid
-- [x] Test responsive layout - working correctly with md:grid-cols-2 (mobile: stacked, desktop: side-by-side)
-
-
-## Phase 68: Enhanced GPS Location Tracking at All Milestones
-- [x] Analyze current GPS tracking implementation (currently only tracks en_route)
-- [x] Update updateStatusByToken backend to capture GPS coordinates for on_site, completed statuses
-- [x] Update pauseWork backend to capture GPS coordinates when pausing
-- [x] Update resumeWork backend to capture GPS coordinates when resuming
-- [x] Update engineer UI to get current position before status changes
-- [x] Update JobTimeline component to display GPS coordinates for all milestone events (on_site, pause, resume, completed)
-- [ ] Test complete workflow: en_route → on_site → pause → resume → complete (all with GPS data)
-
-## Phase 69: Make All Buttons Instant (GPS Capture Non-Blocking)
-- [x] Reduce GPS timeout to 1 second for faster response (pause, resume, status updates)
-- [x] Refactor pause/resume to trigger mutation immediately, capture GPS in background
-- [x] Refactor status updates (on_site, complete) to be instant with background GPS
-- [x] All buttons now respond instantly - status update happens first, GPS captured in background
-
-## Phase 70: Fix Pause Notification Layout
-- [x] Make "Work is paused" notification appear above buttons (not below)
-- [x] Show pause time inline with notification text
-
-## Phase 71: Show Pause Time in Site Visit Report
-- [x] Verify backend returns totalPauseMs and workingTimeMs in site visit report
-- [x] Update SiteVisitReport component to always display pause time (even if 0h 0m)
-- [x] Show: Total Time, Time Paused, Actual Working Time in Engineer On-Site Time section
-- [x] Handle null/undefined values gracefully with fallback to 0
-
-## Phase 72: Fix captureCurrentLocation Reference Error
-- [x] Found and removed 2 remaining references to captureCurrentLocation
-- [x] Replaced with handleStatusUpdate calls which include GPS capture
-- [x] All GPS capture now uses inline implementation in handleStatusUpdate
-
-## Phase 73: Update PDF Print to Include Pause Time
-- [x] Checked PDF generation code in SiteVisitReport component
-- [x] Updated PDF to always show pause time breakdown (Total Time, Time Paused, Actual Working Time)
-- [x] Removed conditional rendering - now matches on-screen display
-- [x] Added null/undefined handling with fallback to 0 for PDF generation
+### Phase 84: Testing & Deployment
+- [ ] Test all superadmin features with test data
+- [ ] Verify role-based access control
+- [ ] Test all filters and search functionality
+- [ ] Verify all charts and analytics display correctly
+- [ ] Test export functionality
+- [ ] Save checkpoint and push to GitHub
