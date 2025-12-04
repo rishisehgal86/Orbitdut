@@ -8,10 +8,12 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function SupplierDashboard() {
   const { data: profile } = trpc.suppliers.getProfile.useQuery();
+  const { data: verificationStatus } = trpc.verification.getStatus.useQuery();
   const { data: availableJobs, isLoading: loadingAvailable } = trpc.jobs.getAvailableForSupplier.useQuery();
   const { data: myJobs, isLoading: loadingMy } = trpc.jobs.getSupplierJobs.useQuery();
 
   const isVerified = profile?.isVerified === 1;
+  const verificationState = verificationStatus?.verification?.status || "not_started";
 
   const isLoading = loadingAvailable || loadingMy;
 
@@ -37,16 +39,48 @@ export default function SupplierDashboard() {
         </div>
 
         {/* Verification Banner */}
-        {!isVerified && (
-          <Alert variant="destructive" className="border-amber-500 bg-amber-50 text-amber-900">
-            <AlertTriangle className="h-5 w-5 text-amber-600" />
-            <AlertTitle className="text-amber-900 font-semibold">Verification Required</AlertTitle>
-            <AlertDescription className="text-amber-800">
+        {!isVerified && verificationState === "not_started" && (
+          <Alert variant="destructive" className="border-red-500 bg-red-50 text-red-900">
+            <AlertTriangle className="h-5 w-5 text-red-600" />
+            <AlertTitle className="text-red-900 font-semibold">Verification Required</AlertTitle>
+            <AlertDescription className="text-red-800">
               Your supplier account is not yet verified. You must complete the verification process before you can accept jobs.
               <div className="mt-3">
                 <Link href="/supplier/verification">
-                  <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white">
+                  <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white">
                     Complete Verification
+                  </Button>
+                </Link>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+        {!isVerified && (verificationState === "pending_review" || verificationState === "under_review") && (
+          <Alert className="border-blue-500 bg-blue-50 text-blue-900">
+            <Clock className="h-5 w-5 text-blue-600" />
+            <AlertTitle className="text-blue-900 font-semibold">Verification Pending Review</AlertTitle>
+            <AlertDescription className="text-blue-800">
+              Your verification application has been submitted and is currently under review. We'll notify you once it's approved.
+              <div className="mt-3">
+                <Link href="/supplier/verification">
+                  <Button size="sm" variant="outline" className="border-blue-600 text-blue-700 hover:bg-blue-100">
+                    View Status
+                  </Button>
+                </Link>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+        {!isVerified && verificationState === "resubmission_required" && (
+          <Alert variant="destructive" className="border-orange-500 bg-orange-50 text-orange-900">
+            <AlertCircle className="h-5 w-5 text-orange-600" />
+            <AlertTitle className="text-orange-900 font-semibold">Action Required</AlertTitle>
+            <AlertDescription className="text-orange-800">
+              Additional information is needed for your verification. Please review the feedback and update your application.
+              <div className="mt-3">
+                <Link href="/supplier/verification">
+                  <Button size="sm" className="bg-orange-600 hover:bg-orange-700 text-white">
+                    Update Application
                   </Button>
                 </Link>
               </div>
