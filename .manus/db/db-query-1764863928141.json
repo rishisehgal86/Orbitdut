@@ -1,0 +1,50 @@
+{
+  "query": "SELECT u.id as userId, u.email, u.name, s.id as supplierId, s.companyName, su.role \nFROM users u \nLEFT JOIN supplierUsers su ON u.id = su.userId \nLEFT JOIN suppliers s ON su.supplierId = s.id \nWHERE u.accountType = 'supplier' \nORDER BY u.id DESC \nLIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT u.id as userId, u.email, u.name, s.id as supplierId, s.companyName, su.role \nFROM users u \nLEFT JOIN supplierUsers su ON u.id = su.userId \nLEFT JOIN suppliers s ON su.supplierId = s.id \nWHERE u.accountType = 'supplier' \nORDER BY u.id DESC \nLIMIT 5;",
+  "rows": [
+    {
+      "userId": "300002",
+      "email": "apvirldtxuxegywado@nesopf.com",
+      "name": "bob",
+      "supplierId": "NULL",
+      "companyName": "NULL",
+      "role": "NULL"
+    },
+    {
+      "userId": "300001",
+      "email": "pwokfcvqhvzjwtmpum@nespf.com",
+      "name": "bob",
+      "supplierId": "NULL",
+      "companyName": "NULL",
+      "role": "NULL"
+    },
+    {
+      "userId": "270007",
+      "email": "ykspnafejazacqjdgy@nespj.com",
+      "name": "Bob ",
+      "supplierId": "300004",
+      "companyName": "testsupplier",
+      "role": "supplier_admin"
+    },
+    {
+      "userId": "240001",
+      "email": "testsupplier@example.com",
+      "name": "Test Supplier Admin",
+      "supplierId": "270001",
+      "companyName": "Test Network Services Inc.",
+      "role": "supplier_admin"
+    },
+    {
+      "userId": "150001",
+      "email": "supplier@test.com",
+      "name": "Test Supplier",
+      "supplierId": "210001",
+      "companyName": "Test Engineering Co",
+      "role": "supplier_admin"
+    }
+  ],
+  "messages": [],
+  "stdout": "userId\temail\tname\tsupplierId\tcompanyName\trole\n300002\tapvirldtxuxegywado@nesopf.com\tbob\tNULL\tNULL\tNULL\n300001\tpwokfcvqhvzjwtmpum@nespf.com\tbob\tNULL\tNULL\tNULL\n270007\tykspnafejazacqjdgy@nespj.com\tBob \t300004\ttestsupplier\tsupplier_admin\n240001\ttestsupplier@example.com\tTest Supplier Admin\t270001\tTest Network Services Inc.\tsupplier_admin\n150001\tsupplier@test.com\tTest Supplier\t210001\tTest Engineering Co\tsupplier_admin\n",
+  "stderr": "",
+  "execution_time_ms": 98
+}

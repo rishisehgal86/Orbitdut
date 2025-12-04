@@ -1,0 +1,18 @@
+{
+  "query": "SELECT u.id as userId, s.id as supplierId \nFROM users u, suppliers s \nWHERE u.email = 'apvirldtxuxegywado@nesopf.com' \nAND s.contactEmail = 'apvirldtxuxegywado@nesopf.com';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT u.id as userId, s.id as supplierId \nFROM users u, suppliers s \nWHERE u.email = 'apvirldtxuxegywado@nesopf.com' \nAND s.contactEmail = 'apvirldtxuxegywado@nesopf.com';",
+  "rows": [
+    {
+      "userId": "300002",
+      "supplierId": "330003"
+    },
+    {
+      "userId": "300002",
+      "supplierId": "330002"
+    }
+  ],
+  "messages": [],
+  "stdout": "userId\tsupplierId\n300002\t330003\n300002\t330002\n",
+  "stderr": "",
+  "execution_time_ms": 64
+}

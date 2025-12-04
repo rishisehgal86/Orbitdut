@@ -830,3 +830,11 @@
 - [ ] Test admin role-based permissions
 - [ ] Test document upload and storage
 - [ ] Test email notifications
+
+## Verification Wizard - Document Storage Migration
+
+- [ ] Migrate document storage from localStorage to external storage solution
+  - Current: All documents (insurance, legal, optional) stored in browser localStorage
+  - Issue: 5-10MB limit, data lost on cache clear
+  - Future: Move to database BLOB storage or external document management service
+  - Affects: Insurance certificate uploads, e-signed legal agreements, optional documents

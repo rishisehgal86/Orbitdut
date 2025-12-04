@@ -534,3 +534,113 @@ Visit: ${APP_URL}
     text,
   });
 }
+
+/**
+ * Send welcome email to new supplier
+ */
+export async function sendSupplierWelcomeEmail(
+  email: string,
+  name: string,
+  companyName: string
+): Promise<boolean> {
+  const { APP_URL } = getGmailConfig();
+  const verificationUrl = `${APP_URL}/supplier/verification`;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to Orbidut</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 28px;">Welcome to Orbidut!</h1>
+  </div>
+  
+  <div style="background: #ffffff; padding: 40px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 10px 10px;">
+    <p>Hi ${name},</p>
+    
+    <p>Thank you for joining Orbidut as a service provider! We're excited to have <strong>${companyName}</strong> in our network.</p>
+    
+    <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; margin: 20px 0;">
+      <p style="margin: 0; color: #92400e;"><strong>⚠️ Next Step: Complete Your Verification</strong></p>
+      <p style="margin: 10px 0 0 0; color: #92400e;">Before you can start accepting jobs, you need to complete the supplier verification process.</p>
+    </div>
+    
+    <p><strong>What you'll need:</strong></p>
+    <ul style="color: #4b5563;">
+      <li>Company profile information</li>
+      <li>Insurance certificates (Liability, Indemnity, Workers Comp)</li>
+      <li>Signed legal documents (DPA, NDA, Non-Compete)</li>
+    </ul>
+    
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${verificationUrl}" style="background: #667eea; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600;">Complete Verification →</a>
+    </div>
+    
+    <p><strong>What happens next?</strong></p>
+    <ol style="color: #4b5563;">
+      <li>Complete your company profile</li>
+      <li>Upload required documents</li>
+      <li>Submit for admin review</li>
+      <li>Get approved and start accepting jobs!</li>
+    </ol>
+    
+    <p style="color: #6b7280; font-size: 14px;">If you have any questions, feel free to reach out to our support team.</p>
+    
+    <p>Best regards,<br/>
+    The Orbidut Team</p>
+    
+    <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+    
+    <p style="color: #9ca3af; font-size: 12px; text-align: center;">
+      Orbidut - Connect with Trusted Service Providers Instantly<br>
+      <a href="${APP_URL}" style="color: #667eea; text-decoration: none;">Visit Orbidut</a>
+    </p>
+  </div>
+</body>
+</html>
+`;
+
+  const text = `
+Welcome to Orbidut!
+
+Hi ${name},
+
+Thank you for joining Orbidut as a service provider! We're excited to have ${companyName} in our network.
+
+⚠️ Next Step: Complete Your Verification
+Before you can start accepting jobs, you need to complete the supplier verification process.
+
+What you'll need:
+- Company profile information
+- Insurance certificates (Liability, Indemnity, Workers Comp)
+- Signed legal documents (DPA, NDA, Non-Compete)
+
+Complete Verification: ${verificationUrl}
+
+What happens next?
+1. Complete your company profile
+2. Upload required documents
+3. Submit for admin review
+4. Get approved and start accepting jobs!
+
+If you have any questions, feel free to reach out to our support team.
+
+Best regards,
+The Orbidut Team
+
+---
+Orbidut - Connect with Trusted Service Providers Instantly
+Visit: ${APP_URL}
+`;
+
+  return sendEmail({
+    to: email,
+    subject: "Welcome to Orbidut - Complete Your Verification",
+    html,
+    text,
+  });
+}

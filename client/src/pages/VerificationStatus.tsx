@@ -168,19 +168,20 @@ export default function VerificationStatus() {
             </div>
 
             {/* Actions */}
-            {verificationStatus === "rejected" || verificationStatus === "resubmission_required" ? (
-              <div className="flex gap-4">
+            <div className="flex gap-4">
+              {verificationStatus === "rejected" || verificationStatus === "resubmission_required" ? (
                 <Button asChild>
                   <Link href="/supplier/verification/resubmit">Update Application</Link>
                 </Button>
-              </div>
-            ) : verificationStatus === "approved" ? (
-              <div className="flex gap-4">
+              ) : verificationStatus === "approved" ? (
                 <Button asChild>
                   <Link href="/supplier/jobs">View Available Jobs</Link>
                 </Button>
-              </div>
-            ) : null}
+              ) : null}
+              <Button variant="outline" asChild>
+                <Link href="/supplier/dashboard">Back to Dashboard</Link>
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

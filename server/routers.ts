@@ -24,6 +24,10 @@ export const appRouter = router({
           email: z.string().email(),
           password: z.string().min(8),
           accountType: z.enum(["customer", "supplier"]),
+          // Supplier-specific fields
+          companyName: z.string().optional(),
+          phone: z.string().optional(),
+          country: z.string().length(2).optional(), // ISO country code
         })
       )
       .mutation(async ({ input, ctx }) => {
@@ -56,7 +60,43 @@ export const appRouter = router({
           lastSignedIn: new Date(),
         });
 
-        const userId = Number((result as any).insertId);
+        // Get the inserted user ID
+        const userId = Number(result[0].insertId);
+        if (!userId) {
+          throw new Error("Failed to create user account");
+        }
+
+        // If supplier account, create supplier company and link user
+        if (input.accountType === "supplier") {
+          const { suppliers, supplierUsers } = await import("../drizzle/schema");
+          
+          // Create supplier company with provided or default values
+          const supplierResult = await db.insert(suppliers).values({
+            companyName: input.companyName || input.name + "'s Company",
+            contactEmail: input.email,
+            contactPhone: input.phone || null,
+            country: input.country || "US",
+            verificationStatus: "pending",
+            isVerified: 0,
+          });
+
+          // Get the inserted supplier ID
+          const supplierId = Number(supplierResult[0].insertId);
+          if (!supplierId) {
+            throw new Error("Failed to create supplier company");
+          }
+
+          // Link user to supplier
+          await db.insert(supplierUsers).values({
+            userId: userId,
+            supplierId: supplierId,
+            role: "supplier_admin",
+          });
+
+          // Send welcome email
+          const { sendSupplierWelcomeEmail } = await import("./_core/email");
+          await sendSupplierWelcomeEmail(input.email, input.name, input.companyName);
+        }
 
         // Create JWT token
         const token = await createToken({
@@ -2125,11 +2165,15 @@ export const appRouter = router({
       const { supplierVerification, supplierCompanyProfile, verificationDocuments } = await import("../drizzle/schema");
       const { eq } = await import("drizzle-orm");
 
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
       // Get supplier
-      const supplier = await getSupplierByUserId(ctx.user.id);
-      if (!supplier) {
+      const result = await getSupplierByUserId(ctx.user.id);
+      if (!result) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Supplier not found" });
       }
+      const supplier = result.supplier;
 
       // Get or create verification record
       let verification = await db.select().from(supplierVerification)
@@ -2199,10 +2243,14 @@ export const appRouter = router({
         const { supplierCompanyProfile, supplierVerification } = await import("../drizzle/schema");
         const { eq } = await import("drizzle-orm");
 
-        const supplier = await getSupplierByUserId(ctx.user.id);
-        if (!supplier) {
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
+        const result = await getSupplierByUserId(ctx.user.id);
+        if (!result) {
           throw new TRPCError({ code: "NOT_FOUND", message: "Supplier not found" });
         }
+        const supplier = result.supplier;
 
         // Check if profile exists
         const existing = await db.select().from(supplierCompanyProfile)
@@ -2262,10 +2310,14 @@ export const appRouter = router({
         const { eq } = await import("drizzle-orm");
         const { storagePut } = await import("./storage");
 
-        const supplier = await getSupplierByUserId(ctx.user.id);
-        if (!supplier) {
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
+        const result = await getSupplierByUserId(ctx.user.id);
+        if (!result) {
           throw new TRPCError({ code: "NOT_FOUND", message: "Supplier not found" });
         }
+        const supplier = result.supplier;
 
         // Upload to S3
         const fileBuffer = Buffer.from(input.fileData.split(",")[1], "base64");
@@ -2300,10 +2352,14 @@ export const appRouter = router({
       const { supplierVerification, supplierCompanyProfile, verificationDocuments } = await import("../drizzle/schema");
       const { eq } = await import("drizzle-orm");
 
-      const supplier = await getSupplierByUserId(ctx.user.id);
-      if (!supplier) {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const result = await getSupplierByUserId(ctx.user.id);
+      if (!result) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Supplier not found" });
       }
+      const supplier = result.supplier;
 
       // Validate: must have company profile
       const profile = await db.select().from(supplierCompanyProfile)
@@ -2357,10 +2413,14 @@ export const appRouter = router({
       const { verificationDocuments } = await import("../drizzle/schema");
       const { eq } = await import("drizzle-orm");
 
-      const supplier = await getSupplierByUserId(ctx.user.id);
-      if (!supplier) {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const result = await getSupplierByUserId(ctx.user.id);
+      if (!result) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Supplier not found" });
       }
+      const supplier = result.supplier;
 
       const documents = await db.select().from(verificationDocuments)
         .where(eq(verificationDocuments.supplierId, supplier.id));
@@ -2580,6 +2640,35 @@ export const appRouter = router({
 
         return { success: true };
       }),
+  }),
+
+  // Suppliers router
+  suppliers: router({
+    // Get supplier profile
+    getProfile: protectedProcedure.query(async ({ ctx }) => {
+      const { getSupplierByUserId } = await import("./db");
+      const { users } = await import("../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const result = await getSupplierByUserId(ctx.user.id);
+      if (!result) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Supplier not found" });
+      }
+
+      // Get user name from users table
+      const user = await db.select().from(users)
+        .where(eq(users.id, ctx.user.id))
+        .limit(1)
+        .then(rows => rows[0]);
+
+      return {
+        ...result.supplier,
+        userName: user?.name || "",
+      };
+    }),
   }),
 });
 
