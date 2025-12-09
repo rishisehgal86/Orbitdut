@@ -18,8 +18,10 @@ export default function Login() {
   const loginMutation = trpc.auth.login.useMutation({
     onSuccess: (data) => {
       toast.success("Logged in successfully!");
-      // Redirect based on account type
-      if (data.user.accountType === "supplier") {
+      // Redirect based on role and account type
+      if (data.user.role === "superadmin") {
+        setLocation("/superadmin");
+      } else if (data.user.accountType === "supplier") {
         setLocation("/supplier/dashboard");
       } else {
         setLocation("/customer/dashboard");

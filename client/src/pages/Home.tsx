@@ -7,8 +7,12 @@ import { ArrowRight, Building2, CheckCircle, Clock, DollarSign, MapPin, Shield, 
 export default function Home() {
   const { isAuthenticated, user } = useAuth();
   
-  // Determine dashboard URL based on user account type
-  const dashboardUrl = user?.accountType === 'supplier' ? '/supplier/dashboard' : '/customer/dashboard';
+  // Determine dashboard URL based on user role and account type
+  const dashboardUrl = user?.role === 'superadmin' 
+    ? '/superadmin' 
+    : user?.accountType === 'supplier' 
+    ? '/supplier/dashboard' 
+    : '/customer/dashboard';
 
   return (
     <div className="min-h-screen flex flex-col">
