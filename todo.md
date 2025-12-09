@@ -886,3 +886,8 @@
 - [x] Fix dashboard routing to redirect superadmin users to /superadmin panel
 - [x] Update DashboardLayout or main.tsx to check for superadmin role
 - [x] Test superadmin login redirects to correct dashboard
+
+## Phase 34: Fix Superadmin Login Redirect Loop
+- [x] Fix infinite redirect loop in CustomerDashboard useEffect
+- [x] Remove redirect from CustomerDashboard (should only be in Login.tsx)
+- [x] Test superadmin login flow works correctly
