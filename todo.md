@@ -850,3 +850,9 @@
   - Check verification status before allowing wizard access
   - If status is "pending_review", "under_review", or "approved", redirect to status page
   - Only allow wizard access if status is "not_started" or "resubmission_required"
+
+## Phase 30: Navigation and Verification Access Control
+- [x] Fix dashboard navigation to route based on user role (customer vs supplier)
+- [x] Block "My Jobs" page access until verification is approved
+- [x] Prevent re-opening of verification wizard after submission
+- [x] Add "Back to Dashboard" button to verification wizard

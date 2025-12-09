@@ -5,7 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ArrowRight, Building2, CheckCircle, Clock, DollarSign, MapPin, Shield, Users } from "lucide-react";
 
 export default function Home() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  
+  // Determine dashboard URL based on user account type
+  const dashboardUrl = user?.accountType === 'supplier' ? '/supplier/dashboard' : '/customer/dashboard';
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -21,7 +24,7 @@ export default function Home() {
           <nav className="flex items-center gap-4">
             {isAuthenticated ? (
               <>
-                <Link href="/customer/dashboard">
+                <Link href={dashboardUrl}>
                   <Button variant="ghost">Dashboard</Button>
                 </Link>
                 <Link href="/customer/request-service">

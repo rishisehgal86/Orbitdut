@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { trpc } from "@/lib/trpc";
 import { CheckCircle2, Upload, FileText, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "wouter";
 import { LegalDocumentModal } from "@/components/LegalDocumentModal";
 import { type LegalDocumentType } from "@/lib/legalTemplates";
 
@@ -521,6 +522,17 @@ export function VerificationWizard() {
 
   return (
     <div className="container max-w-4xl py-8">
+      {/* Header with Back Button */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Supplier Verification</h1>
+          <p className="text-muted-foreground mt-1">Complete your verification to start accepting jobs</p>
+        </div>
+        <Button variant="outline" asChild>
+          <Link href="/supplier/dashboard">Back to Dashboard</Link>
+        </Button>
+      </div>
+
       {/* Progress Steps */}
       <div className="mb-8">
         <div className="flex items-start justify-between gap-2">
