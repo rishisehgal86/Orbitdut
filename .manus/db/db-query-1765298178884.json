@@ -1,0 +1,13 @@
+{
+  "query": "SELECT email FROM users WHERE role = 'superadmin';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT email FROM users WHERE role = 'superadmin';",
+  "rows": [
+    {
+      "email": "admin@orbitdut.com"
+    }
+  ],
+  "messages": [],
+  "stdout": "email\nadmin@orbitdut.com\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

@@ -891,3 +891,11 @@
 - [x] Fix infinite redirect loop in CustomerDashboard useEffect
 - [x] Remove redirect from CustomerDashboard (should only be in Login.tsx)
 - [x] Test superadmin login flow works correctly
+
+## Phase 35: Update Superadmin Email
+- [x] Update superadmin email to admin@orbidut.com in database
+- [x] Verify login works with new email
+
+## Phase 36: Fix Missing useAuth Import
+- [x] Add useAuth import back to CustomerDashboard.tsx
+- [x] Verify customer dashboard loads correctly

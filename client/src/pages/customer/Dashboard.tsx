@@ -1,3 +1,4 @@
+import { useAuth } from "@/_core/hooks/useAuth";
 import CustomerLayout from "@/components/CustomerLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,6 +6,7 @@ import { trpc } from "@/lib/trpc";
 import { Calendar, CheckCircle, Clock, Loader2, Plus } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useEffect } from "react";
+
 
 export default function CustomerDashboard() {
   const { user } = useAuth();
