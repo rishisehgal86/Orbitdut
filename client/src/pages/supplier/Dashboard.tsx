@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { AlertCircle, Briefcase, CheckCircle, Clock, DollarSign, Loader2, Eye, AlertTriangle } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { VerificationProgress } from "@/components/VerificationProgress";
 
 export default function SupplierDashboard() {
   const { data: profile } = trpc.suppliers.getProfile.useQuery();
@@ -38,8 +39,13 @@ export default function SupplierDashboard() {
           </p>
         </div>
 
-        {/* Verification Banner */}
-        {!isVerified && verificationState === "not_started" && (
+        {/* Verification Progress Indicator */}
+        {!isVerified && (
+          <VerificationProgress />
+        )}
+
+        {/* Verification Banner - Keep for backward compatibility but hidden when progress card is shown */}
+        {false && !isVerified && verificationState === "not_started" && (
           <Alert variant="destructive" className="border-red-500 bg-red-50 text-red-900">
             <AlertTriangle className="h-5 w-5 text-red-600" />
             <AlertTitle className="text-red-900 font-semibold">Verification Required</AlertTitle>

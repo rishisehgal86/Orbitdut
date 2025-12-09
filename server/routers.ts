@@ -2608,6 +2608,55 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    // Request resubmission
+    requestResubmission: protectedProcedure
+      .input(
+        z.object({
+          supplierId: z.number(),
+          feedback: z.string().min(1),
+          adminNotes: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const { supplierVerification, suppliers } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
+        // TODO: Add admin role check
+
+        // Update verification status to resubmission_required
+        await db.update(supplierVerification)
+          .set({
+            status: "resubmission_required",
+            reviewedBy: ctx.user.id,
+            reviewedAt: new Date(),
+            rejectionReason: input.feedback,
+            adminNotes: input.adminNotes || null,
+          })
+          .where(eq(supplierVerification.supplierId, input.supplierId));
+
+        // Get supplier details for email
+        const supplier = await db.select()
+          .from(suppliers)
+          .where(eq(suppliers.id, input.supplierId))
+          .limit(1);
+
+        // Send resubmission email notification
+        if (supplier[0]) {
+          const { sendVerificationResubmissionEmail } = await import("./_core/email");
+          await sendVerificationResubmissionEmail(
+            supplier[0].contactEmail,
+            supplier[0].companyName,
+            input.feedback,
+            input.adminNotes
+          ).catch(err => console.error("Failed to send resubmission email:", err));
+        }
+
+        return { success: true };
+      }),
+
     // Add admin note
     addNote: protectedProcedure
       .input(
