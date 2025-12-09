@@ -1,7 +1,7 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { publicProcedure, protectedProcedure, superadminProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
@@ -2432,7 +2432,7 @@ export const appRouter = router({
   // Admin Verification Review
   admin: router({
     // Get pending verifications queue
-    getPendingVerifications: protectedProcedure.query(async ({ ctx }) => {
+    getPendingVerifications: superadminProcedure.query(async ({ ctx }) => {
       const { supplierVerification, suppliers } = await import("../drizzle/schema");
       const { eq, inArray } = await import("drizzle-orm");
 
@@ -2458,7 +2458,7 @@ export const appRouter = router({
     }),
 
     // Get verification details for review
-    getVerificationDetails: protectedProcedure
+    getVerificationDetails: superadminProcedure
       .input(z.object({ supplierId: z.number() }))
       .query(async ({ input, ctx }) => {
         const { supplierVerification, supplierCompanyProfile, verificationDocuments, suppliers } = await import("../drizzle/schema");
@@ -2501,7 +2501,7 @@ export const appRouter = router({
       }),
 
     // Approve verification
-    approveVerification: protectedProcedure
+    approveVerification: superadminProcedure
       .input(z.object({ supplierId: z.number() }))
       .mutation(async ({ input, ctx }) => {
         const { supplierVerification, suppliers } = await import("../drizzle/schema");
@@ -2549,7 +2549,7 @@ export const appRouter = router({
       }),
 
     // Reject verification
-    rejectVerification: protectedProcedure
+    rejectVerification: superadminProcedure
       .input(
         z.object({
           supplierId: z.number(),
@@ -2609,7 +2609,7 @@ export const appRouter = router({
       }),
 
     // Request resubmission
-    requestResubmission: protectedProcedure
+    requestResubmission: superadminProcedure
       .input(
         z.object({
           supplierId: z.number(),
@@ -2658,7 +2658,7 @@ export const appRouter = router({
       }),
 
     // Add admin note
-    addNote: protectedProcedure
+    addNote: superadminProcedure
       .input(
         z.object({
           supplierId: z.number(),
@@ -2689,6 +2689,125 @@ export const appRouter = router({
 
         return { success: true };
       }),
+
+    // Get all suppliers
+    getAllSuppliers: superadminProcedure.query(async () => {
+      const { suppliers, supplierUsers, users } = await import("../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+
+      const allSuppliers = await db.select({
+        id: suppliers.id,
+        companyName: suppliers.companyName,
+        contactEmail: suppliers.contactEmail,
+        contactPhone: suppliers.contactPhone,
+        country: suppliers.country,
+        verificationStatus: suppliers.verificationStatus,
+        isVerified: suppliers.isVerified,
+        isActive: suppliers.isActive,
+        createdAt: suppliers.createdAt,
+      }).from(suppliers);
+
+      // Get admin user info for each supplier
+      const suppliersWithAdmin = await Promise.all(
+        allSuppliers.map(async (supplier) => {
+          const adminUser = await db.select({
+            userId: users.id,
+            userName: users.name,
+            userEmail: users.email,
+            lastSignedIn: users.lastSignedIn,
+          })
+            .from(supplierUsers)
+            .leftJoin(users, eq(supplierUsers.userId, users.id))
+            .where(eq(supplierUsers.supplierId, supplier.id))
+            .limit(1)
+            .then(rows => rows[0] || null);
+
+          return {
+            ...supplier,
+            adminUser,
+          };
+        })
+      );
+
+      return suppliersWithAdmin;
+    }),
+
+    // Get all users
+    getAllUsers: superadminProcedure.query(async () => {
+      const { users } = await import("../drizzle/schema");
+
+      const allUsers = await db.select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        accountType: users.accountType,
+        role: users.role,
+        loginMethod: users.loginMethod,
+        createdAt: users.createdAt,
+        lastSignedIn: users.lastSignedIn,
+      }).from(users);
+
+      return allUsers;
+    }),
+
+    // Get all jobs
+    getAllJobs: superadminProcedure.query(async () => {
+      const { jobs, users } = await import("../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+
+      const allJobs = await db.select({
+        id: jobs.id,
+        customerId: jobs.customerId,
+        supplierId: jobs.supplierId,
+        siteName: jobs.siteName,
+        siteAddress: jobs.siteAddress,
+        status: jobs.status,
+        calculatedPrice: jobs.calculatedPrice,
+        createdAt: jobs.createdAt,
+        scheduledStart: jobs.scheduledStart,
+      }).from(jobs);
+
+      // Get customer info for each job
+      const jobsWithCustomer = await Promise.all(
+        allJobs.map(async (job) => {
+          const customer = await db.select({
+            customerName: users.name,
+            customerEmail: users.email,
+          })
+            .from(users)
+            .where(eq(users.id, job.customerId))
+            .limit(1)
+            .then(rows => rows[0] || null);
+
+          return {
+            ...job,
+            customer,
+          };
+        })
+      );
+
+      return jobsWithCustomer;
+    }),
+
+    // Get coverage statistics
+    getCoverageStats: superadminProcedure.query(async () => {
+      const { supplierCoverageAreas, suppliers } = await import("../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+
+      const coverageAreas = await db.select({
+        id: supplierCoverageAreas.id,
+        supplierId: supplierCoverageAreas.supplierId,
+        country: supplierCoverageAreas.country,
+        region: supplierCoverageAreas.region,
+        city: supplierCoverageAreas.city,
+        postalCode: supplierCoverageAreas.postalCode,
+        companyName: suppliers.companyName,
+      })
+        .from(supplierCoverageAreas)
+        .leftJoin(suppliers, eq(supplierCoverageAreas.supplierId, suppliers.id));
+
+      return coverageAreas;
+    }),
   }),
 
   // Suppliers router

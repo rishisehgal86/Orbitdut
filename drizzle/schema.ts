@@ -20,7 +20,7 @@ export const users = mysqlTable("users", {
   /** Account type: customer or supplier */
   accountType: mysqlEnum("accountType", ["customer", "supplier"]).notNull(),
   loginMethod: varchar("loginMethod", { length: 64 }).default("local"),
-  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  role: mysqlEnum("role", ["user", "admin", "superadmin"]).default("user").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
