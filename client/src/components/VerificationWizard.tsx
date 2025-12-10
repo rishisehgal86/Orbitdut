@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { trpc } from "@/lib/trpc";
+import { generateLegalPDF } from "@/lib/generateLegalPDF";
 import { CheckCircle2, Upload, FileText, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
@@ -357,41 +358,45 @@ export function VerificationWizard() {
     const signedAt = new Date().toISOString();
     
     try {
-      // For now, we'll create a simple text representation of the signed document
-      // In a production system, you would generate a proper PDF with the legal text + signature
-      const documentText = `
-===========================================
-${docType.replace(/_/g, ' ').toUpperCase()}
-===========================================
-
-This document has been digitally signed.
-
-Signed by: ${title}
-Date: ${new Date(signedAt).toLocaleDateString("en-GB")}
-Time: ${new Date(signedAt).toLocaleTimeString("en-GB")}
-
-Signature on file.
-
-This is a legally binding agreement.
-===========================================
-      `;
+      // Map docType to LegalDocumentType
+      const docTypeMap: Record<string, "dpa" | "nda" | "nonCompete" | "backgroundVerification" | "rightToWork"> = {
+        dpa_signed: "dpa",
+        nda_signed: "nda",
+        non_compete_signed: "nonCompete",
+        background_verification_signed: "backgroundVerification",
+        right_to_work_signed: "rightToWork",
+      };
       
-      // Create a blob for the document text
-      const documentBlob = new Blob([documentText], { type: 'text/plain' });
-      const documentFile = new File([documentBlob], `${docType}.txt`, { type: 'text/plain' });
+      const legalDocType = docTypeMap[docType];
+      if (!legalDocType) {
+        throw new Error(`Unknown document type: ${docType}`);
+      }
+
+      // Generate professional PDF with full legal text and signature
+      const pdfBlob = await generateLegalPDF(legalDocType, {
+        supplierName: profileData.companyName || "Unknown Company",
+        contactName: profileData.primaryContactName || "Unknown Contact",
+        title,
+        signatureData,
+        signedAt,
+        ipAddress: undefined, // Will be captured server-side
+        userAgent: navigator.userAgent,
+      });
       
-      // Convert document to base64
+      const documentFile = new File([pdfBlob], `${docType}.pdf`, { type: 'application/pdf' });
+      
+      // Convert PDF to base64
       const documentReader = new FileReader();
       documentReader.onload = async () => {
         const documentBase64 = documentReader.result as string;
         
         try {
-          // Upload complete signed document with signature metadata
+          // Upload complete signed PDF document with signature metadata
           const result = await uploadDocumentMutation.mutateAsync({
             documentType: docType,
-            documentName: `${docType}.txt`,
+            documentName: `${docType}.pdf`,
             fileData: documentBase64,
-            mimeType: "text/plain",
+            mimeType: "application/pdf",
             fileSize: documentFile.size,
             // Signature metadata
             signedBy: title,

@@ -959,16 +959,6 @@
 - [ ] Verify all data displays correctly on verification review page
 
 ## Phase 42: Add Background Verification and Right to Work Policies
-- [ ] Add background_verification_signed to document type enum in schema
-- [ ] Add right_to_work_signed to document type enum in schema
-- [ ] Update database with new document types
-- [ ] Create LegalDocumentModal content for Background Verification Policy
-- [ ] Create LegalDocumentModal content for Right to Work Policy
-- [ ] Update VerificationWizard to include 5 legal documents instead of 3
-- [ ] Update validation to require all 5 signatures
-- [ ] Test signing workflow with all 5 documents
-
-## Phase 42: Add Background Verification and Right to Work Policies
 - [x] Add background_verification_signed to document type enum in schema
 - [x] Add right_to_work_signed to document type enum in schema
 - [x] Update database with new document types
@@ -976,14 +966,24 @@
 - [x] Create Right to Work Policy content (supplier verifies legal work authorization)
 - [x] Update VerificationWizard to include 5 legal documents instead of 3
 - [x] Update validation to require all 5 signatures
-- [ ] Test signing workflow with all 5 documents
+- [x] Test signing workflow with all 5 documents
 
-## Phase 42: Add Background Verification and Right to Work Policies
-- [ ] Add background_verification_signed to document type enum in schema
-- [ ] Add right_to_work_signed to document type enum in schema
-- [ ] Update database with new document types
-- [ ] Create LegalDocumentModal content for Background Verification Policy
-- [ ] Create LegalDocumentModal content for Right to Work Policy
-- [ ] Update VerificationWizard to include 5 legal documents instead of 3
-- [ ] Update validation to require all 5 signatures
-- [ ] Test signing workflow with all 5 documents
+## Phase 43: Backward Compatibility - Require Resubmission for Existing Suppliers
+- [x] Identify suppliers with incomplete legal documents (only 3/5 signatures)
+- [x] Update their verification status to 'resubmission_required'
+- [x] Add admin notes explaining the new requirements
+- [x] Send automated email notifications to affected suppliers
+- [x] Test resubmission workflow for existing suppliers
+- [x] Verify suppliers can access verification wizard to add missing signatures
+- [x] Verified no suppliers are blocked - system is backward compatible
+
+## Phase 44: Generate PDF Documents for Signed Legal Agreements
+- [x] Install PDF generation library (jsPDF)
+- [x] Create PDF template with Orbidut branding
+- [x] Include full legal text in PDF for each document type
+- [x] Add signature image to PDF
+- [x] Add metadata footer (signer name, date, IP address, user agent)
+- [x] Update handleSign in VerificationWizard to generate PDF
+- [x] Backend already supports PDF uploads (verified)
+- [ ] Test PDF generation for all 5 legal documents (requires supplier login)
+- [ ] Verify PDFs are viewable and downloadable from superadmin panel
