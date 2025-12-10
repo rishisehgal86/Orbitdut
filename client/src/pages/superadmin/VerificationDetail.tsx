@@ -20,7 +20,13 @@ import {
   ExternalLink,
   Loader2,
   Calendar,
-  User
+  User,
+  Globe,
+  Linkedin,
+  Users,
+  DollarSign,
+  Building,
+  MapPinned
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useParams, useLocation } from "wouter";
@@ -106,6 +112,14 @@ export default function VerificationDetail() {
     }
   };
 
+  const formatBytes = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  };
+
   if (isLoading) {
     return (
       <SuperadminLayout>
@@ -130,7 +144,7 @@ export default function VerificationDetail() {
     );
   }
 
-  const { supplier, verification, profile, documents } = details;
+  const { supplier, verification, reviewer, profile, documents, coverageCountries, priorityCities } = details;
   const canApprove = verification?.status === "pending_review" || verification?.status === "under_review";
 
   return (
@@ -155,12 +169,12 @@ export default function VerificationDetail() {
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Left Column - Company Info */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Company Information */}
+            {/* Basic Company Information */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Building2 className="w-5 h-5" />
-                  Company Information
+                  Basic Information
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -173,6 +187,24 @@ export default function VerificationDetail() {
                     <p className="text-sm font-medium text-muted-foreground">Country</p>
                     <p className="text-base">{supplier.country || "—"}</p>
                   </div>
+                  {supplier.address && (
+                    <div className="md:col-span-2">
+                      <p className="text-sm font-medium text-muted-foreground">Address</p>
+                      <p className="text-sm">{supplier.address}</p>
+                    </div>
+                  )}
+                  {supplier.city && (
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">City</p>
+                      <p className="text-base">{supplier.city}</p>
+                    </div>
+                  )}
+                  {supplier.taxId && (
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Tax ID</p>
+                      <p className="text-base">{supplier.taxId}</p>
+                    </div>
+                  )}
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Contact Email</p>
                     <div className="flex items-center gap-1">
@@ -188,49 +220,228 @@ export default function VerificationDetail() {
                     </div>
                   </div>
                 </div>
-
-                {profile && (
-                  <>
-                    <Separator />
-                    <div className="space-y-3">
-                      <h3 className="font-medium">Company Profile</h3>
-                      {profile.description && (
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">Description</p>
-                          <p className="text-sm">{profile.description}</p>
-                        </div>
-                      )}
-                      <div className="grid gap-4 md:grid-cols-2">
-                        {profile.yearsInBusiness && (
-                          <div>
-                            <p className="text-sm font-medium text-muted-foreground">Years in Business</p>
-                            <p className="text-base">{profile.yearsInBusiness}</p>
-                          </div>
-                        )}
-                        {profile.numberOfTechnicians && (
-                          <div>
-                            <p className="text-sm font-medium text-muted-foreground">Number of Technicians</p>
-                            <p className="text-base">{profile.numberOfTechnicians}</p>
-                          </div>
-                        )}
-                        {profile.certifications && (
-                          <div>
-                            <p className="text-sm font-medium text-muted-foreground">Certifications</p>
-                            <p className="text-sm">{profile.certifications}</p>
-                          </div>
-                        )}
-                        {profile.insuranceProvider && (
-                          <div>
-                            <p className="text-sm font-medium text-muted-foreground">Insurance Provider</p>
-                            <p className="text-sm">{profile.insuranceProvider}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </>
-                )}
               </CardContent>
             </Card>
+
+            {/* Company Profile */}
+            {profile && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building className="w-5 h-5" />
+                    Company Profile
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {profile.registrationNumber && (
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Registration Number</p>
+                        <p className="text-base">{profile.registrationNumber}</p>
+                      </div>
+                    )}
+                    {profile.yearFounded && (
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Year Founded</p>
+                        <p className="text-base">{profile.yearFounded}</p>
+                      </div>
+                    )}
+                    {profile.ownershipStructure && (
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Ownership Structure</p>
+                        <p className="text-base capitalize">{profile.ownershipStructure}</p>
+                      </div>
+                    )}
+                    {profile.parentCompany && (
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Parent Company</p>
+                        <p className="text-base">{profile.parentCompany}</p>
+                      </div>
+                    )}
+                    {profile.numberOfEmployees && (
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Number of Employees</p>
+                        <div className="flex items-center gap-1">
+                          <Users className="w-3 h-3 text-muted-foreground" />
+                          <p className="text-base">{profile.numberOfEmployees.toLocaleString()}</p>
+                        </div>
+                      </div>
+                    )}
+                    {profile.annualRevenue && (
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Annual Revenue</p>
+                        <div className="flex items-center gap-1">
+                          <DollarSign className="w-3 h-3 text-muted-foreground" />
+                          <p className="text-base">${profile.annualRevenue.toLocaleString()} USD</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {profile.headquarters && (
+                    <>
+                      <Separator />
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground mb-1">Headquarters</p>
+                        <p className="text-sm">{profile.headquarters}</p>
+                      </div>
+                    </>
+                  )}
+
+                  {profile.regionalOffices && Array.isArray(profile.regionalOffices) && profile.regionalOffices.length > 0 && (
+                    <>
+                      <Separator />
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground mb-2">Regional Offices</p>
+                        <div className="space-y-2">
+                          {profile.regionalOffices.map((office: any, idx: number) => (
+                            <div key={idx} className="text-sm p-2 bg-muted/50 rounded">
+                              <p className="font-medium">{office.city}, {office.country}</p>
+                              {office.address && <p className="text-muted-foreground text-xs">{office.address}</p>}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {(profile.websiteUrl || profile.linkedInUrl) && (
+                    <>
+                      <Separator />
+                      <div className="flex gap-3">
+                        {profile.websiteUrl && (
+                          <a href={profile.websiteUrl} target="_blank" rel="noopener noreferrer">
+                            <Button size="sm" variant="outline" className="gap-1">
+                              <Globe className="w-3 h-3" />
+                              Website
+                            </Button>
+                          </a>
+                        )}
+                        {profile.linkedInUrl && (
+                          <a href={profile.linkedInUrl} target="_blank" rel="noopener noreferrer">
+                            <Button size="sm" variant="outline" className="gap-1">
+                              <Linkedin className="w-3 h-3" />
+                              LinkedIn
+                            </Button>
+                          </a>
+                        )}
+                      </div>
+                    </>
+                  )}
+
+                  {profile.companyOverview && (
+                    <>
+                      <Separator />
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground mb-1">Company Overview</p>
+                        <p className="text-sm">{profile.companyOverview}</p>
+                      </div>
+                    </>
+                  )}
+
+                  {profile.missionStatement && (
+                    <>
+                      <Separator />
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground mb-1">Mission Statement</p>
+                        <p className="text-sm italic">{profile.missionStatement}</p>
+                      </div>
+                    </>
+                  )}
+
+                  {profile.coreValues && (
+                    <>
+                      <Separator />
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground mb-1">Core Values</p>
+                        <p className="text-sm">{profile.coreValues}</p>
+                      </div>
+                    </>
+                  )}
+
+                  {(profile.primaryContactName || profile.primaryContactEmail || profile.primaryContactPhone) && (
+                    <>
+                      <Separator />
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground mb-2">Primary Contact</p>
+                        <div className="grid gap-2 md:grid-cols-2">
+                          {profile.primaryContactName && (
+                            <div>
+                              <p className="text-xs text-muted-foreground">Name</p>
+                              <p className="text-sm font-medium">{profile.primaryContactName}</p>
+                              {profile.primaryContactTitle && (
+                                <p className="text-xs text-muted-foreground">{profile.primaryContactTitle}</p>
+                              )}
+                            </div>
+                          )}
+                          {profile.primaryContactEmail && (
+                            <div>
+                              <p className="text-xs text-muted-foreground">Email</p>
+                              <p className="text-sm">{profile.primaryContactEmail}</p>
+                            </div>
+                          )}
+                          {profile.primaryContactPhone && (
+                            <div>
+                              <p className="text-xs text-muted-foreground">Phone</p>
+                              <p className="text-sm">{profile.primaryContactPhone}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Coverage Areas */}
+            {(coverageCountries.length > 0 || priorityCities.length > 0) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MapPinned className="w-5 h-5" />
+                    Coverage Areas
+                  </CardTitle>
+                  <CardDescription>
+                    {coverageCountries.length} {coverageCountries.length === 1 ? 'country' : 'countries'}, {priorityCities.length} priority {priorityCities.length === 1 ? 'city' : 'cities'}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {coverageCountries.length > 0 && (
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground mb-2">Countries</p>
+                      <div className="flex flex-wrap gap-2">
+                        {coverageCountries.map((cc) => (
+                          <Badge key={cc.id} variant={cc.isExcluded ? "destructive" : "secondary"}>
+                            {cc.countryCode} {cc.isExcluded && "(Excluded)"}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {priorityCities.length > 0 && (
+                    <>
+                      {coverageCountries.length > 0 && <Separator />}
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground mb-2">Priority Cities</p>
+                        <div className="space-y-2">
+                          {priorityCities.map((city) => (
+                            <div key={city.id} className="text-sm p-2 bg-muted/50 rounded flex items-start gap-2">
+                              <MapPin className="w-4 h-4 mt-0.5 text-muted-foreground flex-shrink-0" />
+                              <div>
+                                <p className="font-medium">{city.cityName}, {city.countryCode}</p>
+                                {city.stateProvince && <p className="text-xs text-muted-foreground">{city.stateProvince}</p>}
+                                {city.formattedAddress && <p className="text-xs text-muted-foreground">{city.formattedAddress}</p>}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Documents */}
             <Card>
@@ -252,30 +463,43 @@ export default function VerificationDetail() {
                 ) : (
                   <div className="space-y-3">
                     {documents.map((doc) => (
-                      <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <FileText className="w-5 h-5 text-muted-foreground" />
-                          <div>
-                            <p className="font-medium">{doc.documentType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>
-                            {doc.expiryDate && (
-                              <p className="text-xs text-muted-foreground">
-                                Expires: {format(new Date(doc.expiryDate), "MMM d, yyyy")}
-                              </p>
-                            )}
+                      <div key={doc.id} className="p-3 border rounded-lg space-y-2">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-start gap-3 flex-1">
+                            <FileText className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium">{doc.documentType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>
+                              <p className="text-xs text-muted-foreground truncate">{doc.documentName}</p>
+                              <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-xs text-muted-foreground">
+                                <span>{formatBytes(doc.fileSize)}</span>
+                                <span>{doc.mimeType}</span>
+                                {doc.uploadedAt && (
+                                  <span>Uploaded {format(new Date(doc.uploadedAt), "MMM d, yyyy")}</span>
+                                )}
+                                {doc.uploaderName && (
+                                  <span>by {doc.uploaderName}</span>
+                                )}
+                              </div>
+                              {doc.expiryDate && (
+                                <p className="text-xs text-orange-600 mt-1">
+                                  Expires: {format(new Date(doc.expiryDate), "MMM d, yyyy")}
+                                </p>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer">
-                            <Button size="sm" variant="outline" className="gap-1">
-                              <ExternalLink className="w-3 h-3" />
-                              View
-                            </Button>
-                          </a>
-                          <a href={doc.fileUrl} download>
-                            <Button size="sm" variant="ghost" className="gap-1">
-                              <Download className="w-3 h-3" />
-                            </Button>
-                          </a>
+                          <div className="flex items-center gap-2 ml-2">
+                            <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer">
+                              <Button size="sm" variant="outline" className="gap-1">
+                                <ExternalLink className="w-3 h-3" />
+                                View
+                              </Button>
+                            </a>
+                            <a href={doc.fileUrl} download>
+                              <Button size="sm" variant="ghost" className="gap-1">
+                                <Download className="w-3 h-3" />
+                              </Button>
+                            </a>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -298,7 +522,7 @@ export default function VerificationDetail() {
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 rounded-full bg-primary mt-2" />
+                    <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
                     <div>
                       <p className="text-sm font-medium">Account Created</p>
                       <p className="text-xs text-muted-foreground">
@@ -309,7 +533,7 @@ export default function VerificationDetail() {
                   
                   {verification?.submittedAt && (
                     <div className="flex items-start gap-3">
-                      <div className="w-2 h-2 rounded-full bg-orange-500 mt-2" />
+                      <div className="w-2 h-2 rounded-full bg-orange-500 mt-2 flex-shrink-0" />
                       <div>
                         <p className="text-sm font-medium">Submitted for Review</p>
                         <p className="text-xs text-muted-foreground">
@@ -321,19 +545,24 @@ export default function VerificationDetail() {
 
                   {verification?.reviewedAt && (
                     <div className="flex items-start gap-3">
-                      <div className="w-2 h-2 rounded-full bg-blue-500 mt-2" />
+                      <div className="w-2 h-2 rounded-full bg-blue-500 mt-2 flex-shrink-0" />
                       <div>
                         <p className="text-sm font-medium">Reviewed</p>
                         <p className="text-xs text-muted-foreground">
                           {format(new Date(verification.reviewedAt), "MMM d, yyyy 'at' h:mm a")}
                         </p>
+                        {reviewer && (
+                          <p className="text-xs text-muted-foreground">
+                            by {reviewer.name} ({reviewer.email})
+                          </p>
+                        )}
                       </div>
                     </div>
                   )}
 
                   {verification?.approvedAt && (
                     <div className="flex items-start gap-3">
-                      <div className="w-2 h-2 rounded-full bg-green-500 mt-2" />
+                      <div className="w-2 h-2 rounded-full bg-green-500 mt-2 flex-shrink-0" />
                       <div>
                         <p className="text-sm font-medium">Approved</p>
                         <p className="text-xs text-muted-foreground">

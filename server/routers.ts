@@ -2461,7 +2461,7 @@ export const appRouter = router({
     getVerificationDetails: superadminProcedure
       .input(z.object({ supplierId: z.number() }))
       .query(async ({ input, ctx }) => {
-        const { supplierVerification, supplierCompanyProfile, verificationDocuments, suppliers } = await import("../drizzle/schema");
+        const { supplierVerification, supplierCompanyProfile, verificationDocuments, suppliers, supplierCoverageCountries, supplierPriorityCities, users } = await import("../drizzle/schema");
         const { eq } = await import("drizzle-orm");
 
         const db = await getDb();
@@ -2483,21 +2483,58 @@ export const appRouter = router({
           .limit(1)
           .then(rows => rows[0]);
 
+        // Get reviewer info if verification was reviewed
+        let reviewer = null;
+        if (verification?.reviewedBy) {
+          reviewer = await db.select({ name: users.name, email: users.email })
+            .from(users)
+            .where(eq(users.id, verification.reviewedBy))
+            .limit(1)
+            .then(rows => rows[0] || null);
+        }
+
         // Get company profile
         const profile = await db.select().from(supplierCompanyProfile)
           .where(eq(supplierCompanyProfile.supplierId, input.supplierId))
           .limit(1)
           .then(rows => rows[0] || null);
 
-        // Get documents
-        const documents = await db.select().from(verificationDocuments)
+        // Get documents with uploader info
+        const docs = await db.select().from(verificationDocuments)
           .where(eq(verificationDocuments.supplierId, input.supplierId));
+        
+        // Fetch uploader names for documents
+        const documentsWithUploaders = await Promise.all(
+          docs.map(async (doc) => {
+            let uploaderName = null;
+            if (doc.uploadedBy) {
+              const uploader = await db.select({ name: users.name })
+                .from(users)
+                .where(eq(users.id, doc.uploadedBy))
+                .limit(1)
+                .then(rows => rows[0]);
+              uploaderName = uploader?.name || null;
+            }
+            return { ...doc, uploaderName };
+          })
+        );
+
+        // Get coverage countries
+        const coverageCountries = await db.select().from(supplierCoverageCountries)
+          .where(eq(supplierCoverageCountries.supplierId, input.supplierId));
+
+        // Get priority cities
+        const priorityCities = await db.select().from(supplierPriorityCities)
+          .where(eq(supplierPriorityCities.supplierId, input.supplierId));
 
         return {
           supplier,
           verification,
+          reviewer,
           profile,
-          documents,
+          documents: documentsWithUploaders,
+          coverageCountries,
+          priorityCities,
         };
       }),
 
