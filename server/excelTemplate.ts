@@ -10,7 +10,7 @@ const SERVICE_TYPES = [
   { value: "smart_hands", label: "Smart Hands" },
 ];
 
-const RESPONSE_TIMES = [4, 24, 48, 72, 96];
+const RESPONSE_TIMES = [4, 24, 48];
 
 const REGIONS = {
   africa: "Africa",
@@ -113,8 +113,6 @@ function generateCountriesSheet(
     "4h Rate (USD)",
     "24h Rate (USD)",
     "48h Rate (USD)",
-    "72h Rate (USD)",
-    "96h Rate (USD)",
   ];
 
   const rows: any[][] = [headers];
@@ -180,8 +178,6 @@ function generateCitiesSheet(
     "4h Rate (USD)",
     "24h Rate (USD)",
     "48h Rate (USD)",
-    "72h Rate (USD)",
-    "96h Rate (USD)",
   ];
 
   const rows: any[][] = [headers];

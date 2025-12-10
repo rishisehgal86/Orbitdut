@@ -1118,3 +1118,8 @@
 - [x] Fix: Simplified getRates to return all supplier rates without coverage filtering
 - [x] Test: Verified rates now appear correctly on both Current Rates and Rate Management pages
 - [x] Clean up: Removed all debug console.log statements
+
+## Fix Bulk Upload Template
+- [x] Remove legacy 72h and 96h columns from Excel template
+- [x] Update template to only show: Same Business Day, Next Business Day, Scheduled
+- [x] Test template download and verify correct columns - Working correctly
