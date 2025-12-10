@@ -109,6 +109,8 @@ export function VerificationWizard() {
       dpa_signed: { type: "dpa_signed", file: null, uploaded: false },
       nda_signed: { type: "nda_signed", file: null, uploaded: false },
       non_compete_signed: { type: "non_compete_signed", file: null, uploaded: false },
+      background_verification_signed: { type: "background_verification_signed", file: null, uploaded: false },
+      right_to_work_signed: { type: "right_to_work_signed", file: null, uploaded: false },
       security_compliance: { type: "security_compliance", file: null, uploaded: false },
       engineer_vetting_policy: { type: "engineer_vetting_policy", file: null, uploaded: false },
     };
@@ -125,6 +127,8 @@ export function VerificationWizard() {
       dpa_signed: { signed: false },
       nda_signed: { signed: false },
       non_compete_signed: { signed: false },
+      background_verification_signed: { signed: false },
+      right_to_work_signed: { signed: false },
     };
   });
 
@@ -175,11 +179,11 @@ export function VerificationWizard() {
       if (insuranceDocs.length > 0) {
         targetStep = 3;
 
-        // Step 3: Legal Agreements (check if all 3 legal docs signed)
+        // Step 3: Legal Agreements (check if all 5 legal docs signed)
         const legalDocs = verificationStatus.documents?.filter(d => 
-          ['dpa_signed', 'nda_signed', 'non_compete_signed'].includes(d.documentType)
+          ['dpa_signed', 'nda_signed', 'non_compete_signed', 'background_verification_signed', 'right_to_work_signed'].includes(d.documentType)
         ) || [];
-        if (legalDocs.length === 3) {
+        if (legalDocs.length === 5) {
           targetStep = 4;
 
           // Step 4: Optional Documents (check if any optional docs uploaded)
@@ -253,7 +257,7 @@ export function VerificationWizard() {
         }
 
         // Update signed legal documents
-        if (['dpa_signed', 'nda_signed', 'non_compete_signed'].includes(docType)) {
+        if (['dpa_signed', 'nda_signed', 'non_compete_signed', 'background_verification_signed', 'right_to_work_signed'].includes(docType)) {
           updatedSignedDocs[docType] = {
             signed: true,
             fileUrl: doc.fileUrl,
@@ -459,14 +463,14 @@ This is a legally binding agreement.
       // Insurance documents are optional (recommended but not required)
       setCurrentStep(3);
     } else if (currentStep === 3) {
-      // Legal agreements are MANDATORY - all 3 must be signed
-      const requiredLegal = ["dpa_signed", "nda_signed", "non_compete_signed"];
+      // Legal agreements are MANDATORY - all 5 must be signed
+      const requiredLegal = ["dpa_signed", "nda_signed", "non_compete_signed", "background_verification_signed", "right_to_work_signed"];
       const allSigned = requiredLegal.every((type) => signedDocuments[type]?.signed);
       
       if (!allSigned) {
         toast({
           title: "Signatures required",
-          description: "Please sign all three legal agreements to proceed.",
+          description: "Please sign all five legal agreements to proceed.",
           variant: "destructive",
         });
         return;
@@ -877,6 +881,8 @@ function LegalAgreementsForm({
     { type: "dpa" as LegalDocumentType, dbType: "dpa_signed", label: "Data Processing Agreement (DPA)" },
     { type: "nda" as LegalDocumentType, dbType: "nda_signed", label: "Non-Disclosure Agreement (NDA)" },
     { type: "nonCompete" as LegalDocumentType, dbType: "non_compete_signed", label: "Non-Compete Agreement" },
+    { type: "backgroundVerification" as LegalDocumentType, dbType: "background_verification_signed", label: "Background Verification Policy" },
+    { type: "rightToWork" as LegalDocumentType, dbType: "right_to_work_signed", label: "Right to Work Policy" },
   ];
 
   return (
@@ -886,7 +892,7 @@ function LegalAgreementsForm({
           <FileText className="w-5 h-5 text-blue-600 mt-0.5" />
           <div className="text-sm text-blue-900">
             <p className="font-semibold mb-1">Legal Agreements (Mandatory)</p>
-            <p>Review each agreement and provide your digital signature. All three agreements must be signed to proceed.</p>
+            <p>Review each agreement and provide your digital signature. All five agreements must be signed to proceed.</p>
           </div>
         </div>
       </div>

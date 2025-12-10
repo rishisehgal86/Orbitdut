@@ -957,3 +957,33 @@
 - [x] Update verification detail page to display IP and user agent
 - [ ] Test complete upload workflow with all metadata
 - [ ] Verify all data displays correctly on verification review page
+
+## Phase 42: Add Background Verification and Right to Work Policies
+- [ ] Add background_verification_signed to document type enum in schema
+- [ ] Add right_to_work_signed to document type enum in schema
+- [ ] Update database with new document types
+- [ ] Create LegalDocumentModal content for Background Verification Policy
+- [ ] Create LegalDocumentModal content for Right to Work Policy
+- [ ] Update VerificationWizard to include 5 legal documents instead of 3
+- [ ] Update validation to require all 5 signatures
+- [ ] Test signing workflow with all 5 documents
+
+## Phase 42: Add Background Verification and Right to Work Policies
+- [x] Add background_verification_signed to document type enum in schema
+- [x] Add right_to_work_signed to document type enum in schema
+- [x] Update database with new document types
+- [x] Create Background Verification Policy content (supplier commits to background checks on engineers)
+- [x] Create Right to Work Policy content (supplier verifies legal work authorization)
+- [x] Update VerificationWizard to include 5 legal documents instead of 3
+- [x] Update validation to require all 5 signatures
+- [ ] Test signing workflow with all 5 documents
+
+## Phase 42: Add Background Verification and Right to Work Policies
+- [ ] Add background_verification_signed to document type enum in schema
+- [ ] Add right_to_work_signed to document type enum in schema
+- [ ] Update database with new document types
+- [ ] Create LegalDocumentModal content for Background Verification Policy
+- [ ] Create LegalDocumentModal content for Right to Work Policy
+- [ ] Update VerificationWizard to include 5 legal documents instead of 3
+- [ ] Update validation to require all 5 signatures
+- [ ] Test signing workflow with all 5 documents

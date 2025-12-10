@@ -253,6 +253,306 @@ Date: [Auto-filled on signature]
 Signature: [Digital signature]
     `.trim(),
   },
+
+  backgroundVerification: {
+    title: "Background Verification Policy",
+    content: `
+# BACKGROUND VERIFICATION POLICY
+
+**Effective Date:** [Current Date]
+
+**Between:** Orbidut Ltd ("Company")  
+**And:** [Supplier Company Name] ("Supplier")
+
+## 1. PURPOSE
+
+1.1 This Policy establishes the Supplier's commitment to conducting comprehensive background checks on all engineers and personnel assigned to provide services through the Orbidut platform.
+
+1.2 The purpose is to ensure the safety, security, and trustworthiness of all service providers accessing customer premises and sensitive information.
+
+## 2. BACKGROUND CHECK REQUIREMENTS
+
+2.1 The Supplier agrees to conduct the following background checks on ALL engineers before assignment to any Orbidut customer:
+
+**Criminal Background Checks:**
+- National criminal record check (DBS check in UK or equivalent)
+- Verification of no convictions for theft, fraud, violence, or other relevant offenses
+- International criminal checks where applicable
+
+**Employment History Verification:**
+- Verification of previous employment for at least the past 5 years
+- Confirmation of job titles, dates of employment, and reasons for leaving
+- Professional reference checks from at least 2 previous employers
+
+**Identity Verification:**
+- Government-issued photo ID verification (passport, driver's license)
+- Proof of address verification
+- Right to work documentation (see separate Right to Work Policy)
+
+**Professional Qualifications:**
+- Verification of claimed certifications, licenses, and qualifications
+- Confirmation of technical skills and competencies
+- Trade-specific registrations where required
+
+## 3. TIMING AND FREQUENCY
+
+3.1 Background checks must be completed BEFORE an engineer's first assignment through the Orbidut platform.
+
+3.2 Background checks must be renewed every 2 years for ongoing engineers.
+
+3.3 Additional checks may be required if there is reasonable cause for concern.
+
+## 4. RECORD KEEPING
+
+4.1 The Supplier shall maintain records of all background checks for a minimum of 7 years.
+
+4.2 The Supplier shall provide proof of background checks to Orbidut upon request within 48 hours.
+
+4.3 Records must include:
+- Date of check
+- Type of check performed
+- Result/outcome
+- Name of checking authority or service used
+- Expiry date (where applicable)
+
+## 5. DISQUALIFYING FACTORS
+
+5.1 The Supplier agrees NOT to assign engineers to Orbidut customers if they have:
+- Unspent criminal convictions for theft, fraud, violence, or dishonesty
+- False or misleading information on their application
+- Failed to provide required documentation
+- Adverse findings that pose a risk to customer safety or security
+
+## 6. ONGOING MONITORING
+
+6.1 The Supplier shall implement a system to:
+- Monitor for any criminal charges or convictions of active engineers
+- Respond immediately to any adverse findings
+- Remove engineers from the platform if they become ineligible
+
+## 7. SUPPLIER RESPONSIBILITIES
+
+7.1 The Supplier is solely responsible for:
+- Costs of all background checks
+- Accuracy and completeness of checks
+- Compliance with applicable data protection and employment laws
+- Making final hiring and assignment decisions
+
+7.2 The Supplier warrants that all background checks are conducted by reputable, accredited checking services.
+
+## 8. AUDIT RIGHTS
+
+8.1 Orbidut reserves the right to:
+- Audit the Supplier's background checking procedures
+- Request evidence of background checks for any engineer
+- Require removal of any engineer who fails to meet standards
+- Conduct independent background checks
+
+## 9. NON-COMPLIANCE
+
+9.1 Failure to comply with this Policy may result in:
+- Immediate suspension of the Supplier's account
+- Termination of the service agreement
+- Liability for any damages arising from inadequate background checks
+- Reporting to relevant authorities
+
+## 10. LIABILITY AND INDEMNIFICATION
+
+10.1 The Supplier agrees to indemnify and hold harmless Orbidut, its customers, and their property against any claims, damages, or losses arising from:
+- Failure to conduct required background checks
+- Assignment of engineers who should have been disqualified
+- Negligent or inadequate background checking procedures
+- Criminal acts or misconduct by engineers
+
+## 11. DATA PROTECTION
+
+11.1 The Supplier shall comply with all applicable data protection laws when conducting background checks.
+
+11.2 Background check information shall be processed lawfully, fairly, and transparently.
+
+## 12. GOVERNING LAW
+
+12.1 This Policy is governed by the laws of England and Wales.
+
+---
+
+**By signing below, the Supplier acknowledges and agrees to comply with this Background Verification Policy and accepts full responsibility for conducting thorough background checks on all engineers.**
+
+**Supplier Representative:**  
+Name: [Auto-filled from profile]  
+Title: [To be provided]  
+Date: [Auto-filled on signature]  
+Signature: [Digital signature]
+    `.trim(),
+  },
+
+  rightToWork: {
+    title: "Right to Work Policy",
+    content: `
+# RIGHT TO WORK POLICY
+
+**Effective Date:** [Current Date]
+
+**Between:** Orbidut Ltd ("Company")  
+**And:** [Supplier Company Name] ("Supplier")
+
+## 1. PURPOSE
+
+1.1 This Policy establishes the Supplier's obligation to verify and guarantee that all engineers have legal authorization to work in the countries where they provide services through the Orbidut platform.
+
+1.2 The Supplier accepts full responsibility and liability for any violations of immigration or employment laws.
+
+## 2. RIGHT TO WORK VERIFICATION REQUIREMENTS
+
+2.1 The Supplier shall verify that EVERY engineer has legal authorization to work by:
+
+**For UK-Based Services:**
+- Conducting compliant Right to Work checks as required by UK immigration law
+- Verifying British citizenship, settled status, or valid work visa
+- Checking share codes for those with biometric residence permits
+- Maintaining copies of acceptable Right to Work documents
+
+**For International Services:**
+- Verifying citizenship or valid work authorization for each country where services are provided
+- Ensuring compliance with local immigration and employment laws
+- Obtaining necessary work permits, visas, or authorizations
+- Verifying that work authorization covers the specific type of service being provided
+
+## 3. ACCEPTABLE DOCUMENTATION
+
+3.1 The Supplier must obtain and verify original documents from List A or List B as specified in UK Right to Work guidance, or equivalent documentation for other jurisdictions.
+
+3.2 Documents must be:
+- Original (not photocopies, unless certified)
+- Valid and current
+- Checked in the physical presence of the engineer (or via approved digital verification)
+- Properly recorded with dates and checker details
+
+## 4. TIMING AND FREQUENCY
+
+4.1 Right to Work checks must be completed BEFORE an engineer's first assignment.
+
+4.2 Follow-up checks are required:
+- Before expiry of time-limited work authorization
+- Every 12 months for engineers with temporary work status
+- Immediately upon any change in immigration status
+
+4.3 The Supplier must not assign engineers whose work authorization has expired or is about to expire.
+
+## 5. RECORD KEEPING
+
+5.1 The Supplier shall maintain secure records of all Right to Work checks, including:
+- Copies of original documents checked
+- Date of check
+- Name of person who conducted the check
+- Method of verification
+- Expiry dates (where applicable)
+
+5.2 Records must be retained for at least 7 years after the engineer's last assignment.
+
+5.3 Records must be provided to Orbidut or relevant authorities within 48 hours upon request.
+
+## 6. GEOGRAPHIC SCOPE
+
+6.1 This Policy applies to ALL countries and jurisdictions where the Supplier provides services through the Orbidut platform.
+
+6.2 The Supplier is responsible for understanding and complying with the specific Right to Work requirements in each jurisdiction.
+
+6.3 The Supplier shall not assign engineers to provide services in any country where they lack legal work authorization.
+
+## 7. CROSS-BORDER SERVICES
+
+7.1 For engineers traveling across borders to provide services, the Supplier must:
+- Verify work authorization in both origin and destination countries
+- Obtain necessary business visitor permits or work visas
+- Comply with tax and social security obligations in all relevant jurisdictions
+- Ensure engineers carry proper documentation when traveling
+
+## 8. SUPPLIER WARRANTIES AND REPRESENTATIONS
+
+8.1 The Supplier warrants that:
+- All engineers assigned to Orbidut customers have valid Right to Work authorization
+- All Right to Work checks are conducted in accordance with applicable laws
+- All documentation is genuine and has been properly verified
+- No engineer will be assigned if their work authorization is in doubt
+
+## 9. RESPONSIBILITY AND LIABILITY
+
+9.1 The Supplier accepts FULL RESPONSIBILITY AND LIABILITY for:
+- Conducting compliant Right to Work checks
+- Ensuring all engineers have valid work authorization
+- Any civil penalties imposed for employing illegal workers
+- Any criminal liability for immigration violations
+- Any damages, costs, or losses incurred by Orbidut or its customers
+- Legal fees and defense costs arising from immigration violations
+
+9.2 The Supplier is an independent contractor and is solely responsible for the employment status and work authorization of its engineers.
+
+## 10. INDEMNIFICATION
+
+10.1 The Supplier shall indemnify, defend, and hold harmless Orbidut, its officers, directors, employees, customers, and affiliates from and against:
+- All claims, penalties, fines, or sanctions related to Right to Work violations
+- Government investigations or enforcement actions
+- Third-party claims arising from immigration violations
+- All costs, expenses, and legal fees incurred
+
+## 11. AUDIT AND INSPECTION RIGHTS
+
+11.1 Orbidut reserves the right to:
+- Audit the Supplier's Right to Work checking procedures at any time
+- Request proof of work authorization for any engineer
+- Require immediate removal of any engineer lacking valid authorization
+- Conduct independent verification checks
+- Report suspected violations to relevant authorities
+
+## 12. NON-COMPLIANCE CONSEQUENCES
+
+12.1 Failure to comply with this Policy will result in:
+- Immediate suspension of the Supplier's account
+- Removal of all affected engineers from the platform
+- Termination of the service agreement for cause
+- Pursuit of all available legal remedies
+- Reporting to immigration authorities
+
+12.2 The Supplier shall be liable for all penalties, fines, and damages resulting from non-compliance.
+
+## 13. CHANGES IN WORK AUTHORIZATION
+
+13.1 The Supplier must immediately notify Orbidut if:
+- An engineer's work authorization expires or is revoked
+- An engineer's immigration status changes
+- There is any doubt about an engineer's Right to Work
+- The Supplier becomes aware of any immigration violations
+
+## 14. TRAINING AND COMPLIANCE
+
+14.1 The Supplier shall ensure that personnel responsible for Right to Work checks are properly trained and competent.
+
+14.2 The Supplier shall maintain up-to-date knowledge of immigration law requirements in all relevant jurisdictions.
+
+## 15. DATA PROTECTION
+
+15.1 The Supplier shall handle all Right to Work documentation in compliance with applicable data protection laws.
+
+15.2 Documents containing personal data shall be stored securely and accessed only by authorized personnel.
+
+## 16. GOVERNING LAW
+
+16.1 This Policy is governed by the laws of England and Wales.
+
+16.2 Nothing in this Policy limits the Supplier's obligations under the immigration laws of any jurisdiction where services are provided.
+
+---
+
+**By signing below, the Supplier acknowledges and agrees to comply with this Right to Work Policy and accepts FULL RESPONSIBILITY AND LIABILITY for verifying that all engineers have legal authorization to work in the countries where they provide services.**
+
+**Supplier Representative:**  
+Name: [Auto-filled from profile]  
+Title: [To be provided]  
+Date: [Auto-filled on signature]  
+Signature: [Digital signature]
+    `.trim(),
+  },
 };
 
 export type LegalDocumentType = keyof typeof LEGAL_TEMPLATES;

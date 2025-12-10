@@ -624,6 +624,8 @@ export const verificationDocuments = mysqlTable("verificationDocuments", {
     "dpa_signed",
     "nda_signed",
     "non_compete_signed",
+    "background_verification_signed",
+    "right_to_work_signed",
     "security_compliance",
     "engineer_vetting_policy",
     "other"
