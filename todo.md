@@ -1050,3 +1050,16 @@
   - Use existing email service with attachment support
 - [x] Update uploadDocument procedure to send email after signature
 - [x] Write vitest tests for PDF features
+
+
+## Phase 56: Simplify Service Levels (Hybrid Approach)
+- [ ] Update shared/rates.ts to map 4h→Same Business Day, 24h→Next Business Day, 48h→Scheduled
+- [ ] Remove 72h and 96h from RATE_RESPONSE_TIMES constant
+- [ ] Delete all 72h and 96h rates from database
+- [ ] Delete all 72h and 96h exclusions from database
+- [ ] Test supplier rate management pages work correctly
+- [ ] Save checkpoint
+
+## Service Level Simplification
+- [x] Update Current Rates page to display semantic service level names instead of hour labels
+- [x] Fix backend bulk insert rates error - remove validation for old 72h and 96h response times

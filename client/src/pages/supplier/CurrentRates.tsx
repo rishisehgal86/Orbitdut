@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Search, Download, ChevronDown, ChevronRight } from "lucide-react";
 import SupplierLayout from "@/components/SupplierLayout";
-import { RATE_SERVICE_TYPES, RESPONSE_TIME_HOURS, formatCurrency } from "@shared/rates";
+import { RATE_SERVICE_TYPES, RESPONSE_TIME_HOURS, RESPONSE_TIME_LABELS, formatCurrency } from "@shared/rates";
 import { RateConfigurationSummary } from "@/components/RateConfigurationSummary";
 
 type ServiceType = typeof RATE_SERVICE_TYPES[number]["value"];
@@ -336,7 +336,7 @@ export default function CurrentRates() {
                       className="h-3.5 w-3.5"
                     />
                     <label htmlFor={`rt-${rt}`} className="text-xs cursor-pointer leading-none">
-                      {rt}h
+                      {RESPONSE_TIME_LABELS[rt]}
                     </label>
                   </div>
                 ))}
@@ -461,7 +461,7 @@ export default function CurrentRates() {
                             {isExpanded && filters.responseTimes.map((rt) => (
                               <tr key={`${locationKey}-${rt}`} className="bg-muted/30">
                                 <td className="py-1.5 px-3 pl-12 text-sm text-muted-foreground">
-                                  {rt}h
+                                  {RESPONSE_TIME_LABELS[rt]}
                                 </td>
                                 {filters.serviceTypes.map((serviceType) => {
                                   const serviceExcluded = isServiceExcluded(location, serviceType);

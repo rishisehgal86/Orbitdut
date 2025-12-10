@@ -192,7 +192,7 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
   
   // 4. Build virtual table: all possible rate slots with their data
   const SERVICE_TYPES = ['L1 End User Computing', 'L1 Network Support', 'Smart Hands'];
-  const RESPONSE_TIMES = [4, 24, 48, 72, 96];
+  const RESPONSE_TIMES = [4, 24, 48];
   
   const virtualTable: Array<{
     location: { type: 'country', code: string } | { type: 'city', id: number };
