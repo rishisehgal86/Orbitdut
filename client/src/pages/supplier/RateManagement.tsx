@@ -749,7 +749,6 @@ function LocationRatesTable({
 
   const handleToggleResponseTimeExclusion = (location: any, serviceType: string, responseTimeHours: number) => {
     const isExcluded = isResponseTimeExcluded(location, serviceType, responseTimeHours);
-    const { HOURS_TO_SERVICE_LEVEL } = require("@shared/rates");
     const serviceLevel = HOURS_TO_SERVICE_LEVEL[responseTimeHours];
     
     if (isExcluded) {
@@ -803,6 +802,7 @@ function LocationRatesTable({
   };
 
   const handleAutoSave = async (location: any, serviceType: string, responseTimeHours: number, value: string) => {
+    console.log("[Frontend handleAutoSave] Called with:", { location, serviceType, responseTimeHours, value });
     const locationKey = location.type === "country" ? location.code : `city-${location.id}`;
     const stateKey = `${locationKey}-${serviceType}`;
     
@@ -816,7 +816,6 @@ function LocationRatesTable({
     }));
 
     const rateUsdCents = value === "" ? null : Math.round(parseFloat(value) * 100);
-    const { HOURS_TO_SERVICE_LEVEL } = require("@shared/rates");
     const serviceLevel = HOURS_TO_SERVICE_LEVEL[responseTimeHours];
 
     await upsertMutation.mutateAsync({

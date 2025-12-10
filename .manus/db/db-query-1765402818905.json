@@ -1,0 +1,31 @@
+{
+  "query": "SELECT * FROM supplierCoverageCountries WHERE supplierId = 240001",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT * FROM supplierCoverageCountries WHERE supplierId = 240001",
+  "rows": [
+    {
+      "id": "150036",
+      "supplierId": "240001",
+      "countryCode": "AU",
+      "isExcluded": "0",
+      "createdAt": "2025-12-10 13:44:34"
+    },
+    {
+      "id": "150037",
+      "supplierId": "240001",
+      "countryCode": "AZ",
+      "isExcluded": "0",
+      "createdAt": "2025-12-10 13:44:34"
+    },
+    {
+      "id": "150038",
+      "supplierId": "240001",
+      "countryCode": "BH",
+      "isExcluded": "0",
+      "createdAt": "2025-12-10 13:44:34"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tsupplierId\tcountryCode\tisExcluded\tcreatedAt\n150036\t240001\tAU\t0\t2025-12-10 13:44:34\n150037\t240001\tAZ\t0\t2025-12-10 13:44:34\n150038\t240001\tBH\t0\t2025-12-10 13:44:34\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}

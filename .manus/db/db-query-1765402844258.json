@@ -1,0 +1,55 @@
+{
+  "query": "SELECT id, supplierId, countryCode, cityId, serviceType, serviceLevel, rateUsdCents FROM supplierRates WHERE supplierId = 240001 LIMIT 5",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT id, supplierId, countryCode, cityId, serviceType, serviceLevel, rateUsdCents FROM supplierRates WHERE supplierId = 240001 LIMIT 5",
+  "rows": [
+    {
+      "id": "540001",
+      "supplierId": "240001",
+      "countryCode": "AZ",
+      "cityId": "NULL",
+      "serviceType": "L1_NETWORK",
+      "serviceLevel": "next_business_day",
+      "rateUsdCents": "6600"
+    },
+    {
+      "id": "540002",
+      "supplierId": "240001",
+      "countryCode": "AZ",
+      "cityId": "NULL",
+      "serviceType": "SMART_HANDS",
+      "serviceLevel": "next_business_day",
+      "rateUsdCents": "8900"
+    },
+    {
+      "id": "540003",
+      "supplierId": "240001",
+      "countryCode": "AZ",
+      "cityId": "NULL",
+      "serviceType": "L1_EUC",
+      "serviceLevel": "next_business_day",
+      "rateUsdCents": "6600"
+    },
+    {
+      "id": "540004",
+      "supplierId": "240001",
+      "countryCode": "AZ",
+      "cityId": "NULL",
+      "serviceType": "L1_EUC",
+      "serviceLevel": "scheduled",
+      "rateUsdCents": "7700"
+    },
+    {
+      "id": "540005",
+      "supplierId": "240001",
+      "countryCode": "AZ",
+      "cityId": "NULL",
+      "serviceType": "L1_NETWORK",
+      "serviceLevel": "scheduled",
+      "rateUsdCents": "8800"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tsupplierId\tcountryCode\tcityId\tserviceType\tserviceLevel\trateUsdCents\n540001\t240001\tAZ\tNULL\tL1_NETWORK\tnext_business_day\t6600\n540002\t240001\tAZ\tNULL\tSMART_HANDS\tnext_business_day\t8900\n540003\t240001\tAZ\tNULL\tL1_EUC\tnext_business_day\t6600\n540004\t240001\tAZ\tNULL\tL1_EUC\tscheduled\t7700\n540005\t240001\tAZ\tNULL\tL1_NETWORK\tscheduled\t8800\n",
+  "stderr": "",
+  "execution_time_ms": 51
+}

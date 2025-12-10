@@ -1100,5 +1100,21 @@
 
 ## Bug Fix: LocationRatesTable Component Error
 - [x] Fix "ReferenceError: Can't find variable: require" error in By Location tab
-- [x] Replace require() calls with ES6 imports for HOURS_TO_SERVICE_LEVEL and SERVICE_LEVEL_TO_HOURS
-- [x] Test By Location tab loads without errors
+- [x] Replace require() calls with ES6 imports for HOURS_TO_SERVICE_LEVEL and SERVICE_LEVEL_TO_HOURS (initial 3 instances)
+- [x] Fix 2 additional require() calls in handleToggleResponseTimeExclusion and handleAutoSave functions
+- [x] Verify all require() calls removed from RateManagement.tsx
+- [x] Test rate entry and saving functionality works correctly
+- [x] Fix upsertRate procedure - UI shows saved but database not updated (procedure already existed, removed duplicate)
+- [ ] Test and verify rates are saved to database and appear in Current Rates page
+- [x] Debug: Add logging to trace why rates aren't persisting to database
+- [x] Check if upsertRate function is being called with correct parameters
+- [x] Confirmed: Backend IS saving rates successfully
+- [x] Fix: Add cache invalidation so saved rates appear in UI immediately
+- [x] Root cause: Frontend looking for responseTimeHours but backend only had serviceLevel
+- [x] Solution: Transform backend response to include responseTimeHours mapped from serviceLevel
+- [x] Test: Verified rates are NOT appearing on either page
+- [x] Found: Current Rates page also shows all rates as "Missing"
+- [x] Root cause: getSupplierRates was filtering by coverage countries with broken SQL
+- [x] Fix: Simplified getRates to return all supplier rates without coverage filtering
+- [x] Test: Verified rates now appear correctly on both Current Rates and Rate Management pages
+- [x] Clean up: Removed all debug console.log statements

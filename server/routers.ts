@@ -554,8 +554,13 @@ export const appRouter = router({
       )
       .mutation(async ({ input }) => {
         const { upsertRate } = await import("./rates");
-        await upsertRate(input);
-        return { success: true };
+        try {
+          await upsertRate(input);
+          return { success: true };
+        } catch (error) {
+          console.error("[upsertRate] Error saving rate:", error);
+          throw error;
+        }
       }),
 
     // Bulk upsert rates (for "Apply to All" functionality)
@@ -895,8 +900,6 @@ export const appRouter = router({
         const { getResponseTimeExclusions } = await import("./responseTimeExclusions");
         return await getResponseTimeExclusions(input.supplierId);
       }),
-
-    // Note: Old upsertRate procedure removed - replaced by new rate management system in server/rates.ts
 
     // Tier 1: Country Coverage
     getCountries: protectedProcedure

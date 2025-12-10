@@ -89,34 +89,18 @@ export async function getSupplierRates(supplierId: number) {
   const { or, sql } = await import("drizzle-orm");
   const { supplierResponseTimeExclusions, supplierCoverageCountries } = await import("../drizzle/schema");
   
-  // Get current coverage for this supplier
-  const coverageCountries = await db
-    .select()
-    .from(supplierCoverageCountries)
-    .where(eq(supplierCoverageCountries.supplierId, supplierId));
-  
-  const coverageCountryCodes = coverageCountries.map(c => c.countryCode);
-  
-  // Get all rates for this supplier's covered locations
+  // Get all rates for this supplier (no coverage filtering)
   const rates = await db
     .select()
     .from(supplierRates)
-    .where(
-      and(
-        eq(supplierRates.supplierId, supplierId),
-        or(
-          // Country rates in coverage
-          and(
-            sql`${supplierRates.countryCode} IS NOT NULL`,
-            sql`${supplierRates.countryCode} IN (${coverageCountryCodes.join(',')})`
-          ),
-          // City rates (always included if they exist)
-          sql`${supplierRates.cityId} IS NOT NULL`
-        )
-      )
-    );
+    .where(eq(supplierRates.supplierId, supplierId));
   
-  return rates;
+  // Transform rates to include responseTimeHours for backwards compatibility
+  const { SERVICE_LEVEL_TO_HOURS } = await import("../shared/rates");
+  return rates.map(rate => ({
+    ...rate,
+    responseTimeHours: SERVICE_LEVEL_TO_HOURS[rate.serviceLevel],
+  }));
 }
 
 /**
