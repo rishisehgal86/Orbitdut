@@ -98,14 +98,49 @@ describe("Superadmin Verification System", () => {
       expect(details).toHaveProperty("verification");
       expect(details).toHaveProperty("profile");
       expect(details).toHaveProperty("documents");
+      expect(details).toHaveProperty("teamMembers");
+      expect(details).toHaveProperty("coverageCountries");
+      expect(details).toHaveProperty("priorityCities");
 
       expect(details.supplier.id).toBe(testSupplierId);
       expect(Array.isArray(details.documents)).toBe(true);
+      expect(Array.isArray(details.teamMembers)).toBe(true);
+
+      // Verify supplier has all required fields including new ones
+      expect(details.supplier).toHaveProperty("isActive");
+      expect(details.supplier).toHaveProperty("createdAt");
+      expect(details.supplier).toHaveProperty("updatedAt");
+
+      // Verify verification has timestamps if it exists
+      if (details.verification) {
+        expect(details.verification).toHaveProperty("createdAt");
+        expect(details.verification).toHaveProperty("updatedAt");
+      }
+
+      // Verify profile has timestamps if it exists
+      if (details.profile) {
+        expect(details.profile).toHaveProperty("createdAt");
+        expect(details.profile).toHaveProperty("updatedAt");
+      }
+
+      // Verify team members structure
+      if (details.teamMembers.length > 0) {
+        const member = details.teamMembers[0];
+        expect(member).toHaveProperty("userId");
+        expect(member).toHaveProperty("role");
+        expect(member).toHaveProperty("userName");
+        expect(member).toHaveProperty("userEmail");
+        expect(member).toHaveProperty("joinedAt");
+      }
 
       console.log("✓ Successfully fetched details for supplier ID:", testSupplierId);
       console.log("  - Company:", details.supplier.companyName);
       console.log("  - Documents:", details.documents.length);
+      console.log("  - Team Members:", details.teamMembers.length);
+      console.log("  - Account Active:", details.supplier.isActive ? "Yes" : "No");
       console.log("  - Verification Status:", details.verification?.status || "not_started");
+      console.log("  - Supplier Created:", details.supplier.createdAt);
+      console.log("  - Supplier Updated:", details.supplier.updatedAt || "Never");
     } else {
       console.log("⚠ Skipping detail test - no suppliers in database");
     }

@@ -921,3 +921,16 @@
 - [x] Add any missing fields to the review page
 - [x] Organize fields logically by section
 - [x] Test with real data to ensure all fields render correctly
+
+## Phase 39: Add Remaining Missing Contact and Verification Fields
+- [x] Audit what contact fields are missing (check suppliers table vs display)
+- [x] Audit what verification fields are missing (check supplierVerification table vs display)
+- [x] Backend: Update getVerificationDetails to fetch suppliers.isActive, suppliers.updatedAt
+- [x] Backend: Update getVerificationDetails to fetch supplierVerification.createdAt, supplierVerification.updatedAt
+- [x] Backend: Update getVerificationDetails to fetch supplierCompanyProfile.createdAt, supplierCompanyProfile.updatedAt
+- [x] Backend: Update getVerificationDetails to fetch supplierUsers (all team members with roles)
+- [x] Frontend: Add Account Status section showing isActive status
+- [x] Frontend: Add Timestamps section showing all creation/update dates
+- [x] Frontend: Add Team Members section showing all supplier users with roles
+- [x] Testing: Verify all fields display correctly with real data
+- [x] Verify 100% coverage with user confirmation

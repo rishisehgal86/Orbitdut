@@ -2461,7 +2461,7 @@ export const appRouter = router({
     getVerificationDetails: superadminProcedure
       .input(z.object({ supplierId: z.number() }))
       .query(async ({ input, ctx }) => {
-        const { supplierVerification, supplierCompanyProfile, verificationDocuments, suppliers, supplierCoverageCountries, supplierPriorityCities, users } = await import("../drizzle/schema");
+        const { supplierVerification, supplierCompanyProfile, verificationDocuments, suppliers, supplierCoverageCountries, supplierPriorityCities, users, supplierUsers } = await import("../drizzle/schema");
         const { eq } = await import("drizzle-orm");
 
         const db = await getDb();
@@ -2527,6 +2527,18 @@ export const appRouter = router({
         const priorityCities = await db.select().from(supplierPriorityCities)
           .where(eq(supplierPriorityCities.supplierId, input.supplierId));
 
+        // Get supplier users (team members)
+        const teamMembers = await db.select({
+          userId: supplierUsers.userId,
+          role: supplierUsers.role,
+          userName: users.name,
+          userEmail: users.email,
+          joinedAt: supplierUsers.createdAt,
+        })
+          .from(supplierUsers)
+          .leftJoin(users, eq(supplierUsers.userId, users.id))
+          .where(eq(supplierUsers.supplierId, input.supplierId));
+
         return {
           supplier,
           verification,
@@ -2535,6 +2547,7 @@ export const appRouter = router({
           documents: documentsWithUploaders,
           coverageCountries,
           priorityCities,
+          teamMembers,
         };
       }),
 

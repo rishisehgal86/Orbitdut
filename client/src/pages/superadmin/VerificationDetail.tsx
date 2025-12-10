@@ -507,6 +507,140 @@ export default function VerificationDetail() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Account Status */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5" />
+                  Account Status
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Account Active</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      {supplier.isActive ? (
+                        <Badge variant="default" className="gap-1">
+                          <CheckCircle className="w-3 h-3" />
+                          Active
+                        </Badge>
+                      ) : (
+                        <Badge variant="destructive" className="gap-1">
+                          <XCircle className="w-3 h-3" />
+                          Inactive
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <Separator />
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Last Updated</p>
+                    <p className="text-sm mt-1">
+                      {supplier.updatedAt ? format(new Date(supplier.updatedAt), "MMM d, yyyy 'at' h:mm a") : "—"}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Timestamps */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="w-5 h-5" />
+                  Timestamps
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 text-sm">
+                  <div>
+                    <p className="font-medium text-muted-foreground">Supplier Account</p>
+                    <div className="mt-1 space-y-1">
+                      <p>Created: {format(new Date(supplier.createdAt), "MMM d, yyyy 'at' h:mm a")}</p>
+                      {supplier.updatedAt && (
+                        <p>Updated: {format(new Date(supplier.updatedAt), "MMM d, yyyy 'at' h:mm a")}</p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {verification && (
+                    <>
+                      <Separator />
+                      <div>
+                        <p className="font-medium text-muted-foreground">Verification Record</p>
+                        <div className="mt-1 space-y-1">
+                          {verification.createdAt && (
+                            <p>Created: {format(new Date(verification.createdAt), "MMM d, yyyy 'at' h:mm a")}</p>
+                          )}
+                          {verification.updatedAt && (
+                            <p>Updated: {format(new Date(verification.updatedAt), "MMM d, yyyy 'at' h:mm a")}</p>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {profile && (
+                    <>
+                      <Separator />
+                      <div>
+                        <p className="font-medium text-muted-foreground">Company Profile</p>
+                        <div className="mt-1 space-y-1">
+                          {profile.createdAt && (
+                            <p>Created: {format(new Date(profile.createdAt), "MMM d, yyyy 'at' h:mm a")}</p>
+                          )}
+                          {profile.updatedAt && (
+                            <p>Updated: {format(new Date(profile.updatedAt), "MMM d, yyyy 'at' h:mm a")}</p>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Team Members */}
+            {details?.teamMembers && details.teamMembers.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    Team Members
+                  </CardTitle>
+                  <CardDescription>
+                    {details.teamMembers.length} user{details.teamMembers.length !== 1 ? 's' : ''} associated with this supplier
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {details.teamMembers.map((member: any) => (
+                      <div key={member.userId} className="p-3 border rounded-lg">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-start gap-3 flex-1">
+                            <User className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium">{member.userName || "Unnamed User"}</p>
+                              <p className="text-xs text-muted-foreground truncate">{member.userEmail || "—"}</p>
+                              {member.joinedAt && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Joined {format(new Date(member.joinedAt), "MMM d, yyyy")}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <Badge variant="outline" className="capitalize">
+                            {member.role?.replace(/_/g, ' ') || "User"}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Right Column - Verification Status & Actions */}
