@@ -10,11 +10,7 @@ const SERVICE_TYPES = [
   { value: "smart_hands", label: "Smart Hands" },
 ];
 
-const SERVICE_LEVELS = [
-  { value: "same_business_day", label: "Same Business Day" },
-  { value: "next_business_day", label: "Next Business Day" },
-  { value: "scheduled", label: "Scheduled" },
-];
+const RESPONSE_TIMES = [4, 24, 48, 72, 96];
 
 const REGIONS = {
   africa: "Africa",
@@ -114,9 +110,11 @@ function generateCountriesSheet(
     "Region",
     "Country",
     "Country Code",
-    "Same Business Day Rate (USD)",
-    "Next Business Day Rate (USD)",
-    "Scheduled Rate (USD)",
+    "4h Rate (USD)",
+    "24h Rate (USD)",
+    "48h Rate (USD)",
+    "72h Rate (USD)",
+    "96h Rate (USD)",
   ];
 
   const rows: any[][] = [headers];
@@ -142,12 +140,12 @@ function generateCountriesSheet(
     ];
 
     // Add rate columns
-    for (const serviceLevel of SERVICE_LEVELS) {
+    for (const responseTime of RESPONSE_TIMES) {
       const rate = allRates.find(
         (r) =>
           r.countryCode === country.code &&
           r.serviceType === serviceType &&
-          r.serviceLevel === serviceLevel.value &&
+          r.responseTimeHours === responseTime &&
           r.rateUsdCents !== null
       );
 
@@ -179,9 +177,11 @@ function generateCitiesSheet(
     "State/Province",
     "Country",
     "Country Code",
-    "Same Business Day Rate (USD)",
-    "Next Business Day Rate (USD)",
-    "Scheduled Rate (USD)",
+    "4h Rate (USD)",
+    "24h Rate (USD)",
+    "48h Rate (USD)",
+    "72h Rate (USD)",
+    "96h Rate (USD)",
   ];
 
   const rows: any[][] = [headers];
@@ -205,12 +205,12 @@ function generateCitiesSheet(
     ];
 
     // Add rate columns
-    for (const serviceLevel of SERVICE_LEVELS) {
+    for (const responseTime of RESPONSE_TIMES) {
       const rate = allRates.find(
         (r) =>
           r.cityId === city.id &&
           r.serviceType === serviceType &&
-          r.serviceLevel === serviceLevel.value &&
+          r.responseTimeHours === responseTime &&
           r.rateUsdCents !== null
       );
 

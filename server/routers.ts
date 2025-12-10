@@ -548,7 +548,7 @@ export const appRouter = router({
           countryCode: z.string().length(2).optional(),
           cityId: z.number().optional(),
           serviceType: z.string(),
-          serviceLevel: z.string(),
+          responseTimeHours: z.number(),
           rateUsdCents: z.number().nullable(),
         })
       )
@@ -568,7 +568,7 @@ export const appRouter = router({
               countryCode: z.string().length(2).optional(),
               cityId: z.number().optional(),
               serviceType: z.string(),
-              serviceLevel: z.string(),
+              responseTimeHours: z.number(),
               rateUsdCents: z.number().nullable(),
             })
           ),
@@ -657,7 +657,7 @@ export const appRouter = router({
           countryCode: z.string().optional(),
           cityId: z.number().optional(),
           cityName: z.string().optional(),
-          serviceLevel: z.string(),
+          responseTimeHours: z.number(),
           rateUsd: z.number(),
           rowNumber: z.number(),
         }))
@@ -705,7 +705,7 @@ export const appRouter = router({
           ratesToInsert.push({
             supplierId: input.supplierId,
             serviceType: rate.serviceType,
-            serviceLevel: rate.serviceLevel,
+            responseTimeHours: rate.responseTimeHours,
             countryCode: rate.locationType === "country" ? rate.countryCode : null,
             cityId: rate.locationType === "city" ? cityId : null,
             rateUsdCents: dollarsToCents(rate.rateUsd),
@@ -845,7 +845,7 @@ export const appRouter = router({
         return { success: true };
       }),
 
-    // Service level exclusions - granular control at service level
+    // Response time exclusions - granular control at response time level
     addResponseTimeExclusion: protectedProcedure
       .input(
         z.object({
@@ -853,7 +853,7 @@ export const appRouter = router({
           countryCode: z.string().length(2).optional(),
           cityId: z.number().optional(),
           serviceType: z.string(),
-          serviceLevel: z.string(),
+          responseTimeHours: z.number(),
         })
       )
       .mutation(async ({ input }) => {
@@ -874,7 +874,7 @@ export const appRouter = router({
           countryCode: z.string().length(2).optional(),
           cityId: z.number().optional(),
           serviceType: z.string(),
-          serviceLevel: z.string(),
+          responseTimeHours: z.number(),
         })
       )
       .mutation(async ({ input }) => {
@@ -990,7 +990,7 @@ export const appRouter = router({
           supplierId: z.number(),
           countryCode: z.string().nullable(),
           cityName: z.string().nullable().optional(),
-          serviceLevel: z.string(),
+          responseTimeHours: z.number(),
           isDefault: z.number().optional(),
         })
       )

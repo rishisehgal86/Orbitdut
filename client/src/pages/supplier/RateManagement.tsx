@@ -11,7 +11,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Link } from "wouter";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import SupplierLayout from "@/components/SupplierLayout";
-import { RATE_SERVICE_TYPES, RATE_SERVICE_LEVELS } from "@shared/rates";
+import { RATE_SERVICE_TYPES, RATE_RESPONSE_TIMES } from "@shared/rates";
 import { validateBaseRates } from "@shared/rateValidation";
 import { RateConfigurationSummary } from "@/components/RateConfigurationSummary";
 
@@ -129,7 +129,7 @@ export default function RateManagement() {
 function QuickSetupTab({ supplierId, onSuccess }: { supplierId: number; onSuccess: () => void }) {
   const [selectedService, setSelectedService] = useState(RATE_SERVICE_TYPES[0].value);
   const [regionTab, setRegionTab] = useState("africa");
-  const [baseRates, setBaseRates] = useState<Record<string, string>>({});
+  const [baseRates, setBaseRates] = useState<Record<number, string>>({});
   const [isApplying, setIsApplying] = useState(false);
 
   // Reset base rates when service type OR region changes
@@ -175,10 +175,10 @@ function QuickSetupTab({ supplierId, onSuccess }: { supplierId: number; onSucces
     },
   });
 
-  const handleRateChange = (serviceLevel: string, value: string) => {
+  const handleRateChange = (responseTimeHours: number, value: string) => {
     setBaseRates((prev) => ({
       ...prev,
-      [serviceLevel]: value,
+      [responseTimeHours]: value,
     }));
   };
 
@@ -198,14 +198,14 @@ function QuickSetupTab({ supplierId, onSuccess }: { supplierId: number; onSucces
     if (regionTab === "cities") {
       // Apply to all priority cities
       for (const city of cities || []) {
-        for (const serviceLevel of RATE_SERVICE_LEVELS) {
-          const rateValue = baseRates[serviceLevel.value];
+        for (const responseTime of RATE_RESPONSE_TIMES) {
+          const rateValue = baseRates[responseTime.hours];
           if (rateValue && rateValue !== "") {
             rateEntries.push({
               supplierId,
               cityId: city.id,
               serviceType: selectedService,
-              serviceLevel: serviceLevel.value,
+              responseTimeHours: responseTime.hours,
               rateUsdCents: Math.round(parseFloat(rateValue) * 100),
             });
           }
@@ -215,14 +215,14 @@ function QuickSetupTab({ supplierId, onSuccess }: { supplierId: number; onSucces
       // Apply to countries in selected region
       const regionCountries = countryByRegion[regionTab] || [];
       for (const country of regionCountries) {
-        for (const serviceLevel of RATE_SERVICE_LEVELS) {
-          const rateValue = baseRates[serviceLevel.value];
+        for (const responseTime of RATE_RESPONSE_TIMES) {
+          const rateValue = baseRates[responseTime.hours];
           if (rateValue && rateValue !== "") {
             rateEntries.push({
               supplierId,
               countryCode: country.countryCode,
               serviceType: selectedService,
-              serviceLevel: serviceLevel.value,
+              responseTimeHours: responseTime.hours,
               rateUsdCents: Math.round(parseFloat(rateValue) * 100),
             });
           }
@@ -298,10 +298,10 @@ function QuickSetupTab({ supplierId, onSuccess }: { supplierId: number; onSucces
             {/* Base Rates Grid (same for all tabs) */}
             <div className="mt-6 space-y-4">
               <label className="text-sm font-medium">Base Rates (USD per hour)</label>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {RATE_SERVICE_LEVELS.map((serviceLevel) => (
-                  <div key={serviceLevel.value} className="space-y-2">
-                    <label className="text-sm text-muted-foreground">{serviceLevel.label}</label>
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                {RATE_RESPONSE_TIMES.map((responseTime) => (
+                  <div key={responseTime.hours} className="space-y-2">
+                    <label className="text-sm text-muted-foreground">{responseTime.label}</label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                         $
@@ -310,8 +310,8 @@ function QuickSetupTab({ supplierId, onSuccess }: { supplierId: number; onSucces
                         type="number"
                         placeholder="0.00"
                         className="pl-7"
-                        value={baseRates[serviceLevel.value] || ""}
-                        onChange={(e) => handleRateChange(serviceLevel.value, e.target.value)}
+                        value={baseRates[responseTime.hours] || ""}
+                        onChange={(e) => handleRateChange(responseTime.hours, e.target.value)}
                         min="0"
                         step="0.01"
                       />
@@ -1145,7 +1145,7 @@ function ByServiceTab({ supplierId, onSuccess }: { supplierId: number; onSuccess
 }
 
 // Rate Validation Warnings Component
-function RateValidationWarnings({ baseRates }: { baseRates: Record<string, string> }) {
+function RateValidationWarnings({ baseRates }: { baseRates: Record<number, string> }) {
   const warnings = useMemo(() => {
     return validateBaseRates(baseRates);
   }, [baseRates]);
