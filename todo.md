@@ -1016,3 +1016,37 @@
 - [x] Add verification approval confirmation banner/card to dashboard
 - [x] Update "Get Started" section to show green checkmarks for completed items
 - [x] Hide "Get Started" card entirely when all steps are completed
+
+## Phase 53: Email Notifications for Supplier Setup Milestones
+- [x] Create email template for rates completion notification
+- [x] Create email template for coverage completion notification
+- [x] Add sendRatesCompletedEmail function to email service
+- [x] Add sendCoverageCompletedEmail function to email service
+- [x] Trigger email when supplier saves rates (in bulkUpsertRates or updateRate)
+- [x] Trigger email when supplier saves coverage (in updateCountries)
+- [x] Email should include:
+  - Congratulations message
+  - Summary of what they completed (e.g., "3 countries, 15 rates")
+  - Next steps (e.g., "Complete coverage" or "Start accepting jobs")
+  - Link to dashboard
+- [x] Write vitest tests for email notifications
+
+## Phase 54: PDF Preview, Download, and Email for Verification Documents
+- [x] Add PDF preview modal to verification wizard
+  - Show PDF in iframe or embed before signing
+  - Allow suppliers to review document content
+  - Add "Review PDF" button next to each legal document
+- [x] Add PDF download functionality
+  - "Download PDF" button after signing
+  - Save signed PDF to supplier's device
+  - Filename format: orbidut-{document-type}-signed-{date}.pdf
+- [x] Add automatic email delivery of signed PDFs
+  - Send email with PDF attachment after each document is signed
+  - Email should include:
+    - Document type (DPA, NDA, Non-Compete, etc.)
+    - Signing date and time
+    - PDF attachment
+    - Confirmation message
+  - Use existing email service with attachment support
+- [x] Update uploadDocument procedure to send email after signature
+- [x] Write vitest tests for PDF features

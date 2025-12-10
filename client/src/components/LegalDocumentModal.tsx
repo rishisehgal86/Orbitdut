@@ -7,6 +7,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import SignatureCanvas from "react-signature-canvas";
 import { LEGAL_TEMPLATES, type LegalDocumentType } from "@/lib/legalTemplates";
 import ReactMarkdown from "react-markdown";
+import { FileText, Download } from "lucide-react";
+import { generateLegalPDF } from "@/lib/generateLegalPDF";
 
 interface LegalDocumentModalProps {
   open: boolean;
@@ -28,6 +30,8 @@ export function LegalDocumentModal({
   const [title, setTitle] = useState("");
   const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
   const [hasSignature, setHasSignature] = useState(false);
+  const [showPdfPreview, setShowPdfPreview] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const signatureRef = useRef<SignatureCanvas>(null);
 
   const template = LEGAL_TEMPLATES[documentType];
@@ -61,15 +65,93 @@ export function LegalDocumentModal({
     }
   };
 
+  const handlePreviewPdf = async () => {
+    try {
+      const pdfBlob = await generateLegalPDF({
+        documentType,
+        supplierName,
+        contactName,
+        signatureData: null,
+        title: "",
+      });
+      const url = URL.createObjectURL(pdfBlob);
+      setPdfUrl(url);
+      setShowPdfPreview(true);
+    } catch (error) {
+      console.error("Failed to generate PDF preview:", error);
+    }
+  };
+
+  const handleDownloadPdf = async () => {
+    try {
+      const pdfBlob = await generateLegalPDF({
+        documentType,
+        supplierName,
+        contactName,
+        signatureData: signatureRef.current?.toDataURL() || null,
+        title: title || "",
+      });
+      const url = URL.createObjectURL(pdfBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      const docName = template.title.toLowerCase().replace(/\s+/g, '-');
+      const date = new Date().toISOString().split('T')[0];
+      link.download = `orbidut-${docName}-signed-${date}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Failed to download PDF:", error);
+    }
+  };
+
   const isSignDisabled = !hasScrolledToBottom || !title.trim() || !hasSignature;
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="!w-[95vw] !h-[95vh] !max-w-[95vw] flex flex-col">
+    <>
+      {/* PDF Preview Modal */}
+      <Dialog open={showPdfPreview} onOpenChange={setShowPdfPreview}>
+        <DialogContent className="!w-[95vw] !h-[95vh] !max-w-[95vw] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>PDF Preview - {template.title}</DialogTitle>
+            <DialogDescription>
+              Preview of the document before signing
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 border rounded-lg overflow-hidden">
+            {pdfUrl && (
+              <iframe
+                src={pdfUrl}
+                className="w-full h-full"
+                title="PDF Preview"
+              />
+            )}
+          </div>
+          <div className="flex justify-end pt-4">
+            <Button onClick={() => setShowPdfPreview(false)}>
+              Close Preview
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Main Document Modal */}
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="!w-[95vw] !h-[95vh] !max-w-[95vw] flex flex-col">
         <DialogHeader>
           <DialogTitle>{template.title}</DialogTitle>
-          <DialogDescription>
-            Please read the entire document and sign at the bottom
+          <DialogDescription className="flex items-center justify-between">
+            <span>Please read the entire document and sign at the bottom</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePreviewPdf}
+              className="gap-2"
+            >
+              <FileText className="w-4 h-4" />
+              Preview PDF
+            </Button>
           </DialogDescription>
         </DialogHeader>
 
@@ -126,13 +208,24 @@ export function LegalDocumentModal({
               <Button variant="outline" onClick={onClose}>
                 Cancel
               </Button>
+              {hasSignature && title.trim() && (
+                <Button
+                  variant="outline"
+                  onClick={handleDownloadPdf}
+                  className="gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Download PDF
+                </Button>
+              )}
               <Button onClick={handleSign} disabled={isSignDisabled}>
                 Sign Document
               </Button>
             </div>
           </div>
         )}
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

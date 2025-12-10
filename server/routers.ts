@@ -574,9 +574,29 @@ export const appRouter = router({
           ),
         })
       )
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         const { bulkUpsertRates } = await import("./rates");
         await bulkUpsertRates(input.rates);
+        
+        // Send email notification on first rates completion
+        if (input.rates.length > 0 && ctx.user) {
+          const supplierId = input.rates[0].supplierId;
+          const { getSupplierById } = await import("./db");
+          const supplier = await getSupplierById(supplierId);
+          
+          if (supplier) {
+            // Count unique service types
+            const serviceTypes = new Set(input.rates.map(r => r.serviceType));
+            const { sendRatesCompletedEmail } = await import("./_core/email");
+            await sendRatesCompletedEmail(
+              ctx.user.email,
+              supplier.companyName,
+              input.rates.length,
+              serviceTypes.size
+            );
+          }
+        }
+        
         return { success: true };
       }),
 
@@ -888,13 +908,30 @@ export const appRouter = router({
           isExcluded: z.boolean().optional(),
         })
       )
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         const { upsertSupplierCountries } = await import("./db");
         await upsertSupplierCountries(input.supplierId, input.countryCodes, input.isExcluded);
         
         // Automatic cleanup: Remove orphaned rates after coverage change
         const { cleanupOrphanedRates } = await import("./rates");
         await cleanupOrphanedRates(input.supplierId);
+        
+        // Send email notification when coverage is configured
+        if (input.countryCodes.length > 0 && ctx.user) {
+          const { getSupplierById, getSupplierCities } = await import("./db");
+          const supplier = await getSupplierById(input.supplierId);
+          const cities = await getSupplierCities(input.supplierId);
+          
+          if (supplier) {
+            const { sendCoverageCompletedEmail } = await import("./_core/email");
+            await sendCoverageCompletedEmail(
+              ctx.user.email,
+              supplier.companyName,
+              input.countryCodes.length,
+              cities.length
+            );
+          }
+        }
         
         return { success: true };
       }),
@@ -2367,6 +2404,44 @@ export const appRouter = router({
         await db.update(supplierVerification)
           .set({ status: "in_progress" })
           .where(eq(supplierVerification.supplierId, supplier.id));
+
+        // Send email with PDF attachment for signed legal documents
+        const signedDocTypes = ['dpa_signed', 'nda_signed', 'non_compete_signed', 'background_verification_signed', 'right_to_work_signed'];
+        if (signedDocTypes.includes(input.documentType) && input.signatureData) {
+          try {
+            // Generate PDF with signature
+            const { generateLegalPDF } = await import("../client/src/lib/generateLegalPDF");
+            const docTypeMap: Record<string, string> = {
+              'dpa_signed': 'dpa',
+              'nda_signed': 'nda',
+              'non_compete_signed': 'nonCompete',
+              'background_verification_signed': 'backgroundVerification',
+              'right_to_work_signed': 'rightToWork',
+            };
+            
+            const pdfBlob = await generateLegalPDF({
+              documentType: docTypeMap[input.documentType] as any,
+              supplierName: supplier.companyName,
+              contactName: input.signedBy || ctx.user.email,
+              signatureData: input.signatureData,
+              title: input.signedBy || '',
+            });
+            
+            const pdfBuffer = Buffer.from(await pdfBlob.arrayBuffer());
+            const { sendSignedDocumentEmail } = await import("./_core/email");
+            await sendSignedDocumentEmail(
+              ctx.user.email,
+              supplier.companyName,
+              input.documentType,
+              input.documentName,
+              input.signedAt || new Date().toISOString(),
+              pdfBuffer
+            );
+          } catch (emailError) {
+            console.error('Failed to send signed document email:', emailError);
+            // Don't fail the upload if email fails
+          }
+        }
 
         return { success: true, fileUrl };
       }),

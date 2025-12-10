@@ -5,6 +5,11 @@ interface SendEmailOptions {
   subject: string;
   html: string;
   text?: string;
+  attachments?: Array<{
+    filename: string;
+    content: Buffer | string;
+    contentType?: string;
+  }>;
 }
 
 /**
@@ -59,6 +64,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<boolean> {
       subject: options.subject,
       html: options.html,
       text: options.text || options.html.replace(/<[^>]*>/g, ""),
+      attachments: options.attachments || [],
     });
 
     console.log("Email sent successfully:", info.messageId);
@@ -701,5 +707,309 @@ Visit: ${APP_URL}
     subject: "Welcome to Orbidut - Complete Your Verification",
     html,
     text,
+  });
+}
+
+/**
+ * Send rates completion notification email
+ */
+export async function sendRatesCompletedEmail(
+  email: string,
+  companyName: string,
+  ratesCount: number,
+  servicesCount: number
+): Promise<boolean> {
+  const { APP_URL } = getGmailConfig();
+  const dashboardUrl = `${APP_URL}/supplier/dashboard`;
+  const coverageUrl = `${APP_URL}/supplier/coverage`;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rates Configuration Complete</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 28px;">Orbidut</h1>
+  </div>
+  
+  <div style="background: #ffffff; padding: 40px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 10px 10px;">
+    <h2 style="color: #1f2937; margin-top: 0;">🎉 Rates Configuration Complete!</h2>
+    
+    <p>Congratulations ${companyName}!</p>
+    
+    <p>You've successfully configured your service rates on the Orbidut platform.</p>
+    
+    <div style="background: #ecfdf5; border-left: 4px solid #10b981; padding: 20px; margin: 20px 0;">
+      <p style="margin: 0 0 10px 0; color: #065f46;"><strong>What You've Completed:</strong></p>
+      <ul style="margin: 0; padding-left: 20px; color: #047857;">
+        <li style="margin-bottom: 8px;">${ratesCount} rates configured across ${servicesCount} service types</li>
+        <li style="margin-bottom: 8px;">Pricing structure set for different response times</li>
+        <li>Ready to receive competitive job requests</li>
+      </ul>
+    </div>
+    
+    <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 20px; margin: 20px 0;">
+      <p style="margin: 0 0 10px 0; color: #1e40af;"><strong>Next Steps:</strong></p>
+      <ol style="margin: 0; padding-left: 20px; color: #1e3a8a;">
+        <li style="margin-bottom: 8px;">Define your coverage area (countries and cities you serve)</li>
+        <li style="margin-bottom: 8px;">Complete your profile setup</li>
+        <li>Start accepting job requests in your service areas!</li>
+      </ol>
+    </div>
+    
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${coverageUrl}" style="background: #667eea; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600; margin: 0 10px 10px 0;">Set Coverage Area</a>
+      <a href="${dashboardUrl}" style="background: #6b7280; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600; margin: 0 10px 10px 0;">Go to Dashboard</a>
+    </div>
+    
+    <p style="color: #6b7280; font-size: 14px;">You can always update your rates later from your dashboard.</p>
+    
+    <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+    
+    <p style="color: #9ca3af; font-size: 12px; text-align: center;">
+      Orbidut - Connect with Trusted Service Providers Instantly<br>
+      <a href="${APP_URL}" style="color: #667eea; text-decoration: none;">Visit Orbidut</a>
+    </p>
+  </div>
+</body>
+</html>
+`;
+
+  const text = `
+Rates Configuration Complete!
+
+Congratulations ${companyName}!
+
+You've successfully configured your service rates on the Orbidut platform.
+
+What You've Completed:
+- ${ratesCount} rates configured across ${servicesCount} service types
+- Pricing structure set for different response times
+- Ready to receive competitive job requests
+
+Next Steps:
+1. Define your coverage area (countries and cities you serve)
+2. Complete your profile setup
+3. Start accepting job requests in your service areas!
+
+Set Coverage Area: ${coverageUrl}
+Go to Dashboard: ${dashboardUrl}
+
+You can always update your rates later from your dashboard.
+
+---
+Orbidut - Connect with Trusted Service Providers Instantly
+Visit: ${APP_URL}
+`;
+
+  return sendEmail({
+    to: email,
+    subject: "✅ Service Rates Configured Successfully",
+    html,
+    text,
+  });
+}
+
+/**
+ * Send coverage completion notification email
+ */
+export async function sendCoverageCompletedEmail(
+  email: string,
+  companyName: string,
+  countriesCount: number,
+  citiesCount: number
+): Promise<boolean> {
+  const { APP_URL } = getGmailConfig();
+  const dashboardUrl = `${APP_URL}/supplier/dashboard`;
+  const jobsUrl = `${APP_URL}/supplier/jobs`;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coverage Area Complete</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 28px;">Orbidut</h1>
+  </div>
+  
+  <div style="background: #ffffff; padding: 40px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 10px 10px;">
+    <h2 style="color: #1f2937; margin-top: 0;">🌍 Coverage Area Configured!</h2>
+    
+    <p>Excellent work, ${companyName}!</p>
+    
+    <p>You've successfully defined your service coverage area on the Orbidut platform.</p>
+    
+    <div style="background: #ecfdf5; border-left: 4px solid #10b981; padding: 20px; margin: 20px 0;">
+      <p style="margin: 0 0 10px 0; color: #065f46;"><strong>Your Coverage:</strong></p>
+      <ul style="margin: 0; padding-left: 20px; color: #047857;">
+        <li style="margin-bottom: 8px;">${countriesCount} ${countriesCount === 1 ? 'country' : 'countries'} covered</li>
+        ${citiesCount > 0 ? `<li style="margin-bottom: 8px;">${citiesCount} priority ${citiesCount === 1 ? 'city' : 'cities'} with faster response times</li>` : ''}
+        <li>Ready to receive job requests from your service areas</li>
+      </ul>
+    </div>
+    
+    <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 20px; margin: 20px 0;">
+      <p style="margin: 0 0 10px 0; color: #1e40af;"><strong>You're All Set!</strong></p>
+      <p style="margin: 0; color: #1e3a8a;">Your profile is now complete. You can start browsing and accepting job requests from customers in your coverage area.</p>
+    </div>
+    
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${jobsUrl}" style="background: #667eea; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600; margin: 0 10px 10px 0;">View Available Jobs</a>
+      <a href="${dashboardUrl}" style="background: #6b7280; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600; margin: 0 10px 10px 0;">Go to Dashboard</a>
+    </div>
+    
+    <p style="color: #6b7280; font-size: 14px;">You can expand your coverage area anytime from your dashboard settings.</p>
+    
+    <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+    
+    <p style="color: #9ca3af; font-size: 12px; text-align: center;">
+      Orbidut - Connect with Trusted Service Providers Instantly<br>
+      <a href="${APP_URL}" style="color: #667eea; text-decoration: none;">Visit Orbidut</a>
+    </p>
+  </div>
+</body>
+</html>
+`;
+
+  const text = `
+Coverage Area Configured!
+
+Excellent work, ${companyName}!
+
+You've successfully defined your service coverage area on the Orbidut platform.
+
+Your Coverage:
+- ${countriesCount} ${countriesCount === 1 ? 'country' : 'countries'} covered
+${citiesCount > 0 ? `- ${citiesCount} priority ${citiesCount === 1 ? 'city' : 'cities'} with faster response times\n` : ''}- Ready to receive job requests from your service areas
+
+You're All Set!
+Your profile is now complete. You can start browsing and accepting job requests from customers in your coverage area.
+
+View Available Jobs: ${jobsUrl}
+Go to Dashboard: ${dashboardUrl}
+
+You can expand your coverage area anytime from your dashboard settings.
+
+---
+Orbidut - Connect with Trusted Service Providers Instantly
+Visit: ${APP_URL}
+`;
+
+  return sendEmail({
+    to: email,
+    subject: "✅ Coverage Area Configured - You're Ready to Accept Jobs!",
+    html,
+    text,
+  });
+}
+
+/**
+ * Send signed legal document PDF via email
+ */
+export async function sendSignedDocumentEmail(
+  email: string,
+  companyName: string,
+  documentType: string,
+  documentTitle: string,
+  signedAt: string,
+  pdfBuffer: Buffer
+): Promise<boolean> {
+  const { APP_URL } = getGmailConfig();
+  const dashboardUrl = `${APP_URL}/supplier/dashboard`;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Signed Document Confirmation</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 28px;">Orbidut</h1>
+  </div>
+  
+  <div style="background: #ffffff; padding: 40px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 10px 10px;">
+    <h2 style="color: #1f2937; margin-top: 0;">✅ Document Signed Successfully</h2>
+    
+    <p>Hi ${companyName},</p>
+    
+    <p>Thank you for signing the legal document. Your signed copy is attached to this email for your records.</p>
+    
+    <div style="background: #ecfdf5; border-left: 4px solid #10b981; padding: 20px; margin: 20px 0;">
+      <p style="margin: 0 0 10px 0; color: #065f46;"><strong>Document Details:</strong></p>
+      <ul style="margin: 0; padding-left: 20px; color: #047857;">
+        <li style="margin-bottom: 8px;"><strong>Document:</strong> ${documentTitle}</li>
+        <li style="margin-bottom: 8px;"><strong>Signed On:</strong> ${signedAt}</li>
+        <li><strong>Status:</strong> Legally Binding</li>
+      </ul>
+    </div>
+    
+    <p>The attached PDF contains your digital signature and is legally binding. Please keep this document for your records.</p>
+    
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${dashboardUrl}" style="background: #667eea; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600;">Go to Dashboard</a>
+    </div>
+    
+    <p style="color: #6b7280; font-size: 14px;">If you have any questions about this document, please contact our support team.</p>
+    
+    <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+    
+    <p style="color: #9ca3af; font-size: 12px; text-align: center;">
+      Orbidut - Connect with Trusted Service Providers Instantly<br>
+      <a href="${APP_URL}" style="color: #667eea; text-decoration: none;">Visit Orbidut</a>
+    </p>
+  </div>
+</body>
+</html>
+`;
+
+  const text = `
+Document Signed Successfully
+
+Hi ${companyName},
+
+Thank you for signing the legal document. Your signed copy is attached to this email for your records.
+
+Document Details:
+- Document: ${documentTitle}
+- Signed On: ${signedAt}
+- Status: Legally Binding
+
+The attached PDF contains your digital signature and is legally binding. Please keep this document for your records.
+
+Go to Dashboard: ${dashboardUrl}
+
+If you have any questions about this document, please contact our support team.
+
+---
+Orbidut - Connect with Trusted Service Providers Instantly
+Visit: ${APP_URL}
+`;
+
+  const docName = documentTitle.toLowerCase().replace(/\s+/g, '-');
+  const date = new Date().toISOString().split('T')[0];
+
+  return sendEmail({
+    to: email,
+    subject: `✅ Signed Document: ${documentTitle}`,
+    html,
+    text,
+    attachments: [
+      {
+        filename: `orbidut-${docName}-signed-${date}.pdf`,
+        content: pdfBuffer,
+        contentType: 'application/pdf',
+      },
+    ],
   });
 }
