@@ -11,7 +11,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Link } from "wouter";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import SupplierLayout from "@/components/SupplierLayout";
-import { RATE_SERVICE_TYPES, RATE_SERVICE_LEVELS } from "@shared/rates";
+import { RATE_SERVICE_TYPES, RATE_SERVICE_LEVELS, HOURS_TO_SERVICE_LEVEL, SERVICE_LEVEL_TO_HOURS } from "@shared/rates";
 import { validateBaseRates } from "@shared/rateValidation";
 import { RateConfigurationSummary } from "@/components/RateConfigurationSummary";
 
@@ -607,7 +607,6 @@ function LocationRatesTable({
 
   // Helper to check if a specific response time is excluded (response time-level)
   const isResponseTimeExcluded = (location: any, serviceType: string, responseTimeHours: number): boolean => {
-    const { HOURS_TO_SERVICE_LEVEL } = require("@shared/rates");
     const serviceLevel = HOURS_TO_SERVICE_LEVEL[responseTimeHours];
     
     return responseTimeExclusions.some((exclusion: any) => {
@@ -628,7 +627,7 @@ function LocationRatesTable({
     onSuccess: (_, variables) => {
       const locationKey = variables.countryCode || `city-${variables.cityId}`;
       const stateKey = `${locationKey}-${variables.serviceType}`;
-      const { SERVICE_LEVEL_TO_HOURS } = require("@shared/rates");
+
       const responseTimeHours = SERVICE_LEVEL_TO_HOURS[variables.serviceLevel];
       
       // Set saved state
@@ -659,7 +658,7 @@ function LocationRatesTable({
     onError: (error, variables) => {
       const locationKey = variables.countryCode || `city-${variables.cityId}`;
       const stateKey = `${locationKey}-${variables.serviceType}`;
-      const { SERVICE_LEVEL_TO_HOURS } = require("@shared/rates");
+
       const responseTimeHours = SERVICE_LEVEL_TO_HOURS[variables.serviceLevel];
       
       setSavingStates((prev) => ({

@@ -1097,3 +1097,8 @@
 - cleanupOrphanedRates functionality temporarily disabled (needs reimplementation)
 - Database migration pending (interactive prompts for unrelated job table columns)
 - Login testing blocked - need to verify test user credentials
+
+## Bug Fix: LocationRatesTable Component Error
+- [x] Fix "ReferenceError: Can't find variable: require" error in By Location tab
+- [x] Replace require() calls with ES6 imports for HOURS_TO_SERVICE_LEVEL and SERVICE_LEVEL_TO_HOURS
+- [x] Test By Location tab loads without errors
