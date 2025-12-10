@@ -1,9 +1,15 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { publicProcedure, protectedProcedure, superadminProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import { eq } from "drizzle-orm";
+import { getDb } from "./db";
+import { users, jobs, siteVisitReports, svrMediaFiles } from "../drizzle/schema";
+import { generateJobToken } from "./_core/tokens";
+import { invokeLLM } from "./_core/llm";
+import { notifyOwner } from "./_core/notification";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -18,6 +24,10 @@ export const appRouter = router({
           email: z.string().email(),
           password: z.string().min(8),
           accountType: z.enum(["customer", "supplier"]),
+          // Supplier-specific fields
+          companyName: z.string().optional(),
+          phone: z.string().optional(),
+          country: z.string().length(2).optional(), // ISO country code
         })
       )
       .mutation(async ({ input, ctx }) => {
@@ -50,7 +60,43 @@ export const appRouter = router({
           lastSignedIn: new Date(),
         });
 
-        const userId = Number((result as any).insertId);
+        // Get the inserted user ID
+        const userId = Number(result[0].insertId);
+        if (!userId) {
+          throw new Error("Failed to create user account");
+        }
+
+        // If supplier account, create supplier company and link user
+        if (input.accountType === "supplier") {
+          const { suppliers, supplierUsers } = await import("../drizzle/schema");
+          
+          // Create supplier company with provided or default values
+          const supplierResult = await db.insert(suppliers).values({
+            companyName: input.companyName || input.name + "'s Company",
+            contactEmail: input.email,
+            contactPhone: input.phone || null,
+            country: input.country || "US",
+            verificationStatus: "pending",
+            isVerified: 0,
+          });
+
+          // Get the inserted supplier ID
+          const supplierId = Number(supplierResult[0].insertId);
+          if (!supplierId) {
+            throw new Error("Failed to create supplier company");
+          }
+
+          // Link user to supplier
+          await db.insert(supplierUsers).values({
+            userId: userId,
+            supplierId: supplierId,
+            role: "supplier_admin",
+          });
+
+          // Send welcome email
+          const { sendSupplierWelcomeEmail } = await import("./_core/email");
+          await sendSupplierWelcomeEmail(input.email, input.name, input.companyName);
+        }
 
         // Create JWT token
         const token = await createToken({
@@ -528,9 +574,29 @@ export const appRouter = router({
           ),
         })
       )
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         const { bulkUpsertRates } = await import("./rates");
         await bulkUpsertRates(input.rates);
+        
+        // Send email notification on first rates completion
+        if (input.rates.length > 0 && ctx.user) {
+          const supplierId = input.rates[0].supplierId;
+          const { getSupplierById } = await import("./db");
+          const supplier = await getSupplierById(supplierId);
+          
+          if (supplier) {
+            // Count unique service types
+            const serviceTypes = new Set(input.rates.map(r => r.serviceType));
+            const { sendRatesCompletedEmail } = await import("./_core/email");
+            await sendRatesCompletedEmail(
+              ctx.user.email,
+              supplier.companyName,
+              input.rates.length,
+              serviceTypes.size
+            );
+          }
+        }
+        
         return { success: true };
       }),
 
@@ -842,13 +908,30 @@ export const appRouter = router({
           isExcluded: z.boolean().optional(),
         })
       )
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         const { upsertSupplierCountries } = await import("./db");
         await upsertSupplierCountries(input.supplierId, input.countryCodes, input.isExcluded);
         
         // Automatic cleanup: Remove orphaned rates after coverage change
         const { cleanupOrphanedRates } = await import("./rates");
         await cleanupOrphanedRates(input.supplierId);
+        
+        // Send email notification when coverage is configured
+        if (input.countryCodes.length > 0 && ctx.user) {
+          const { getSupplierById, getSupplierCities } = await import("./db");
+          const supplier = await getSupplierById(input.supplierId);
+          const cities = await getSupplierCities(input.supplierId);
+          
+          if (supplier) {
+            const { sendCoverageCompletedEmail } = await import("./_core/email");
+            await sendCoverageCompletedEmail(
+              ctx.user.email,
+              supplier.companyName,
+              input.countryCodes.length,
+              cities.length
+            );
+          }
+        }
         
         return { success: true };
       }),
@@ -987,8 +1070,13 @@ export const appRouter = router({
       .mutation(async ({ input, ctx }) => {
         const { getDb } = await import("./db");
         const { jobs } = await import("../drizzle/schema");
+        const { randomBytes } = await import("crypto");
         const db = await getDb();
         if (!db) throw new Error("Database not available");
+        
+        // Generate engineer token and short code once at job creation
+        const engineerToken = randomBytes(32).toString('hex');
+        const shortCode = randomBytes(4).toString('hex').toUpperCase(); // 8-character hex code
 
         const [result] = await db.insert(jobs).values({
           // Basic job info
@@ -1042,6 +1130,10 @@ export const appRouter = router({
           isOutOfHours: input.isOutOfHours ? 1 : 0,
           status: "pending_supplier_acceptance",
           
+          // Engineer token and short code (generated once at creation)
+          engineerToken: engineerToken,
+          shortCode: shortCode,
+          
           // Link to customer user
           customerId: ctx.user.id,
         });
@@ -1055,7 +1147,7 @@ export const appRouter = router({
       .input(z.object({ id: z.number() }))
       .query(async ({ input, ctx }) => {
         const { getDb, getSupplierByUserId } = await import("./db");
-        const { jobs } = await import("../drizzle/schema");
+        const { jobs, siteVisitReports, svrMediaFiles } = await import("../drizzle/schema");
         const { eq, or, and } = await import("drizzle-orm");
         const db = await getDb();
         if (!db) return null;
@@ -1075,14 +1167,25 @@ export const appRouter = router({
         const result = await db
           .select()
           .from(jobs)
+          .leftJoin(siteVisitReports, eq(jobs.id, siteVisitReports.jobId))
+          .leftJoin(svrMediaFiles, eq(siteVisitReports.id, svrMediaFiles.svrId))
           .where(
             and(
               eq(jobs.id, input.id),
               or(...conditions)
             )
-          )
-          .limit(1);
-        return result.length > 0 ? result[0] : null;
+          );
+
+        if (result.length === 0) return null;
+
+        const jobData = result[0].jobs;
+        const reportData = result[0].siteVisitReports;
+        const photos = result.map(r => r.svrMediaFiles).filter(p => p);
+
+        return {
+          ...jobData,
+          siteVisitReport: reportData ? { ...reportData, photos } : null,
+        };
       }),
 
     // Get available jobs for supplier (in their coverage area)
@@ -1186,7 +1289,7 @@ export const appRouter = router({
         const { getSupplierByUserId } = await import("./db");
         const { getDb } = await import("./db");
         const { jobs } = await import("../drizzle/schema");
-        const { eq } = await import("drizzle-orm");
+        const { eq, and, ne } = await import("drizzle-orm");
 
         const supplier = await getSupplierByUserId(ctx.user.id);
         if (!supplier) return [];
@@ -1194,10 +1297,17 @@ export const appRouter = router({
         const db = await getDb();
         if (!db) return [];
 
+        // Get jobs assigned to this supplier, excluding pending_supplier_acceptance
+        // (those appear in Available Jobs tab)
         const supplierJobs = await db
           .select()
           .from(jobs)
-          .where(eq(jobs.assignedSupplierId, supplier.supplier.id));
+          .where(
+            and(
+              eq(jobs.assignedSupplierId, supplier.supplier.id),
+              ne(jobs.status, 'pending_supplier_acceptance')
+            )
+          );
 
         return supplierJobs;
       }),
@@ -1207,7 +1317,7 @@ export const appRouter = router({
       .input(
         z.object({
           jobId: z.number(),
-          status: z.enum(["assigned_to_supplier", "en_route", "on_site", "completed"]),
+          status: z.enum(["supplier_accepted", "sent_to_engineer", "engineer_accepted", "en_route", "on_site", "completed"]),
         })
       )
       .mutation(async ({ input, ctx }) => {
@@ -1240,11 +1350,18 @@ export const appRouter = router({
           throw new Error("Job not found or not assigned to you");
         }
 
-        // Update status
+        // Update status with automatic timestamp tracking
         const oldStatus = job.status;
         const updateData: any = { status: input.status };
-        if (input.status === "completed") {
-          updateData.completedAt = new Date();
+        
+        // Set timestamps based on status
+        const now = new Date();
+        if (input.status === "en_route") {
+          updateData.enRouteAt = now;
+        } else if (input.status === "on_site") {
+          updateData.arrivedAt = now;
+        } else if (input.status === "completed") {
+          updateData.completedAt = now;
         }
 
         await db
@@ -1280,11 +1397,221 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    // Accept available job (supplier)
+    acceptJobAsSupplier: protectedProcedure
+      .input(z.object({
+        jobId: z.number(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { getJobById, addJobStatusHistory, updateJob, getSupplierByUserId } = await import("./db");
+
+        const job = await getJobById(input.jobId);
+        if (!job) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Job not found' });
+        }
+
+        // Verify job is available for acceptance
+        if (job.status !== 'pending_supplier_acceptance') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Job is not available for acceptance' });
+        }
+
+        // Get supplier info
+        const supplier = await getSupplierByUserId(ctx.user.id);
+        if (!supplier) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'You must be a supplier to accept jobs' });
+        }
+
+        // Update job status and assign to supplier (token already exists from job creation)
+        await updateJob(job.id, {
+          status: 'supplier_accepted',
+          assignedSupplierId: supplier.supplier.id,
+        });
+
+        await addJobStatusHistory({
+          jobId: job.id,
+          status: 'supplier_accepted',
+          notes: `Job accepted by ${supplier.supplier.companyName}`,
+        });
+
+        // Return existing engineer token (generated at job creation)
+        return { success: true, engineerToken: job.engineerToken };
+      }),
+
+    // Assign engineer to job
+    assignEngineer: protectedProcedure
+      .input(z.object({
+        jobId: z.number(),
+        engineerName: z.string(),
+        engineerEmail: z.string().email(),
+        engineerPhone: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { getJobById, addJobStatusHistory, updateJob } = await import("./db");
+        const { sendJobAssignmentNotification } = await import("./_core/email");
+        const { randomBytes } = await import("crypto");
+
+        const job = await getJobById(input.jobId);
+        if (!job) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Job not found' });
+        }
+
+        // Verify job has been accepted by supplier
+        if (job.status !== 'supplier_accepted') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Job must be accepted before assigning an engineer' });
+        }
+
+        // Ensure only the assigned supplier can assign an engineer
+        const { getSupplierByUserId } = await import("./db");
+        const supplier = await getSupplierByUserId(ctx.user.id);
+        if (!supplier || job.assignedSupplierId !== supplier.supplier.id) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'You are not authorized to assign this job' });
+        }
+
+        // Use existing engineer token (generated at job creation)
+        await updateJob(job.id, {
+          engineerName: input.engineerName,
+          engineerEmail: input.engineerEmail,
+          engineerPhone: input.engineerPhone,
+          status: 'sent_to_engineer',
+        });
+
+        await addJobStatusHistory({
+          jobId: job.id,
+          status: 'sent_to_engineer',
+          notes: `Assigned to engineer ${input.engineerName} (${input.engineerEmail})`,
+        });
+
+        // Send email to engineer (using existing token from job creation)
+        const baseUrl = process.env.VITE_APP_URL || "http://localhost:3000";
+        await sendJobAssignmentNotification({
+          engineerEmail: input.engineerEmail,
+          engineerName: input.engineerName,
+          jobId: job.id,
+          siteName: job.siteName || "Site",
+          siteAddress: job.siteAddress,
+          scheduledDateTime: job.scheduledDateTime,
+          jobToken: job.engineerToken!,
+          baseUrl,
+        });
+
+        return { success: true, engineerToken: job.engineerToken };
+      }),
+
+    // Engineer claims job by providing their details
+    claimJob: publicProcedure
+      .input(z.object({
+        token: z.string(),
+        engineerName: z.string().min(1, "Name is required"),
+        engineerEmail: z.string().email("Valid email is required"),
+        engineerPhone: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { getJobByEngineerToken, updateJob, addJobStatusHistory } = await import("./db");
+        const { sendJobAssignmentNotification } = await import("./_core/email");
+
+        const job = await getJobByEngineerToken(input.token);
+        if (!job) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Job not found' });
+        }
+
+        // Verify job is in supplier_accepted status (not yet claimed)
+        if (job.status !== 'supplier_accepted') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Job has already been claimed or is not available' });
+        }
+
+        // Verify no engineer is assigned yet
+        if (job.engineerName || job.engineerEmail) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Job has already been assigned to an engineer' });
+        }
+
+        // Update job with engineer details and change status to engineer_accepted (self-claim implies acceptance)
+        await updateJob(job.id, {
+          engineerName: input.engineerName,
+          engineerEmail: input.engineerEmail,
+          engineerPhone: input.engineerPhone,
+          status: 'engineer_accepted',
+        });
+
+        await addJobStatusHistory({
+          jobId: job.id,
+          status: 'engineer_accepted',
+          notes: `Job claimed and accepted by engineer ${input.engineerName} (${input.engineerEmail})`,
+        });
+
+        // Send confirmation email to engineer
+        const baseUrl = process.env.VITE_APP_URL || "http://localhost:3000";
+        await sendJobAssignmentNotification({
+          engineerEmail: input.engineerEmail,
+          engineerName: input.engineerName,
+          jobId: job.id,
+          siteName: job.siteName || "Site",
+          siteAddress: job.siteAddress,
+          scheduledDateTime: job.scheduledDateTime,
+          jobToken: input.token,
+          baseUrl,
+        });
+
+        return { success: true };
+      }),
+
+    // Engineer accepts manually assigned job and can update their details
+    acceptJob: publicProcedure
+      .input(z.object({
+        token: z.string(),
+        engineerName: z.string().min(1, "Name is required"),
+        engineerEmail: z.string().email("Valid email is required"),
+        engineerPhone: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { getJobByEngineerToken, updateJob, addJobStatusHistory } = await import("./db");
+        const { sendJobAssignmentNotification } = await import("./_core/email");
+
+        const job = await getJobByEngineerToken(input.token);
+        if (!job) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Job not found' });
+        }
+
+        // Verify job is in sent_to_engineer status (manually assigned, awaiting acceptance)
+        if (job.status !== 'sent_to_engineer') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Job is not awaiting engineer acceptance' });
+        }
+
+        // Update job with engineer's confirmed/updated details and change status to engineer_accepted
+        // Engineer's input supersedes supplier's manual assignment
+        await updateJob(job.id, {
+          engineerName: input.engineerName,
+          engineerEmail: input.engineerEmail,
+          engineerPhone: input.engineerPhone,
+          status: 'engineer_accepted',
+        });
+
+        await addJobStatusHistory({
+          jobId: job.id,
+          status: 'engineer_accepted',
+          notes: `Job accepted by engineer ${input.engineerName} (${input.engineerEmail})`,
+        });
+
+        // Send confirmation email to engineer with updated details
+        const baseUrl = process.env.VITE_APP_URL || "http://localhost:3000";
+        await sendJobAssignmentNotification({
+          engineerEmail: input.engineerEmail,
+          engineerName: input.engineerName,
+          jobId: job.id,
+          siteName: job.siteName || "Site",
+          siteAddress: job.siteAddress,
+          scheduledDateTime: job.scheduledDateTime,
+          jobToken: input.token,
+          baseUrl,
+        });
+
+        return { success: true };
+      }),
+
     // Get timezone from coordinates using Google Maps API
     getTimezone: publicProcedure
       .input(z.object({
-        latitude: z.number(),
-        longitude: z.number(),
+        latitude: z.union([z.number(), z.string().transform(Number)]),
+        longitude: z.union([z.number(), z.string().transform(Number)]),
         timestamp: z.number().optional(),
       }))
       .query(async ({ input }) => {
@@ -1326,23 +1653,1430 @@ export const appRouter = router({
       }),
 
     // Get customer's jobs
-    getCustomerJobs: protectedProcedure      .query(async ({ ctx }) => {
+    getCustomerJobs: protectedProcedure
+      .query(async ({ ctx }) => {
         const { getDb } = await import("./db");
         const { jobs } = await import("../drizzle/schema");
-        const { eq, desc } = await import("drizzle-orm");
+        const { eq, desc, or } = await import("drizzle-orm");
 
         const db = await getDb();
         if (!db) return [];
 
-        // Get jobs for this customer (by user ID)
+        // Get jobs for this customer (by user ID or email)
+        // This handles cases where jobs were created before user logged in
         const customerJobs = await db
           .select()
           .from(jobs)
-          .where(eq(jobs.customerId, ctx.user.id))
+          .where(
+            or(
+              eq(jobs.customerId, ctx.user.id),
+              eq(jobs.customerEmail, ctx.user.email)
+            )
+          )
           .orderBy(desc(jobs.createdAt));
 
         return customerJobs;
       }),
+
+    // Get job by engineer token (no auth required)
+    getByEngineerToken: publicProcedure
+      .input(z.object({ token: z.string() }))
+      .query(async ({ input }) => {
+        const { getJobByEngineerToken } = await import("./db");
+        return await getJobByEngineerToken(input.token);
+      }),
+
+    // Get job by short code (no auth required) - for /e/:shortCode redirect
+    getByShortCode: publicProcedure
+      .input(z.object({ shortCode: z.string() }))
+      .query(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { jobs } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        const db = await getDb();
+        if (!db) return null;
+
+        const result = await db
+          .select()
+          .from(jobs)
+          .where(eq(jobs.shortCode, input.shortCode))
+          .limit(1);
+        
+        return result.length > 0 ? result[0] : null;
+      }),
+
+    // Update job status by engineer token (no auth required)
+    updateStatusByToken: publicProcedure
+      .input(z.object({
+        token: z.string(),
+        status: z.enum(["accepted", "declined", "en_route", "on_site", "completed"]),
+      }))
+      .mutation(async ({ input }) => {
+        const { getJobByEngineerToken, updateJob, addJobStatusHistory } = await import("./db");
+        const { getDb } = await import("./db");
+        const { jobs } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+
+        const job = await getJobByEngineerToken(input.token);
+        if (!job) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Job not found' });
+        }
+
+        // Update status with automatic timestamp tracking
+        const updateData: any = { status: input.status };
+        const now = new Date();
+        
+        if (input.status === "accepted") {
+          updateData.acceptedAt = now;
+        } else if (input.status === "en_route") {
+          updateData.enRouteAt = now;
+        } else if (input.status === "on_site") {
+          updateData.arrivedAt = now;
+        } else if (input.status === "completed") {
+          updateData.completedAt = now;
+        }
+
+        await updateJob(job.id, updateData);
+
+        // Add status history entry
+        await addJobStatusHistory({
+          jobId: job.id,
+          status: input.status,
+          notes: `Status updated by engineer via token`,
+        });
+
+        // Send email notification to customer
+        if (job.customerId) {
+          const db = await getDb();
+          if (db) {
+            const { users } = await import("../drizzle/schema");
+            const [customer] = await db
+              .select()
+              .from(users)
+              .where(eq(users.id, job.customerId))
+              .limit(1);
+
+            if (customer) {
+              const { sendJobStatusEmail } = await import("./_core/email");
+              sendJobStatusEmail(
+                customer.email,
+                customer.name || "Customer",
+                job.id,
+                job.serviceType,
+                job.status,
+                input.status
+              ).catch((error) => {
+                console.error("Failed to send job status email:", error);
+              });
+            }
+          }
+        }
+
+        return { success: true };
+      }),
+
+    // Add GPS location by engineer token (no auth required)
+    addLocationByToken: publicProcedure
+      .input(z.object({
+        token: z.string(),
+        latitude: z.string(),
+        longitude: z.string(),
+        accuracy: z.string(),
+        trackingType: z.enum(["milestone", "en_route", "on_site"]),
+      }))
+      .mutation(async ({ input }) => {
+        const { getJobByEngineerToken } = await import("./db");
+        const { getDb } = await import("./db");
+        const { jobLocations } = await import("../drizzle/schema");
+
+        const job = await getJobByEngineerToken(input.token);
+        if (!job) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Job not found' });
+        }
+
+        const db = await getDb();
+        if (!db) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        }
+
+        await db.insert(jobLocations).values({
+          jobId: job.id,
+          latitude: input.latitude,
+          longitude: input.longitude,
+          accuracy: input.accuracy,
+          trackingType: input.trackingType,
+          timestamp: new Date(),
+        });
+
+        return { success: true };
+      }),
+
+    // Get latest location for a job by token
+    getLatestLocationByToken: publicProcedure
+      .input(z.object({ token: z.string() }))
+      .query(async ({ input }) => {
+        const { getJobByEngineerToken } = await import("./db");
+        const { getDb } = await import("./db");
+        const { jobLocations } = await import("../drizzle/schema");
+        const { eq, desc } = await import("drizzle-orm");
+
+        const job = await getJobByEngineerToken(input.token);
+        if (!job) return null;
+
+        const db = await getDb();
+        if (!db) return null;
+
+        const [latestLocation] = await db
+          .select()
+          .from(jobLocations)
+          .where(eq(jobLocations.jobId, job.id))
+          .orderBy(desc(jobLocations.timestamp))
+          .limit(1);
+
+        return latestLocation || null;
+      }),
+
+    // Get latest location for a job by job ID (for customers)
+    getLatestLocationByJobId: protectedProcedure
+      .input(z.object({ jobId: z.number() }))
+      .query(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { jobs, jobLocations, supplierUsers } = await import("../drizzle/schema");
+        const { eq, desc, and } = await import("drizzle-orm");
+
+        const db = await getDb();
+        if (!db) return null;
+
+        // Verify the job belongs to the current user (customer or assigned supplier)
+        const [job] = await db
+          .select()
+          .from(jobs)
+          .where(eq(jobs.id, input.jobId))
+          .limit(1);
+
+        if (!job) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Job not found' });
+        }
+
+        // Check if user is the customer
+        const isCustomer = job.customerId === ctx.user.id;
+
+        // Check if user belongs to the assigned supplier company
+        let isAssignedSupplier = false;
+        if (job.assignedSupplierId) {
+          const [supplierUser] = await db
+            .select()
+            .from(supplierUsers)
+            .where(and(
+              eq(supplierUsers.supplierId, job.assignedSupplierId),
+              eq(supplierUsers.userId, ctx.user.id)
+            ))
+            .limit(1);
+          isAssignedSupplier = !!supplierUser;
+        }
+
+        if (!isCustomer && !isAssignedSupplier) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied' });
+        }
+
+        const [latestLocation] = await db
+          .select()
+          .from(jobLocations)
+          .where(eq(jobLocations.jobId, input.jobId))
+          .orderBy(desc(jobLocations.timestamp))
+          .limit(1);
+
+        return latestLocation || null;
+      }),
+
+    // Submit site visit report by engineer token (no auth required)
+    submitSiteVisitReport: publicProcedure
+      .input(z.object({
+        token: z.string(),
+        workCompleted: z.string(),
+        findings: z.string().optional(),
+        recommendations: z.string().optional(),
+        customerName: z.string(),
+        signatureDataUrl: z.string(),
+        photos: z.array(z.string()).optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { getJobByEngineerToken } = await import("./db");
+        const { getDb } = await import("./db");
+        const { siteVisitReports, svrMediaFiles, jobStatusHistory } = await import("../drizzle/schema");
+        const { eq, desc } = await import("drizzle-orm");
+
+        const job = await getJobByEngineerToken(input.token);
+        if (!job) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Job not found' });
+        }
+
+        const db = await getDb();
+        if (!db) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        }
+
+        // Get on-site timestamp from status history
+        const statusHistory = await db
+          .select()
+          .from(jobStatusHistory)
+          .where(eq(jobStatusHistory.jobId, job.id));
+
+        const onSiteEntry = statusHistory.find(h => h.status === 'on_site');
+        
+        // Use current timestamp as "left site" time since submitting the report means the job is complete
+        const currentTime = new Date();
+
+        // Create site visit report - map form fields to database schema
+        const reportData = {
+          jobId: job.id,
+          visitDate: new Date(),
+          engineerName: job.engineerName || 'Unknown Engineer',
+          timeOnsite: onSiteEntry?.timestamp ? new Date(onSiteEntry.timestamp).toISOString() : null,
+          timeLeftSite: currentTime.toISOString(), // Current time = when engineer left site
+          issueFault: input.findings || null,
+          actionsPerformed: input.workCompleted,
+          recommendations: input.recommendations || null,
+          issueResolved: true, // Assuming completion means issue is resolved
+          contactAgreed: true, // Customer signature implies agreement
+          clientSignatory: input.customerName,
+          clientSignatureData: input.signatureDataUrl,
+          signedAt: new Date(),
+        };
+        
+        // Check if a site visit report already exists for this job
+        const [existingReport] = await db
+          .select()
+          .from(siteVisitReports)
+          .where(eq(siteVisitReports.jobId, job.id))
+          .limit(1);
+        
+        let reportId: number;
+        
+        if (existingReport) {
+          // Update existing report
+          await db
+            .update(siteVisitReports)
+            .set({
+              visitDate: reportData.visitDate,
+              engineerName: reportData.engineerName,
+              timeOnsite: reportData.timeOnsite,
+              timeLeftSite: reportData.timeLeftSite,
+              issueFault: reportData.issueFault,
+              actionsPerformed: reportData.actionsPerformed,
+              recommendations: reportData.recommendations,
+              issueResolved: reportData.issueResolved,
+              contactAgreed: reportData.contactAgreed,
+              clientSignatory: reportData.clientSignatory,
+              clientSignatureData: reportData.clientSignatureData,
+              signedAt: reportData.signedAt,
+            })
+            .where(eq(siteVisitReports.id, existingReport.id));
+          
+          reportId = existingReport.id;
+        } else {
+          // Insert new report
+          await db.insert(siteVisitReports).values(reportData);
+          
+          // Query back to get the created report
+          const [createdReport] = await db
+            .select()
+            .from(siteVisitReports)
+            .where(eq(siteVisitReports.jobId, job.id))
+            .limit(1);
+          
+          if (!createdReport) {
+            throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to create site visit report' });
+          }
+          
+          reportId = createdReport.id;
+        }
+
+        // Save photos if provided (store as base64 in database)
+        if (input.photos && input.photos.length > 0) {
+          for (let i = 0; i < input.photos.length; i++) {
+            const photoDataUrl = input.photos[i];
+            
+            // Extract mime type from data URL
+            const mimeTypeMatch = photoDataUrl.match(/data:([^;]+);/);
+            const mimeType = mimeTypeMatch ? mimeTypeMatch[1] : 'image/jpeg';
+            
+            // Calculate file size from base64
+            const base64Data = photoDataUrl.split(',')[1];
+            const fileSize = Math.ceil((base64Data.length * 3) / 4); // Approximate size in bytes
+            
+            // Generate file key for reference (not used for storage)
+            const timestamp = Date.now();
+            const randomSuffix = Math.random().toString(36).substring(7);
+            const fileKey = `site-visit-reports/${job.id}/photo-${i + 1}-${timestamp}-${randomSuffix}.jpg`;
+            
+            // Save to database with base64 data URL
+            await db.insert(svrMediaFiles).values({
+              svrId: reportId,
+              fileKey: fileKey,
+              fileUrl: photoDataUrl, // Store base64 data URL directly
+              fileName: `photo-${i + 1}.jpg`,
+              fileType: 'image' as const,
+              mimeType: mimeType,
+              fileSize: fileSize,
+            });
+          }
+        }
+
+        // Update job status to completed
+        const { jobs } = await import("../drizzle/schema");
+        
+        await db
+          .update(jobs)
+          .set({ status: 'completed' })
+          .where(eq(jobs.id, job.id));
+        
+        // Add status history entry
+        await db.insert(jobStatusHistory).values({
+          jobId: job.id,
+          status: 'completed',
+          timestamp: new Date(),
+        });
+
+        return { success: true, reportId: reportId };
+      }),
+
+    // Get site visit report by job ID
+    getSiteVisitReport: protectedProcedure
+      .input(z.object({ jobId: z.number() }))
+      .query(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { jobs, siteVisitReports, svrMediaFiles, supplierUsers } = await import("../drizzle/schema");
+        const { eq, and } = await import("drizzle-orm");
+
+        const db = await getDb();
+        if (!db) return null;
+
+        // Verify the job belongs to the current user (customer or assigned supplier)
+        const [job] = await db
+          .select()
+          .from(jobs)
+          .where(eq(jobs.id, input.jobId))
+          .limit(1);
+
+        if (!job) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Job not found' });
+        }
+
+        // Check if user is the customer
+        const isCustomer = job.customerId === ctx.user.id;
+
+        // Check if user belongs to the assigned supplier company
+        let isAssignedSupplier = false;
+        if (job.assignedSupplierId) {
+          const [supplierUser] = await db
+            .select()
+            .from(supplierUsers)
+            .where(and(
+              eq(supplierUsers.supplierId, job.assignedSupplierId),
+              eq(supplierUsers.userId, ctx.user.id)
+            ))
+            .limit(1);
+          isAssignedSupplier = !!supplierUser;
+        }
+
+        if (!isCustomer && !isAssignedSupplier) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied' });
+        }
+
+        // Get the report
+        const [report] = await db
+          .select()
+          .from(siteVisitReports)
+          .where(eq(siteVisitReports.jobId, input.jobId))
+          .limit(1);
+
+        if (!report) return null;
+
+        // Get media files
+        const mediaFiles = await db
+          .select()
+          .from(svrMediaFiles)
+          .where(eq(svrMediaFiles.svrId, report.id));
+
+        return { ...report, mediaFiles };
+      }),
+
+    // Get job timeline with status history and GPS locations
+    getJobTimeline: protectedProcedure
+      .input(z.object({ jobId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const { getDb } = await import("./db");
+        const { jobs, jobStatusHistory, jobLocations } = await import("../drizzle/schema");
+        const { eq, and, desc } = await import("drizzle-orm");
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
+        // Verify user has access to this job
+        const [job] = await db
+          .select()
+          .from(jobs)
+          .where(eq(jobs.id, input.jobId))
+          .limit(1);
+
+        if (!job) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Job not found' });
+        }
+
+        // Check access: customer or supplier
+        const hasAccess = 
+          job.customerId === ctx.user.id || 
+          (job.assignedSupplierId && await (async () => {
+            const { supplierUsers } = await import("../drizzle/schema");
+            const [supplierUser] = await db
+              .select()
+              .from(supplierUsers)
+              .where(and(
+                eq(supplierUsers.userId, ctx.user.id),
+                eq(supplierUsers.supplierId, job.assignedSupplierId!)
+              ))
+              .limit(1);
+            return !!supplierUser;
+          })());
+
+        if (!hasAccess) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied' });
+        }
+
+        // Get status history
+        const statusHistory = await db
+          .select()
+          .from(jobStatusHistory)
+          .where(eq(jobStatusHistory.jobId, input.jobId))
+          .orderBy(jobStatusHistory.timestamp);
+
+        // Get GPS locations for milestone events
+        const locations = await db
+          .select()
+          .from(jobLocations)
+          .where(and(
+            eq(jobLocations.jobId, input.jobId),
+            eq(jobLocations.trackingType, "milestone")
+          ))
+          .orderBy(jobLocations.timestamp);
+
+        // Build timeline events with duration calculations
+        const events = statusHistory.map((event, index) => {
+          // Find matching GPS location
+          const location = locations.find(loc => 
+            Math.abs(new Date(loc.timestamp).getTime() - new Date(event.timestamp).getTime()) < 60000 // Within 1 minute
+          );
+
+          // Calculate duration in this status (time until next status change)
+          let duration: number | undefined;
+          if (index < statusHistory.length - 1) {
+            const nextEvent = statusHistory[index + 1];
+            const durationMs = new Date(nextEvent.timestamp).getTime() - new Date(event.timestamp).getTime();
+            duration = Math.floor(durationMs / 60000); // Convert to minutes
+          } else if (job.status === event.status) {
+            // Still in this status - calculate duration until now
+            const durationMs = Date.now() - new Date(event.timestamp).getTime();
+            duration = Math.floor(durationMs / 60000);
+          }
+
+          return {
+            id: event.id,
+            status: event.status,
+            timestamp: event.timestamp,
+            notes: event.notes,
+            latitude: location?.latitude,
+            longitude: location?.longitude,
+            duration,
+          };
+        });
+
+        return { events, currentStatus: job.status };
+      }),
+  }),
+
+  // Supplier Verification System
+  verification: router({
+    // Get verification status for current supplier
+    getStatus: protectedProcedure.query(async ({ ctx }) => {
+      const { getSupplierByUserId } = await import("./db");
+      const { supplierVerification, supplierCompanyProfile, verificationDocuments } = await import("../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // Get supplier
+      const result = await getSupplierByUserId(ctx.user.id);
+      if (!result) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Supplier not found" });
+      }
+      const supplier = result.supplier;
+
+      // Get or create verification record
+      let verification = await db.select().from(supplierVerification)
+        .where(eq(supplierVerification.supplierId, supplier.id))
+        .limit(1)
+        .then(rows => rows[0]);
+
+      if (!verification) {
+        await db.insert(supplierVerification).values({
+          supplierId: supplier.id,
+          status: "not_started",
+        });
+        verification = await db.select().from(supplierVerification)
+          .where(eq(supplierVerification.supplierId, supplier.id))
+          .limit(1)
+          .then(rows => rows[0]);
+      }
+
+      // Get company profile
+      const profile = await db.select().from(supplierCompanyProfile)
+        .where(eq(supplierCompanyProfile.supplierId, supplier.id))
+        .limit(1)
+        .then(rows => rows[0] || null);
+
+      // Get documents
+      const documents = await db.select().from(verificationDocuments)
+        .where(eq(verificationDocuments.supplierId, supplier.id));
+
+      return {
+        verification,
+        profile,
+        documents,
+        isVerified: supplier.isVerified === 1,
+      };
+    }),
+
+    // Submit company profile
+    submitCompanyProfile: protectedProcedure
+      .input(
+        z.object({
+          companyName: z.string().min(1),
+          registrationNumber: z.string().optional(),
+          yearFounded: z.number().optional(),
+          headquarters: z.string().optional(),
+          regionalOffices: z.array(z.object({
+            city: z.string(),
+            country: z.string(),
+            address: z.string(),
+          })).optional(),
+          ownershipStructure: z.enum(["private", "group", "subsidiary"]),
+          parentCompany: z.string().optional(),
+          missionStatement: z.string().optional(),
+          coreValues: z.string().optional(),
+          companyOverview: z.string().optional(),
+          numberOfEmployees: z.number().optional(),
+          annualRevenue: z.number().optional(),
+          websiteUrl: z.string().optional(),
+          linkedInUrl: z.string().optional(),
+          primaryContactName: z.string().optional(),
+          primaryContactTitle: z.string().optional(),
+          primaryContactEmail: z.string().email().optional(),
+          primaryContactPhone: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const { getSupplierByUserId } = await import("./db");
+        const { supplierCompanyProfile, supplierVerification } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
+        const result = await getSupplierByUserId(ctx.user.id);
+        if (!result) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Supplier not found" });
+        }
+        const supplier = result.supplier;
+
+        // Check if profile exists
+        const existing = await db.select().from(supplierCompanyProfile)
+          .where(eq(supplierCompanyProfile.supplierId, supplier.id))
+          .limit(1)
+          .then(rows => rows[0]);
+
+        if (existing) {
+          // Update existing profile
+          await db.update(supplierCompanyProfile)
+            .set({
+              ...input,
+              updatedAt: new Date(),
+            })
+            .where(eq(supplierCompanyProfile.supplierId, supplier.id));
+        } else {
+          // Create new profile
+          await db.insert(supplierCompanyProfile).values({
+            supplierId: supplier.id,
+            ...input,
+          });
+        }
+
+        // Update verification status to in_progress
+        await db.update(supplierVerification)
+          .set({ status: "in_progress" })
+          .where(eq(supplierVerification.supplierId, supplier.id));
+
+        return { success: true };
+      }),
+
+    // Upload verification document
+    uploadDocument: protectedProcedure
+      .input(
+        z.object({
+          documentType: z.enum([
+            "insurance_liability",
+            "insurance_indemnity",
+            "insurance_workers_comp",
+            "dpa_signed",
+            "nda_signed",
+            "non_compete_signed",
+            "background_verification_signed",
+            "right_to_work_signed",
+            "security_compliance",
+            "engineer_vetting_policy",
+            "other",
+          ]),
+          documentName: z.string(),
+          fileData: z.string(), // base64
+          mimeType: z.string(),
+          fileSize: z.number(),
+          expiryDate: z.string().optional(),
+          // Signature metadata (for signed documents)
+          signedBy: z.string().optional(),
+          signatureData: z.string().optional(), // base64 signature image
+          signedAt: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const { getSupplierByUserId } = await import("./db");
+        const { verificationDocuments, supplierVerification } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        const { storagePut } = await import("./storage");
+
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
+        const result = await getSupplierByUserId(ctx.user.id);
+        if (!result) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Supplier not found" });
+        }
+        const supplier = result.supplier;
+
+        // Upload to S3
+        const fileBuffer = Buffer.from(input.fileData.split(",")[1], "base64");
+        const fileKey = `verification/${supplier.id}/${input.documentType}/${Date.now()}-${input.documentName}`;
+        const { url: fileUrl } = await storagePut(fileKey, fileBuffer, input.mimeType);
+
+        // Upload signature image if provided
+        let signatureUrl: string | null = null;
+        if (input.signatureData) {
+          const signatureBuffer = Buffer.from(input.signatureData.split(",")[1], "base64");
+          const signatureKey = `verification/${supplier.id}/${input.documentType}/signature-${Date.now()}.png`;
+          const signatureResult = await storagePut(signatureKey, signatureBuffer, "image/png");
+          signatureUrl = signatureResult.url;
+        }
+
+        // Get client IP and user agent from request
+        const clientIp = ctx.req?.headers['x-forwarded-for'] || ctx.req?.socket?.remoteAddress || null;
+        const userAgent = ctx.req?.headers['user-agent'] || null;
+
+        // Save to database
+        await db.insert(verificationDocuments).values({
+          supplierId: supplier.id,
+          documentType: input.documentType,
+          documentName: input.documentName,
+          fileUrl,
+          fileKey,
+          fileSize: input.fileSize,
+          mimeType: input.mimeType,
+          uploadedBy: ctx.user.id,
+          expiryDate: input.expiryDate ? new Date(input.expiryDate) : null,
+          status: "pending_review",
+          // Signature metadata
+          signedBy: input.signedBy || null,
+          signatureUrl: signatureUrl,
+          signedAt: input.signedAt ? new Date(input.signedAt) : null,
+          signerIpAddress: typeof clientIp === 'string' ? clientIp : (Array.isArray(clientIp) ? clientIp[0] : null),
+          signerUserAgent: typeof userAgent === 'string' ? userAgent : null,
+        });
+
+        // Update verification status
+        await db.update(supplierVerification)
+          .set({ status: "in_progress" })
+          .where(eq(supplierVerification.supplierId, supplier.id));
+
+        // Send email with PDF attachment for signed legal documents
+        const signedDocTypes = ['dpa_signed', 'nda_signed', 'non_compete_signed', 'background_verification_signed', 'right_to_work_signed'];
+        if (signedDocTypes.includes(input.documentType) && input.signatureData) {
+          try {
+            // Generate PDF with signature
+            const { generateLegalPDF } = await import("../client/src/lib/generateLegalPDF");
+            const docTypeMap: Record<string, string> = {
+              'dpa_signed': 'dpa',
+              'nda_signed': 'nda',
+              'non_compete_signed': 'nonCompete',
+              'background_verification_signed': 'backgroundVerification',
+              'right_to_work_signed': 'rightToWork',
+            };
+            
+            const pdfBlob = await generateLegalPDF({
+              documentType: docTypeMap[input.documentType] as any,
+              supplierName: supplier.companyName,
+              contactName: input.signedBy || ctx.user.email,
+              signatureData: input.signatureData,
+              title: input.signedBy || '',
+            });
+            
+            const pdfBuffer = Buffer.from(await pdfBlob.arrayBuffer());
+            const { sendSignedDocumentEmail } = await import("./_core/email");
+            await sendSignedDocumentEmail(
+              ctx.user.email,
+              supplier.companyName,
+              input.documentType,
+              input.documentName,
+              input.signedAt || new Date().toISOString(),
+              pdfBuffer
+            );
+          } catch (emailError) {
+            console.error('Failed to send signed document email:', emailError);
+            // Don't fail the upload if email fails
+          }
+        }
+
+        return { success: true, fileUrl };
+      }),
+
+    // Submit for verification review
+    submitForReview: protectedProcedure.mutation(async ({ ctx }) => {
+      const { getSupplierByUserId } = await import("./db");
+      const { supplierVerification, supplierCompanyProfile, verificationDocuments } = await import("../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const result = await getSupplierByUserId(ctx.user.id);
+      if (!result) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Supplier not found" });
+      }
+      const supplier = result.supplier;
+
+      // Validate: must have company profile
+      const profile = await db.select().from(supplierCompanyProfile)
+        .where(eq(supplierCompanyProfile.supplierId, supplier.id))
+        .limit(1)
+        .then(rows => rows[0]);
+
+      if (!profile) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Company profile not completed" });
+      }
+
+      // Validate: must have required documents
+      const documents = await db.select().from(verificationDocuments)
+        .where(eq(verificationDocuments.supplierId, supplier.id));
+
+      const requiredDocs = [
+        "insurance_liability",
+        "insurance_indemnity",
+        "insurance_workers_comp",
+        "dpa_signed",
+        "nda_signed",
+        "non_compete_signed",
+      ];
+
+      const uploadedTypes = documents.map(d => d.documentType);
+      const missingDocs = requiredDocs.filter(type => !uploadedTypes.includes(type));
+
+      if (missingDocs.length > 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Missing required documents: ${missingDocs.join(", ")}`,
+        });
+      }
+
+      // Update verification status
+      await db.update(supplierVerification)
+        .set({
+          status: "pending_review",
+          submittedAt: new Date(),
+        })
+        .where(eq(supplierVerification.supplierId, supplier.id));
+
+      // TODO: Send email notification to admin team
+
+      return { success: true };
+    }),
+
+    // Get uploaded documents
+    getDocuments: protectedProcedure.query(async ({ ctx }) => {
+      const { getSupplierByUserId } = await import("./db");
+      const { verificationDocuments } = await import("../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const result = await getSupplierByUserId(ctx.user.id);
+      if (!result) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Supplier not found" });
+      }
+      const supplier = result.supplier;
+
+      const documents = await db.select().from(verificationDocuments)
+        .where(eq(verificationDocuments.supplierId, supplier.id));
+
+      return documents;
+    }),
+  }),
+
+  // Admin Verification Review
+  admin: router({
+    // Get pending verifications queue
+    getPendingVerifications: superadminProcedure.query(async ({ ctx }) => {
+      const { supplierVerification, suppliers } = await import("../drizzle/schema");
+      const { eq, inArray } = await import("drizzle-orm");
+
+      // TODO: Add admin role check
+      // if (ctx.user.role !== "admin") {
+      //   throw new TRPCError({ code: "FORBIDDEN", message: "Admin access required" });
+      // }
+
+      // Get all pending/under_review verifications
+      const verifications = await db.select({
+        id: supplierVerification.id,
+        supplierId: supplierVerification.supplierId,
+        status: supplierVerification.status,
+        submittedAt: supplierVerification.submittedAt,
+        companyName: suppliers.companyName,
+        contactEmail: suppliers.contactEmail,
+      })
+        .from(supplierVerification)
+        .leftJoin(suppliers, eq(supplierVerification.supplierId, suppliers.id))
+        .where(inArray(supplierVerification.status, ["pending_review", "under_review"]));
+
+      return verifications;
+    }),
+
+    // Get verification details for review
+    getVerificationDetails: superadminProcedure
+      .input(z.object({ supplierId: z.number() }))
+      .query(async ({ input, ctx }) => {
+        const { supplierVerification, supplierCompanyProfile, verificationDocuments, suppliers, supplierCoverageCountries, supplierPriorityCities, users, supplierUsers } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
+        // Get supplier
+        const supplier = await db.select().from(suppliers)
+          .where(eq(suppliers.id, input.supplierId))
+          .limit(1)
+          .then(rows => rows[0]);
+
+        if (!supplier) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Supplier not found" });
+        }
+
+        // Get verification record
+        const verification = await db.select().from(supplierVerification)
+          .where(eq(supplierVerification.supplierId, input.supplierId))
+          .limit(1)
+          .then(rows => rows[0]);
+
+        // Get reviewer info if verification was reviewed
+        let reviewer = null;
+        if (verification?.reviewedBy) {
+          reviewer = await db.select({ name: users.name, email: users.email })
+            .from(users)
+            .where(eq(users.id, verification.reviewedBy))
+            .limit(1)
+            .then(rows => rows[0] || null);
+        }
+
+        // Get company profile
+        const profile = await db.select().from(supplierCompanyProfile)
+          .where(eq(supplierCompanyProfile.supplierId, input.supplierId))
+          .limit(1)
+          .then(rows => rows[0] || null);
+
+        // Get documents with uploader info
+        const docs = await db.select().from(verificationDocuments)
+          .where(eq(verificationDocuments.supplierId, input.supplierId));
+        
+        // Fetch uploader names for documents
+        const documentsWithUploaders = await Promise.all(
+          docs.map(async (doc) => {
+            let uploaderName = null;
+            if (doc.uploadedBy) {
+              const uploader = await db.select({ name: users.name })
+                .from(users)
+                .where(eq(users.id, doc.uploadedBy))
+                .limit(1)
+                .then(rows => rows[0]);
+              uploaderName = uploader?.name || null;
+            }
+            return { ...doc, uploaderName };
+          })
+        );
+
+        // Get coverage countries
+        const coverageCountries = await db.select().from(supplierCoverageCountries)
+          .where(eq(supplierCoverageCountries.supplierId, input.supplierId));
+
+        // Get priority cities
+        const priorityCities = await db.select().from(supplierPriorityCities)
+          .where(eq(supplierPriorityCities.supplierId, input.supplierId));
+
+        // Get supplier users (team members)
+        const teamMembers = await db.select({
+          userId: supplierUsers.userId,
+          role: supplierUsers.role,
+          userName: users.name,
+          userEmail: users.email,
+          joinedAt: supplierUsers.createdAt,
+        })
+          .from(supplierUsers)
+          .leftJoin(users, eq(supplierUsers.userId, users.id))
+          .where(eq(supplierUsers.supplierId, input.supplierId));
+
+        return {
+          supplier,
+          verification,
+          reviewer,
+          profile,
+          documents: documentsWithUploaders,
+          coverageCountries,
+          priorityCities,
+          teamMembers,
+        };
+      }),
+
+    // Approve verification
+    approveVerification: superadminProcedure
+      .input(z.object({ supplierId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const { supplierVerification, suppliers } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
+        // TODO: Add admin role check
+
+        // Update verification status
+        await db.update(supplierVerification)
+          .set({
+            status: "approved",
+            reviewedBy: ctx.user.id,
+            reviewedAt: new Date(),
+            approvedAt: new Date(),
+          })
+          .where(eq(supplierVerification.supplierId, input.supplierId));
+
+        // Update supplier isVerified flag
+        await db.update(suppliers)
+          .set({
+            isVerified: 1,
+            verificationStatus: "verified",
+          })
+          .where(eq(suppliers.id, input.supplierId));
+
+        // Get supplier details for email
+        const supplier = await db.select()
+          .from(suppliers)
+          .where(eq(suppliers.id, input.supplierId))
+          .limit(1);
+
+        // Send approval email notification
+        if (supplier[0]) {
+          const { sendVerificationApprovedEmail } = await import("./_core/email");
+          await sendVerificationApprovedEmail(
+            supplier[0].contactEmail,
+            supplier[0].companyName
+          ).catch(err => console.error("Failed to send approval email:", err));
+        }
+
+        return { success: true };
+      }),
+
+    // Reject verification
+    rejectVerification: superadminProcedure
+      .input(
+        z.object({
+          supplierId: z.number(),
+          reason: z.string().min(1),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const { supplierVerification, suppliers } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
+        // TODO: Add admin role check
+
+        // Update verification status
+        await db.update(supplierVerification)
+          .set({
+            status: "rejected",
+            reviewedBy: ctx.user.id,
+            reviewedAt: new Date(),
+            rejectionReason: input.reason,
+          })
+          .where(eq(supplierVerification.supplierId, input.supplierId));
+
+        // Update supplier status
+        await db.update(suppliers)
+          .set({
+            isVerified: 0,
+            verificationStatus: "rejected",
+          })
+          .where(eq(suppliers.id, input.supplierId));
+
+        // Get supplier details and verification for email
+        const supplier = await db.select()
+          .from(suppliers)
+          .where(eq(suppliers.id, input.supplierId))
+          .limit(1);
+
+        const verification = await db.select()
+          .from(supplierVerification)
+          .where(eq(supplierVerification.supplierId, input.supplierId))
+          .limit(1);
+
+        // Send rejection email notification
+        if (supplier[0]) {
+          const { sendVerificationRejectedEmail } = await import("./_core/email");
+          await sendVerificationRejectedEmail(
+            supplier[0].contactEmail,
+            supplier[0].companyName,
+            input.reason,
+            verification[0]?.adminNotes || undefined
+          ).catch(err => console.error("Failed to send rejection email:", err));
+        }
+
+        return { success: true };
+      }),
+
+    // Request resubmission
+    requestResubmission: superadminProcedure
+      .input(
+        z.object({
+          supplierId: z.number(),
+          feedback: z.string().min(1),
+          adminNotes: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const { supplierVerification, suppliers } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
+        // TODO: Add admin role check
+
+        // Update verification status to resubmission_required
+        await db.update(supplierVerification)
+          .set({
+            status: "resubmission_required",
+            reviewedBy: ctx.user.id,
+            reviewedAt: new Date(),
+            rejectionReason: input.feedback,
+            adminNotes: input.adminNotes || null,
+          })
+          .where(eq(supplierVerification.supplierId, input.supplierId));
+
+        // Get supplier details for email
+        const supplier = await db.select()
+          .from(suppliers)
+          .where(eq(suppliers.id, input.supplierId))
+          .limit(1);
+
+        // Send resubmission email notification
+        if (supplier[0]) {
+          const { sendVerificationResubmissionEmail } = await import("./_core/email");
+          await sendVerificationResubmissionEmail(
+            supplier[0].contactEmail,
+            supplier[0].companyName,
+            input.feedback,
+            input.adminNotes
+          ).catch(err => console.error("Failed to send resubmission email:", err));
+        }
+
+        return { success: true };
+      }),
+
+    // Add admin note
+    addNote: superadminProcedure
+      .input(
+        z.object({
+          supplierId: z.number(),
+          note: z.string().min(1),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const { supplierVerification } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+
+        // TODO: Add admin role check
+
+        // Get existing notes
+        const verification = await db.select().from(supplierVerification)
+          .where(eq(supplierVerification.supplierId, input.supplierId))
+          .limit(1)
+          .then(rows => rows[0]);
+
+        const existingNotes = verification?.adminNotes || "";
+        const timestamp = new Date().toISOString();
+        const newNote = `[${timestamp}] ${ctx.user.name || ctx.user.email}: ${input.note}`;
+        const updatedNotes = existingNotes ? `${existingNotes}\n\n${newNote}` : newNote;
+
+        // Update notes
+        await db.update(supplierVerification)
+          .set({ adminNotes: updatedNotes })
+          .where(eq(supplierVerification.supplierId, input.supplierId));
+
+        return { success: true };
+      }),
+
+    // Get all suppliers grouped by verification status
+    getAllSupplierVerifications: superadminProcedure.query(async () => {
+      const { suppliers, supplierVerification, supplierUsers, users, supplierCompanyProfile, verificationDocuments } = await import("../drizzle/schema");
+      const { eq, isNull, sql } = await import("drizzle-orm");
+
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // Get all suppliers with their verification status and contact info
+      const allSuppliers = await db.select({
+        supplierId: suppliers.id,
+        companyName: suppliers.companyName,
+        contactEmail: suppliers.contactEmail,
+        contactPhone: suppliers.contactPhone,
+        country: suppliers.country,
+        isVerified: suppliers.isVerified,
+        isActive: suppliers.isActive,
+        createdAt: suppliers.createdAt,
+        verificationId: supplierVerification.id,
+        verificationStatus: supplierVerification.status,
+        submittedAt: supplierVerification.submittedAt,
+        reviewedAt: supplierVerification.reviewedAt,
+        approvedAt: supplierVerification.approvedAt,
+        updatedAt: supplierVerification.updatedAt,
+      })
+        .from(suppliers)
+        .leftJoin(supplierVerification, eq(suppliers.id, supplierVerification.supplierId));
+
+      // Get contact person (admin user) for each supplier
+      const suppliersWithContact = await Promise.all(
+        allSuppliers.map(async (supplier) => {
+          const adminUser = await db.select({
+            userId: users.id,
+            userName: users.name,
+            userEmail: users.email,
+            userPhone: users.email, // Using email as phone fallback
+            lastSignedIn: users.lastSignedIn,
+          })
+            .from(supplierUsers)
+            .leftJoin(users, eq(supplierUsers.userId, users.id))
+            .where(eq(supplierUsers.supplierId, supplier.supplierId))
+            .limit(1)
+            .then(rows => rows[0] || null);
+
+          // Get document count
+          const docCount = await db.select({ count: sql<number>`count(*)` })
+            .from(verificationDocuments)
+            .where(eq(verificationDocuments.supplierId, supplier.supplierId))
+            .then(rows => rows[0]?.count || 0);
+
+          // Calculate completion percentage for in-progress verifications
+          let completionPercentage = 0;
+          if (supplier.verificationStatus === 'in_progress') {
+            const profile = await db.select()
+              .from(supplierCompanyProfile)
+              .where(eq(supplierCompanyProfile.supplierId, supplier.supplierId))
+              .limit(1)
+              .then(rows => rows[0] || null);
+            
+            // Simple completion calculation: profile exists (50%) + documents (50%)
+            completionPercentage = (profile ? 50 : 0) + (docCount > 0 ? 50 : 0);
+          }
+
+          return {
+            ...supplier,
+            contactName: adminUser?.userName || 'N/A',
+            contactPersonEmail: adminUser?.userEmail || supplier.contactEmail,
+            contactPersonPhone: supplier.contactPhone || 'N/A',
+            lastSignedIn: adminUser?.lastSignedIn,
+            documentsCount: docCount,
+            completionPercentage,
+          };
+        })
+      );
+
+      // Group by status
+      const grouped = {
+        notStarted: suppliersWithContact.filter(s => !s.verificationStatus || s.verificationStatus === 'not_started'),
+        inProgress: suppliersWithContact.filter(s => s.verificationStatus === 'in_progress'),
+        pendingReview: suppliersWithContact.filter(s => s.verificationStatus === 'pending_review'),
+        underReview: suppliersWithContact.filter(s => s.verificationStatus === 'under_review'),
+        approved: suppliersWithContact.filter(s => s.verificationStatus === 'approved'),
+        rejected: suppliersWithContact.filter(s => s.verificationStatus === 'rejected'),
+        resubmissionRequired: suppliersWithContact.filter(s => s.verificationStatus === 'resubmission_required'),
+      };
+
+      return grouped;
+    }),
+
+    // Get all suppliers
+    getAllSuppliers: superadminProcedure.query(async () => {
+      const { suppliers, supplierUsers, users } = await import("../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+
+      const allSuppliers = await db.select({
+        id: suppliers.id,
+        companyName: suppliers.companyName,
+        contactEmail: suppliers.contactEmail,
+        contactPhone: suppliers.contactPhone,
+        country: suppliers.country,
+        verificationStatus: suppliers.verificationStatus,
+        isVerified: suppliers.isVerified,
+        isActive: suppliers.isActive,
+        createdAt: suppliers.createdAt,
+      }).from(suppliers);
+
+      // Get admin user info for each supplier
+      const suppliersWithAdmin = await Promise.all(
+        allSuppliers.map(async (supplier) => {
+          const adminUser = await db.select({
+            userId: users.id,
+            userName: users.name,
+            userEmail: users.email,
+            lastSignedIn: users.lastSignedIn,
+          })
+            .from(supplierUsers)
+            .leftJoin(users, eq(supplierUsers.userId, users.id))
+            .where(eq(supplierUsers.supplierId, supplier.id))
+            .limit(1)
+            .then(rows => rows[0] || null);
+
+          return {
+            ...supplier,
+            adminUser,
+          };
+        })
+      );
+
+      return suppliersWithAdmin;
+    }),
+
+    // Get all users
+    getAllUsers: superadminProcedure.query(async () => {
+      const { users } = await import("../drizzle/schema");
+
+      const allUsers = await db.select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        accountType: users.accountType,
+        role: users.role,
+        loginMethod: users.loginMethod,
+        createdAt: users.createdAt,
+        lastSignedIn: users.lastSignedIn,
+      }).from(users);
+
+      return allUsers;
+    }),
+
+    // Get all jobs
+    getAllJobs: superadminProcedure.query(async () => {
+      const { jobs, users } = await import("../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+
+      const allJobs = await db.select({
+        id: jobs.id,
+        customerId: jobs.customerId,
+        supplierId: jobs.supplierId,
+        siteName: jobs.siteName,
+        siteAddress: jobs.siteAddress,
+        status: jobs.status,
+        calculatedPrice: jobs.calculatedPrice,
+        createdAt: jobs.createdAt,
+        scheduledStart: jobs.scheduledStart,
+      }).from(jobs);
+
+      // Get customer info for each job
+      const jobsWithCustomer = await Promise.all(
+        allJobs.map(async (job) => {
+          const customer = await db.select({
+            customerName: users.name,
+            customerEmail: users.email,
+          })
+            .from(users)
+            .where(eq(users.id, job.customerId))
+            .limit(1)
+            .then(rows => rows[0] || null);
+
+          return {
+            ...job,
+            customer,
+          };
+        })
+      );
+
+      return jobsWithCustomer;
+    }),
+
+    // Get coverage statistics
+    getCoverageStats: superadminProcedure.query(async () => {
+      const { supplierCoverageAreas, suppliers } = await import("../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+
+      const coverageAreas = await db.select({
+        id: supplierCoverageAreas.id,
+        supplierId: supplierCoverageAreas.supplierId,
+        country: supplierCoverageAreas.country,
+        region: supplierCoverageAreas.region,
+        city: supplierCoverageAreas.city,
+        postalCode: supplierCoverageAreas.postalCode,
+        companyName: suppliers.companyName,
+      })
+        .from(supplierCoverageAreas)
+        .leftJoin(suppliers, eq(supplierCoverageAreas.supplierId, suppliers.id));
+
+      return coverageAreas;
+    }),
+  }),
+
+  // Suppliers router
+  suppliers: router({
+    // Get supplier profile
+    getProfile: protectedProcedure.query(async ({ ctx }) => {
+      const { getSupplierByUserId } = await import("./db");
+      const { users } = await import("../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const result = await getSupplierByUserId(ctx.user.id);
+      if (!result) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Supplier not found" });
+      }
+
+      // Get user name from users table
+      const user = await db.select().from(users)
+        .where(eq(users.id, ctx.user.id))
+        .limit(1)
+        .then(rows => rows[0]);
+
+      return {
+        ...result.supplier,
+        userName: user?.name || "",
+      };
+    }),
   }),
 });
 

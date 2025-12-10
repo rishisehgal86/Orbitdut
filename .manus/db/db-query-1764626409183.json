@@ -1,0 +1,15 @@
+{
+  "query": "SELECT id, email, accountType FROM users WHERE email = '12@supplier.com'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT id, email, accountType FROM users WHERE email = '12@supplier.com'",
+  "rows": [
+    {
+      "id": "90049",
+      "email": "12@supplier.com",
+      "accountType": "supplier"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temail\taccountType\n90049\t12@supplier.com\tsupplier\n",
+  "stderr": "",
+  "execution_time_ms": 185
+}

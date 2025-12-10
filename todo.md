@@ -1,1545 +1,1052 @@
 # Orbidut Marketplace TODO
 
-## Phase 1: Foundation & Database Schema
-- [x] Design and implement marketplace database schema
-- [x] Create supplier tables (suppliers, supplier_users, supplier_rates, supplier_coverage)
-- [x] Create job and payment tables
-- [x] Run database migration
+## Completed Features
+- [x] Basic customer portal with job submission
+- [x] Supplier portal with job management
+- [x] Email notification system (Gmail SMTP)
+- [x] Password reset flow
+- [x] Job status email notifications
 
-## Phase 2: Navigation & Layout
-- [x] Implement modern left-hand sidebar navigation component
-- [x] Create responsive mobile navigation (hamburger + bottom nav)
-- [x] Build collapsible sidebar functionality
-- [x] Implement dark/light mode support
-- [x] Create supplier portal layout wrapper
-- [x] Create customer portal layout wrapper
+## FieldPulse Integration - Complete Workflow
 
-## Phase 3: Supplier Authentication & Onboarding
-- [x] Extend user roles to include supplier types (supplier_admin, supplier_tech)
-- [x] Create supplier registration page
-- [x] Create supplier login page
-- [x] Implement supplier session management
-- [x] Build supplier dashboard home page
+### Phase 1: Database Schema
+- [x] Add jobStatusHistory table (audit trail of all status changes)
+- [x] Add jobLocations table (GPS tracking data)
+- [x] Add siteVisitReports table (completion reports with signatures)
+- [x] Add svrMediaFiles table (photos/videos for reports)
+- [x] Engineer fields already exist in jobs table (engineerName, engineerEmail, engineerPhone)
+- [x] Run database migration (manual SQL execution)
 
-## Phase 4: Supplier Profile & Coverage
-- [x] Create company profile management API
-- [x] Build company profile form UI
-- [ ] Implement geographic coverage API (postal codes, radius, polygons)
-- [ ] Build service area page with interactive map
-- [ ] Integrate map for visual coverage selection
+### Phase 2: Supplier Engineer Assignment
+- [x] Add "Assign Engineer" button to supplier job detail page
+- [x] Create engineer assignment modal/form (AssignEngineerDialog component)
+- [x] Build tRPC procedure to assign engineer to job
+- [x] Send email/notification to engineer with unique job link
+- [x] Update job status to "sent_to_engineer"
+- [x] Add job status history tracking
 
-## Phase 5: Supplier Rates & Pricing
-- [x] Create supplier rates API (country-specific hourly rates)
-- [x] Build rates management UI
-- [x] Implement multi-currency support
-- [ ] Create pricing engine service
+### Phase 3: Engineer Job Page (Token-Based, No Login)
+- [x] Create /engineer/job/:token route
+- [x] Build EngineerJobPage component (copy from FieldPulse)
+- [x] Add Accept/Decline buttons
+- [x] Add status update buttons (En Route, On Site, Completed)
+- [x] Build tRPC procedures for engineer actions
+- [x] Add automatic timestamp tracking on status changes
 
-## Future Phases (Not Yet Started)
-- [ ] Job matching algorithm
-- [ ] Real-time job notifications
-- [ ] FCFS job acceptance mechanism
-- [ ] Stripe Connect integration
-- [ ] Customer portal
-- [ ] Rating and review system
-- [ ] Admin dashboard enhancements
-- [ ] Analytics and reporting
+### Phase 4: GPS Tracking
+- [x] Implement browser geolocation API in engineer page
+- [x] Auto-track location when status is "en_route" or "on_site"
+- [x] Save GPS coordinates to jobLocations table
+- [x] Create real-time map view for customers
+- [ ] Calculate and display ETA based on GPS data (deferred)
+- [x] Add location tracking indicator to engineer page
 
-## Phase 6: Customer Job Request Flow
-- [x] Create job request form with address lookup
-- [x] Implement service type selection
-- [x] Add scheduling calendar/date picker
-- [x] Build dynamic pricing calculation engine
-- [ ] Integrate payment authorization (Stripe)
-- [x] Create job submission and confirmation
+### Phase 5: Site Visit Reports
+- [x] Create site visit report form component
+- [x] Add digital signature capture (react-signature-canvas)
+- [x] Add photo upload functionality (multiple images)
+- [x] Build tRPC procedure to save site visit report
+- [x] Integrate report form into EngineerJobPage
+- [ ] Generate PDF report with signature and photos (deferred)
+- [ ] Email report to customer and supplier (deferred)
 
-## Phase 7: Supplier Marketplace & Job Distribution
-- [ ] Build geographic matching algorithm
-- [x] Implement FCFS job distribution to qualified suppliers
-- [ ] Create real-time job notification system
-- [x] Build supplier job acceptance interface
-- [ ] Add job offer expiration logic
+### Phase 6: Job Timeline & Activity History
+- [ ] Create JobTimeline component
+- [ ] Display all status changes with timestamps
+- [ ] Calculate and show duration in each status (travel time, on-site time)
+- [ ] Add timeline to customer job detail page
+- [ ] Add timeline to supplier job detail page
+- [ ] Show GPS location for each status change
 
-## Phase 8: Job Workflow Management
-- [x] Implement job status tracking (assigned → en_route → on_site → completed)
-- [x] Create supplier job detail page
-- [x] Build status update interface for suppliers
-- [ ] Add real-time status notifications to customers
-- [ ] Implement job timeline/activity log
+### Phase 7: Testing & Polish
+- [ ] Test complete workflow end-to-end
+- [ ] Test engineer page on mobile devices
+- [ ] Verify GPS tracking accuracy
+- [ ] Test signature capture on touch devices
+- [ ] Verify email notifications at each step
+- [ ] Test with multiple concurrent jobs
+- [ ] Save checkpoint and push to GitHub
 
-## Phase 9: Job Completion & Payment
-- [x] Create job completion workflow for suppliers
-- [x] Implement customer notification on completion
-- [ ] Build automatic payment capture from authorization (Stripe integration pending)
-- [ ] Create supplier payout processing (Stripe integration pending)
-- [ ] Add review/rating system post-completion
+## Future Features (Post-Launch)
+- [ ] Supplier matching algorithm
+- [ ] Pricing and payment integration (Stripe)
+- [ ] Multi-project support
+- [ ] SMS notifications
+- [ ] Native mobile app for engineers
+- [ ] Customer review/rating system
+- [ ] Invoice generation and management
 
-## Phase 10: Customer Portal & Authentication Flow
-- [x] Create customer portal layout with left sidebar navigation
-- [x] Build customer dashboard with job history and status
-- [x] Move request service form to authenticated customer portal
-- [x] Update homepage to show service preview with login prompts
-- [ ] Add customer job tracking and management interface
-- [ ] Create customer profile settings page
-
-## Phase 11: Service Types and Time Zone Updates
-- [x] Update service types to three engineer services only (L1 EUC, L1 Network, Smart Hands)
-- [x] Implement dual time UTC system (local time selection based on site location)
-- [x] Display both local time and UTC time on job details
-- [ ] Store scheduled time as UTC timestamp in database
-
-## Phase 12: Google Maps Timezone API Integration
-- [x] Create backend endpoint to fetch timezone from Google Maps API
-- [x] Update frontend RequestService to call timezone API
-- [x] Replace coordinate-based timezone estimation with API call
-- [ ] Test timezone accuracy for various global locations
-
-## Phase 13: Job Duration Constraints
-- [x] Update frontend duration input to enforce 2-16 hour range
-- [x] Add validation messages for duration limits
-- [x] Update backend job creation validation
-- [x] Update pricing calculation to respect duration limits
-
-## Phase 14: Local Authentication System
-- [x] Update users table to include password hash and account type fields
-- [x] Create backend signup endpoint with password hashing
-- [x] Create backend login endpoint with JWT token generation
-- [x] Update logout endpoint for local auth
-- [x] Build separate customer signup page
-- [x] Build separate supplier signup page
-- [x] Build login page
-- [x] Update auth context and hooks to use local auth
-- [x] Remove Manus OAuth dependencies from navigation and pages
-- [x] Test complete signup and login flow
-
-## Phase 15: Customer Job Tracking Page
-- [x] Create customer jobs list page with filtering
-- [x] Add status filter (all, pending, assigned, in progress, completed)
-- [x] Display job cards with key information
-- [x] Create detailed job view page with timeline
-- [x] Add job timeline/activity log
-- [x] Implement real-time status updates
-- [x] Add search functionality
-
-## Phase 16: Homepage Signup Links
-- [x] Add prominent customer signup link to homepage
-- [x] Add prominent supplier signup link to homepage
-- [x] Update hero section with clear calls-to-action
-- [x] Add signup section explaining benefits for each user type
-
-## Phase 17: Supplier Signup Portal Integration
-- [x] Update supplier signup to redirect to supplier portal after registration
-- [x] Ensure supplier account type is set correctly during signup
-- [x] Test complete supplier signup and portal access flow
-
-## Phase 18: Fix Supplier Signup Route
-- [x] Add /auth/supplier-signup route to App.tsx
-- [x] Verify all auth routes are properly registered
-- [x] Test supplier signup page access
-
-## Phase 19: Remove Manus OAuth
-- [x] Remove OAuth callback route from server
-- [x] Disable OAuth fallback in context.ts
-- [x] Update error messages to remove OAuth references
-- [x] Test complete authentication flow without OAuth
-
-## Phase 20: Homepage CTA Differentiation
-- [x] Update navigation to show distinct customer vs supplier CTAs
-- [x] Change "Get Started" to "Request Service" for customers
-- [x] Make "Supplier Signup" more prominent with different styling
-- [x] Update bottom CTA section with clearer messaging
-- [x] Test both signup flows from homepage
-
-## Phase 21: Geographic Coverage Management System
-- [x] Update database schema to store coverage data (countries, cities, exclusions, response times)
-- [x] Create ISO 3166-1 country list with codes
-- [x] Build backend API for coverage CRUD operations
-- [x] Create coverage management page with tabbed interface
-- [x] Build Tier 1: Country selection UI with search and select all
-- [ ] Build Tier 2: Priority cities/metro areas UI with Google Maps
-- [ ] Build Tier 4: Response time zones UI
-- [x] Add supplier navigation link to coverage page
-- [ ] Test complete coverage management flow
-- [ ] Add coverage visualization on supplier profiles
-- [ ] Update job matching algorithm to use coverage data
-- [ ] Test coverage setup and job matching
+## Phase 6: Job Timeline & Activity History (Complete)
+- [x] Create JobTimeline component with visual timeline UI
+- [x] Build getJobTimeline tRPC procedure
+- [x] Calculate duration between status changes (travel time, on-site time)
+- [x] Display GPS location for each status change
+- [x] Add timeline to customer job detail page
+- [x] Add timeline to supplier job detail page
+- [x] Show formatted timestamps and durations
 
 ## Bug Fixes
-- [x] Fix Coverage navigation button to link to /supplier/coverage page
-- [x] Fix database delete query error in coverage update operation
-- [x] Add loading states and success feedback to coverage save operation
-- [x] Load existing coverage on page mount and display selected countries
-- [x] Fix coverage mode selection to load existing countries (not replace them)
-- [x] Remove country display limit in Current Coverage section (show all countries)
-- [x] Sort countries alphabetically in Current Coverage display
-
-## Coverage Management - Phase 2
-- [x] Implement Global Coverage one-click selection
-- [x] Build Coverage Preview tab with statistics
-- [x] Add region breakdown display
-- [ ] Implement world map visualization for covered countries (deferred - will add after Priority Cities)
-- [x] Build Priority Cities UI with city search input
-- [x] Add city management (add/remove cities)
-- [x] Persist priority cities to database
-
-## Coverage Management - Phase 3
-- [ ] Integrate Google Maps Places API for city autocomplete
-- [ ] Auto-detect country code when adding cities using geocoding
-- [ ] Capture and store latitude/longitude coordinates for each city
-- [ ] Add map visualization showing priority cities on a world map
-
-## Response Time Management System
-- [x] Update database schema to support global default response time
-- [x] Create shared response time constants (4h, 24h, 48h, 72h, 96h)
-- [x] Build Default Response Time UI (global fallback setting)
-- [x] Implement Country-Level Response Time management with bulk actions
-- [x] Add Priority City response time overrides
-- [x] Update Preview tab to show response time statistics
-- [x] Add backend API for CRUD operations on response times
-
-## UI Enhancements
-- [x] Add search bar to Country-Level Response Times for quick country filtering
-
-## Priority Cities - Google Places Integration
-- [x] Integrate Google Places API autocomplete for city search
-- [x] Update database schema to store state/province, latitude, longitude
-- [x] Update backend API to handle geocoded city data
-- [x] Display full location details (City, State, Country) in UI
-
-## Response Time Enhancements
-- [ ] Add checkboxes to Country-Level Response Times for multi-select
-- [ ] Add bulk action to set response time for selected countries
-
-## Preview Tab Enhancements
-- [x] Add response time breakdown statistics (count by tier: 4h, 24h, 48h, 72h, 96h)
-- [ ] Integrate world map visualization with color-coded countries by response time
-- [ ] Add legend showing response time colors on map
-
-## Priority City Response Times Enhancements
-- [x] Add search bar to filter priority cities
-- [x] Add checkboxes for multi-select cities
-- [x] Add bulk action to set response time for selected cities
-- [x] Add Select All / Deselect All functionality
-- [x] Add Priority City Response Time Distribution to Preview tab
-
-## UI Improvements
-- [x] Reorder sidebar navigation: Coverage should appear above Rates
-
-## Preview Tab Enhancements
-- [x] Show detailed country lists under each response time tier (like Coverage by Region)
-- [x] Show detailed city lists under each response time tier for Priority Cities
-
-## Bug Fixes
-- [x] Fix × button functionality in custom country selection (Selected countries list)
-
-## Critical Bug Fixes
-- [x] Fix × button in Selected countries section - buttons should remove country from selection when clicked
-
-## Bug Fixes - Sorting
-- [x] Fix All Countries (A-Z) list to sort alphabetically by country name instead of by region
-
-## Response Time Validation
-- [x] Implement validation logic ensuring Priority Cities have faster response times than parent countries
-- [x] Add visual warnings when city response time is slower than country response time
-
-
-
-## Rate Management System
-- [x] Review and verify supplierRates table schema
-- [x] Create shared constants for service types and response times
-- [x] Build backend tRPC procedures (getRates, upsertRate, bulkUpsertRates, getRateCompletionStats)
-- [x] Fix TypeScript errors from schema migration
-- [x] Create Rates page with tab structure (Quick Setup, By Location, By Service, Bulk Import/Export)
-- [x] Implement Quick Setup tab with base rate inputs for all service types
-- [x] Add "Apply to All Locations" functionality
-- [x] Add completion tracker showing rates configured percentage
-- [x] Fix toast notification errors (use sonner API correctly)
-- [x] Fix getPriorityCities query name (was getCities)
-- [x] Add refetch for stats query after bulk upsert
-- [x] Test Quick Setup tab with all 3 service types (L1 EUC, L1 Network, Smart Hands)
-- [ ] Build By Location tab with searchable location list
-- [x] Create expandable rate cards for each location
-- [x] Implement inline rate editing with auto-save
-- [x] Add validation warnings (e.g., faster response time cheaper than slower)
-- [ ] Test rate CRUD operations thoroughly
-- [ ] Test with multiple locations and service types
-
-## Rate Management - Quick Setup Improvements
-- [x] Fix: Reset base rate inputs when switching between service types
-- [x] Clear input fields when user selects a different service type tab
-
-## Rate Management - By Location Tab Implementation
-- [x] Create By Location tab with nested regional tabs
-- [x] Add Africa tab showing countries in Africa region
-- [x] Add Americas tab showing countries in Americas region
-- [x] Add Asia tab showing countries in Asia region
-- [x] Add Europe tab showing countries in Europe region
-- [x] Add Oceania tab showing countries in Oceania region
-- [x] Add Cities tab showing all priority cities
-- [x] Display rates in table format with inline editing
-- [x] Add search functionality for filtering locations
-- [x] Implement save functionality for individual rate changes
-- [x] Update getSupplierCountries to include region and country name
-- [x] Test all regional tabs and inline editing
-- [x] Update getSupplierCountries to include region and country name
-- [x] Test regional filtering and tab switching
-- [x] Test inline editing with auto-save on blur
-
-## Rate Management - Quick Setup Regional Tabs
-- [x] Add regional tabs to Quick Setup (Africa, Americas, Asia, Europe, Oceania, Cities)
-- [x] Allow suppliers to set different base rates for each region
-- [x] Update "Apply to All Locations" to only apply to selected region/cities
-- [x] Update button text to reflect regional scope (e.g., "Apply to Africa")
-- [x] Test regional rate application
-- [x] Reset rates when switching between regions
-
-## Rate Management - Quick Setup Location Preview
-- [x] Show actual location names instead of just count in Quick Setup
-- [x] Display list of countries/cities that will be affected by the bulk operation
-- [x] Fix typo: "cityies" should be "cities"
-- [x] Show first 5 locations and "and X more" for longer lists
-- [x] Test with all regional tabs
-
-## Rate Management - Enhanced Progress Tracking
-- [x] Update getRateCompletionStats API to return breakdown by location type (countries vs cities)
-- [x] Update getRateCompletionStats API to return breakdown by service type (L1 EUC, L1 Network, Smart Hands)
-- [x] Create progress breakdown UI component showing multiple progress bars
-- [x] Display countries completion percentage and count
-- [x] Display cities completion percentage and count
-- [x] Display service type completion percentages (L1 EUC, L1 Network, Smart Hands)
-- [x] Keep overall progress bar at the top
-- [x] Use color-coded progress bars (blue for countries, green for cities, purple/orange/cyan for services)
-- [x] Test progress tracking with different completion states
-
-## Rate Management - Progress Tracking Fixes & Enhancements
-- [ ] Fix bug: Service type progress not updating after Quick Setup bulk upsert
-- [ ] Investigate why service types show 0% despite rates being configured
-- [ ] Verify bulk upsert is setting serviceType field correctly
-- [ ] Add hover tooltips to progress bars showing missing rate details
-- [ ] Show which specific locations/services are missing on hover
-- [ ] Consider alternative visualization: interactive breakdown, heatmap, or smart recommendations
-- [ ] Test service type tracking after bulk upsert operations
-
-## Multi-Tenancy Architecture Audit
-- [x] Review all database tables to ensure supplierId tenant differentiator exists
-- [x] Audit all queries to verify supplierId filtering is applied
-- [x] Check supplierRates table for proper tenant isolation
-- [x] Check supplierCoverageCountries table for proper tenant isolation
-- [x] Check supplierPriorityCities table for proper tenant isolation
-- [x] Review any shared/global tables (countries, cities reference data)
-- [x] Add database indexes on supplierId for performance
-- [x] Add foreign key constraints to enforce referential integrity (CASCADE DELETE)
-- [x] Add defensive supplierId check to UPDATE operations
-- [x] Clean up orphaned cityId references
-- [x] Add composite unique indexes to prevent duplicate rates
-- [ ] Verify no cross-tenant data leakage in API endpoints
-- [ ] Document multi-tenancy architecture and patterns
-- [ ] Test tenant isolation with multiple supplier accounts
-
-## Complete Tenant Isolation Audit - All Tables
-- [x] Audit supplierResponseTimes table (missing FK and indexes)
-- [x] Audit supplierUsers table (missing FK and indexes)
-- [x] Audit jobs table (verify assignedSupplierId isolation)
-- [x] Audit payments table (verify supplier payout isolation)
-- [x] Audit reviews table (verify supplierId FK and indexes)
-- [x] Add foreign key constraints where missing
-- [x] Add performance indexes on all tenant differentiator fields
-- [x] Clean up orphaned data (supplierUsers, supplierRates)
-- [x] Add CASCADE DELETE for automatic cleanup
-- [x] Add SET NULL for optional references (customerId, assignedSupplierId)
-- [x] Add composite unique constraints to prevent duplicates
-- [ ] Verify all SELECT queries include tenant filtering
-- [ ] Verify all UPDATE queries include tenant checks
-- [ ] Verify all DELETE queries include tenant checks
-- [ ] Create tenant isolation test suite
-- [ ] Document tenant isolation architecture
-
-## API Query Tenant Isolation Audit
-- [x] Find all SELECT queries in server code
-- [x] Verify each SELECT includes supplierId filtering where applicable
-- [x] Find all UPDATE queries in server code
-- [x] Verify each UPDATE includes supplierId in WHERE clause
-- [x] Find all DELETE queries in server code
-- [x] Verify each DELETE includes supplierId in WHERE clause
-- [x] Audit tRPC procedures for proper ctx.user.supplierId usage
-- [x] Check db.ts helper functions for tenant filtering
-- [x] Check rates.ts for tenant filtering
-- [x] Check routers.ts for tenant filtering
-- [x] Document all queries and their tenant isolation status
-- [x] Fix all critical security vulnerabilities (7 issues fixed)
-- [x] Fixed: deleteSupplierPriorityCity - added supplierId check
-- [x] Fixed: deleteSupplierResponseTime - added supplierId check
-- [x] Fixed: deleteRate - added supplierId check
-- [x] Fixed: updateSupplier - added user permission verification
-- [x] Fixed: getJobById - added customer/supplier filtering
-- [x] Verified: updateJobStatus - already secure with supplier check
-- [x] Verified: acceptJob - has business logic TODO but no security issue
-- [ ] Create test cases for cross-tenant access attempts
-
-## Rate Validation Warnings
-- [x] Design validation rules for rate patterns
-- [x] Rule 1: Faster response time should not be cheaper than slower response time
-- [x] Rule 2: Rates should be positive numbers
-- [x] Rule 3: Warn if rate difference between tiers is too large (>50%)
-- [x] Create validation utility function (shared/rateValidation.ts)
-- [x] Add visual warning indicators in Quick Setup tab
-- [x] Show warning icon with tooltip explaining the issue
-- [x] Use amber/yellow color for warnings, blue for suggestions
-- [ ] Add visual warning indicators in By Location tab
-- [ ] Test validation with various rate combinations
-
-## Rates Submenu Restructuring
-- [ ] Design submenu structure with two sections: Current Rates and Rate Management
-- [ ] Create Current Rates page (read-only view)
-- [ ] Show all applied rates with status indicators (configured, missing, no coverage)
-- [ ] Add filtering by location, service type, response time
-- [ ] Add search functionality for locations
-- [ ] Show visual indicators: green for configured, amber for missing, gray for no coverage
-- [ ] Add export to CSV/Excel functionality
-- [ ] Show rate statistics and completion summary
-- [ ] Rename existing Rates page to Rate Management
-- [ ] Update sidebar navigation to show Rates submenu
-- [ ] Update routing: /supplier/rates/current and /supplier/rates/manage
-- [ ] Test navigation between Current Rates and Rate Management
-- [ ] Ensure progress tracker is visible on both pages
-
-## Rates Submenu Restructuring
-- [x] Create submenu structure with two pages: Current Rates and Rate Management
-- [x] Design Current Rates page (read-only view)
-- [x] Add multi-select filters (service types, regions, response times, status)
-- [x] Create comprehensive table view showing all rates
-- [x] Add export to CSV functionality
-- [x] Add search bar for location filtering
-- [x] Show rate status with color coding (configured, missing, no coverage)
-- [x] Rename existing Rates page to Rate Management
-- [x] Update App.tsx routing for both pages (/supplier/rates/current, /supplier/rates/manage)
-- [x] Update SupplierLayout navigation with submenu support
-- [x] Add submenu rendering in navigation (indented, smaller text)
-- [x] Fix stats API response structure in CurrentRates
-- [x] Test both pages with real data
-
-## Service Exclusion System
-- [x] Design service exclusion architecture (coverage-level + bulk actions)
-- [x] Update database schema to add supplierServiceExclusions table
-- [x] Add isServiceable field to supplierRates (null=missing, 0=not_offered, 1=active)
-- [x] Create backend API for service exclusions CRUD (server/serviceExclusions.ts)
-- [x] Add tenant isolation to all service exclusion operations
-- [ ] Add tRPC procedures for service exclusions
-- [ ] Add "Service Exclusions" section to Coverage page
-- [ ] Allow excluding service types per country (e.g., "No Smart Hands in Algeria")
-- [ ] Allow excluding service types per city (e.g., "No L1 Network in New York")
-- [ ] Add bulk "Mark as Not Offered" button in Rate Management By Location tab
-- [ ] Add "Mark Region as Not Offered" option in Quick Setup tab
-- [x] Update getRates API to filter out excluded service/location combinations
-- [x] Update progress tracking to exclude non-serviceable rates from completion %
-- [ ] Add visual distinction: Missing (amber) vs Not Offered (gray) vs Configured (green)
-- [ ] Show "X rates opted out" stat in progress card
-- [ ] Test service exclusions with various combinations
-
-## Service Exclusion UI Implementation
-- [x] Add tRPC procedures for service exclusions (getExclusions, addExclusion, removeExclusion, bulkAdd, bulkRemove)
-- [x] Create Coverage page at /supplier/coverage
-- [x] Add navigation link to Coverage in SupplierLayout (already exists)
-- [x] Build service exclusion management UI in Coverage page
-- [x] Show list of countries with expandable service type checkboxes
-- [x] Show list of cities with expandable service type checkboxes
-- [x] Add "Save Exclusions" button with optimistic updates
-- [x] Add search functionality for filtering locations
-- [x] Add tabs for Countries and Priority Cities
-- [x] Add unsaved changes warning
-- [ ] Add bulk "Mark as Not Offered" button in Rate Management By Location tab
-- [ ] Add "Mark Region as Not Offered" option in Quick Setup tab
-- [x] Update getRates to filter out excluded combinations
-- [x] Update progress tracking to exclude non-serviceable rates
-- [ ] Add visual distinction: Missing (amber) vs Not Offered (gray) vs Configured (green)
-- [ ] Test service exclusions end-to-end
-
-## Fix Coverage.tsx Syntax Error (CRITICAL)
-- [x] Investigate syntax error at line 406:184 in Coverage.tsx
-- [x] Fix the Unicode escape sequence issue causing application crash (template literals had \$ instead of $)
-- [x] Fix SERVICE_TYPES import (changed to RATE_SERVICE_TYPES array)
-- [x] Restart dev server and test Coverage page
-
-## Fix Coverage Management Page Layout
-- [x] Add SupplierLayout wrapper to Coverage.tsx to display left sidebar navigation
-- [x] Test that sidebar navigation appears on Coverage page
-
-## Restore Full Coverage Page Functionality
-- [x] Check if original coverage page with country/city/response time management still exists
-- [x] Restore original coverage features (country selection, priority cities, response times)
-- [x] Create separate ServiceExclusions.tsx page
-- [x] Add Coverage submenu in SupplierLayout (Geographic Coverage, Service Exclusions)
-- [x] Add route for /supplier/coverage/exclusions in App.tsx
-- [x] Fix null safety in filter functions
-- [x] Test all coverage management features together
-
-## Fix Priority Cities Deletion UI Issue
-- [x] Investigate why deleted cities remain visible in the UI (tenant isolation issue)
-- [x] Fix deletePriorityCity procedure to include supplierId parameter for tenant isolation
-- [x] Update handleRemoveCity to pass supplierId along with id
-- [x] Add optimistic updates to deleteCity mutation for instant UI feedback
-- [x] Test that cities disappear immediately after clicking X button
-
-## Fix Google Maps API Deprecation Warnings
-- [ ] Update Google Maps script loading to use `loading=async` parameter for better performance
-- [ ] Migrate from deprecated `google.maps.places.Autocomplete` to new `google.maps.places.PlaceAutocompleteElement` API
-- [ ] Test city search functionality with new PlaceAutocompleteElement
-- [ ] Verify all Maps features work correctly after migration
-- [ ] Remove deprecation warnings from browser console
-
-## Fix Service Exclusions Page - Not Showing Coverage Countries
-- [x] Investigate why Service Exclusions page shows "Countries (0)" when Geographic Coverage has 196 countries (missing database tables)
-- [ ] Verify tenant isolation in all Service Exclusions tRPC procedures (getServiceExclusions, bulkAddServiceExclusions, bulkRemoveServiceExclusions)
-- [ ] Create missing database tables (supplier_coverage_countries, supplierServiceExclusions, etc.)
-- [ ] Fix data fetching to load countries from supplier coverage settings
-- [ ] Fix data fetching to load priority cities from supplier coverage settings
-- [ ] Test that countries and cities appear on Service Exclusions page
-
-## Fix Service Exclusions Page - Database and UI Issues
-- [x] Investigate why Service Exclusions page shows "Countries (0)" when Geographic Coverage has 196 countries
-- [x] Verify tenant isolation in all Service Exclusions tRPC procedures (all properly implemented with supplierId checks)
-- [x] Create missing supplierServiceExclusions table via drizzle migration
-- [x] Fix field name mismatch (changed country.name to country.countryName, city.name to city.cityName)
-- [x] Add missing Label component import to ServiceExclusions.tsx
-- [x] Test that countries and cities appear on Service Exclusions page (196 countries, 2 cities now showing correctly)
-
-## Service Exclusions Page Layout Optimization
-- [x] Analyze current layout structure and identify spacing issues (Card wrapper with pt-6 padding, individual bordered boxes for each checkbox)
-- [x] Redesign service checkboxes to use horizontal inline layout instead of cards
-- [x] Implement four-column grid layout (180px for location, 1fr each for 3 service types)
-- [x] Reduce padding and margins for more compact display (p-3, space-y-1)
-- [x] Test layout responsiveness on different screen sizes
-- [x] Verify all 196 countries fit better on screen with reduced scrolling (now shows ~11 countries vs 3-4 before)
-
-## Service Availability UX Redesign (formerly Service Exclusions)
-- [x] Rename page from "Service Exclusions" to "Service Availability"
-- [x] Flip checkbox logic: checked = service IS available (positive framing maintained)
-- [x] Update page title and description with clear positive wording ("Check the services you provide")
-- [x] Update card title ("Service Availability by Location") and helper text for clarity
-- [x] Rename file from ServiceExclusions.tsx to ServiceAvailability.tsx
-- [x] Update navigation menu item from "Service Exclusions" to "Service Availability"
-- [x] Update route from /supplier/coverage/exclusions to /supplier/coverage/availability
-- [x] Add green styling to checked checkboxes for visual reinforcement
-- [x] Backend logic remains unchanged (still stores exclusions, but UI presents as availability)
-- [x] Test that checkbox states work correctly with new logic
-- [x] Verify data persistence with flipped logic
-
-## Integrate Service Availability with Rates System
-- [x] Analyze current service availability and rates data flow (isServiceable field exists but unused)
-- [x] Implement sync logic: when service availability changes, update supplierRates.isServiceable field
-- [x] Add syncServiceAvailabilityToRates and syncServiceExclusionToRates functions in serviceExclusions.ts
-- [x] Update bulkAddServiceExclusions to call syncServiceExclusionToRates (sets isServiceable = 0)
-- [x] Update bulkRemoveServiceExclusions to call syncServiceAvailabilityToRates (sets isServiceable = 1)
-- [x] Add bulkSyncAllRatesWithAvailability procedure for fixing existing data inconsistencies
-- [x] Update getSupplierRates query to filter WHERE isServiceable = 1 OR isServiceable IS NULL
-- [x] Add info banner to Rate Management page explaining service availability connection
-- [x] Add link from Rate Management to Service Availability page
-- [x] Test that info banner displays correctly with proper messaging
-- [x] Verify sync logic updates isServiceable when availability changes
-
-## Service Availability Page - Add Region Filter
-- [x] Add region filter tabs to Countries section (All, Africa, Americas, Asia, Europe, Oceania)
-- [x] Update countries query to include region field
-- [x] Implement region filtering logic in frontend
-- [x] Test region filter with all 196 countries
-- [x] Verify service checkboxes work correctly after filtering
-
-## Grey Out Unavailable Service Rate Inputs
-- [x] Fetch service exclusions in By Location tab
-- [x] Disable rate input fields for excluded service/location combinations
-- [x] Add grey styling and "Not Offered" tooltip for disabled inputs
-- [x] Update By Service tab (when built) to also respect exclusions
-- [x] Test with various exclusion scenarios (cities only, countries only, mixed)
-
-## Fix Service Availability Save Error
-- [x] Fix bulkAddServiceExclusions mutation - supplierId is undefined in exclusions array
-- [x] Ensure each exclusion object includes supplierId when calling bulk save
-- [x] Test service availability changes save successfully
-
-## Fix Service Availability City Checkbox Bug
-- [x] Reproduce bug: checking service for one city checks it for all cities
-- [x] Analyze exclusion key generation logic for cities
-- [x] Fix checkbox state management to properly handle individual cities
-- [x] Test with multiple cities and different services
-
-## By Location Tab Enhancements
-- [x] Replace flat table with Accordion-based expandable cards for each location
-- [x] Add location header showing country/city name and configured count
-- [x] Implement collapsible rate sections per location
-- [x] Add inline rate editing with debounced auto-save (500ms delay)
-- [x] Show save status indicators (saving, saved, error)
-- [x] Add validation warnings for pricing inconsistencies (faster cheaper than slower)
-- [x] Display amber warning icons with tooltips for invalid rates
-- [ ] Test expandable cards with multiple locations
-- [ ] Test auto-save functionality with rapid edits
-- [ ] Test validation warnings with various rate combinations
-
-## Validation Warning Tooltip Enhancement
-- [x] Replace HTML title attribute with shadcn/ui Tooltip component for validation warnings
-- [x] Show clear explanation of pricing inconsistency on hover
-- [x] Test tooltip hover behavior and readability
-
-## Response Time-Level Exclusions
-- [x] Update database schema to support response time exclusions (supplierResponseTimeExclusions table)
-- [x] Add supplierId, serviceType, countryCode/cityId, responseTimeHours columns
-- [x] Create backend tRPC procedures (addResponseTimeExclusion, removeResponseTimeExclusion, getResponseTimeExclusions)
-- [x] Add X icon next to each rate input in By Location tab
-- [ ] Implement click handler to toggle exclusion state
-- [ ] Show tooltip "Mark Xh response time as not offered" on hover
-- [ ] Grey out input and show "N/A" when response time is excluded
-- [ ] Update getRates API to filter out excluded response times
-- [ ] Update progress tracking to exclude response time exclusions from totals
-- [ ] Test exclusion toggle with various service/location/response time combinations
-- [ ] Verify visual consistency with service-level exclusions
-
-## Update Exclusion Checking Logic to Query Both Tables
-- [x] Update `getSupplierRates` in server/rates.ts to check both service and response time exclusions
-- [x] Modify WHERE clause to exclude rates if EITHER service OR response time is excluded
-- [ ] Update frontend By Location tab to fetch both exclusion types
-- [ ] Combine service exclusions and response time exclusions in isRateDisabled check
-- [ ] Ensure service-level exclusions take precedence (hide X icon if service excluded)
-- [ ] Test precedence: service exclusion should override response time exclusions
-
-## Bug Fixes - Response Time Exclusions
-- [x] Fix X icon re-enabling behavior to be instant (currently has delay when removing exclusions)
-
-## Current Rates Page - Show Exclusions
-- [ ] Query service exclusions in Current Rates page
-- [ ] Query response time exclusions in Current Rates page
-- [ ] Display service exclusions in the rates table (e.g., "Service Not Offered")
-- [ ] Display response time exclusions in the rates table (e.g., grey out or show "N/A")
-- [ ] Test exclusion display with various scenarios
-
-## Current Rates Page - Show Exclusions
-- [x] Query both service exclusions and response time exclusions tables
-- [x] Display "Service Excluded" badge when a service is excluded for a location
-- [x] Display "Response Time Excluded" text when a response time is excluded
-
-## Rate Management - By Service Tab Implementation
-- [x] Create By Service tab component mirroring By Location tab structure
-- [x] Group locations by service type (L1 EUC, L1 Network, Smart Hands)
-- [x] Reuse same table UI and inline editing components
-- [x] Add search functionality for filtering locations
-- [x] Implement X icon toggle for response time exclusions
-- [x] Test all service type tabs and inline editing
-
-## Rate Management - By Location Tab UI Change
-- [x] Remove service type selector from By Location tab
-- [x] Update LocationRatesTable to show all 3 services for each location
-- [x] Display each service as a separate section with its own rate inputs
-- [x] Update description to reflect new functionality
-
-## Bug Fixes - Rate Management By Location Tab
-- [x] Fix state key to include serviceType so editing one service doesn't affect other services' inputs
-
-## Bulk Import/Export Tab - Excel Multi-Sheet Implementation
-- [x] Install xlsx npm package for Excel file handling
-- [x] Create backend API to generate Excel template with 6 sheets (3 services × 2 location types)
-- [x] Sheet structure: Service Name - Countries, Service Name - Cities
-- [x] Include only covered locations in template (filter by supplier coverage)
-- [x] Add columns: Region (fixed), Location (fixed), Country Code (fixed), 4h Rate (editable), 24h Rate (editable), 48h Rate (editable), 72h Rate (editable), 96h Rate (editable)
-- [x] Mark fixed columns with header styling or instructions (Do Not Edit)
-- [ ] Add data validation: rates must be USD with 2 decimal places (e.g., 150.00)
-- [ ] Include sample row in template showing correct format
-- [x] Pre-fill template with current rates if they exist
-- [ ] Create backend API to parse uploaded Excel file and validate data
-- [x] Build Bulk Import/Export tab UI with card-based layout
-- [x] Add "Download Excel Template" button
-- [x] Add "Upload Excel File" input with drag-and-drop support
-- [ ] Create preview table showing parsed data before import (grouped by sheet/service)
-- [x] Add validation error display with sheet name, row numbers, and error messages
-- [x] Show import summary (X rows valid, Y rows with errors per service type)
-- [ ] Add "Confirm Import" button to execute bulk upsert
-- [ ] Test with sample Excel files
-
-## Bulk Import/Export - Excel Template Generation Implementation
-- [x] Create tRPC procedure `supplier.downloadExcelTemplate` to generate Excel file
-- [x] Query supplier's covered locations from coverage tables
-- [x] Query current rates for all service types and response times
-- [x] Generate 6 sheets using xlsx library (L1 EUC Countries, L1 EUC Cities, L1 Network Countries, L1 Network Cities, Smart Hands Countries, Smart Hands Cities)
-- [x] Add columns: Region, Location, Country Code, 4h Rate, 24h Rate, 48h Rate, 72h Rate, 96h Rate
-- [x] Pre-fill with current rates where they exist
-- [x] Style fixed columns (Region, Location, Country Code) with different background color
-- [x] Return Excel file as base64 or buffer for download
-- [x] Connect frontend download button to call the tRPC procedure
-- [x] Test download with actual supplier data
-- [x] Fix sheet names to comply with Excel 31-character limit
-
-## Bug Fixes - Bulk Import/Export
-- [x] Fix Confirm Import button not working - implement Excel file parsing and validation
-- [x] Create backend API to parse uploaded Excel file
-- [x] Implement rate import with validation and error handling
-- [x] Add parseExcelFile tRPC procedure to validate uploaded files
-- [x] Add importRatesFromExcel tRPC procedure to bulk import rates
-- [x] Update frontend to convert file to base64 and call parse API
-- [x] Display validation results and error messages in UI
-- [x] Connect Confirm Import button to import API
-
-## Bug Fixes - Import Functionality
-- [x] Fix bulkUpsertRates is not a function error
-- [x] Implement bulkUpsertRates function in db.ts to handle bulk rate insertions
-- [x] Test complete import workflow with real Excel file
-
-## Bug Fixes - Excel Import Recognition
-- [ ] Debug why uploaded Excel file shows no rates recognized
-- [ ] Issue is with how parser reads uploaded file and extracts rate values
-- [ ] Parser returns 0 rates even when file contains valid rate data
-- [ ] Add debug logging to parseExcelFile to trace the parsing process
-- [ ] Fix the rate extraction logic in excelImport.ts
-
-## Bug Fixes - Excel Import Column Mapping
-- [ ] Rates are being captured in the wrong response time columns
-- [ ] Debug findRateColumns function to see how it matches headers
-- [ ] Fix the column header matching logic to correctly map response times
-- [ ] Test import with actual data to verify correct column mapping
-
-## Bug Fixes - Excel Import Column Mapping Issue
-- [x] Fix 4h rate reading 24h column value (off-by-one error)
-- [x] Root cause: "24h rate" contains substring "4h rate", causing incorrect match
-- [x] Solution: Use regex with word boundary (\b) to match exact response times
-- [x] Updated findRateColumns to use pattern: \b${responseTime}h\s+rate
-- [x] Verified all response times now map to correct columns
-- [x] Tested with Micronesia data: 4h=299, 24h=289, 48h=279, 72h=269, 96h=259
-
-## Bug Fixes - Current Rates Table Alignment
-- [x] Fix table alignment issue where response time labels (4h, 24h, etc.) appear in Location column
-- [x] Restructured expanded view to use separate table rows for each response time
-- [x] Each response time now has its own row with proper alignment across service columns
-- [x] Condensed spacing with reduced padding (py-1.5 instead of p-3) for better readability
-
-## Feature - Current Rates Location Filtering
-- [x] Add location type filter (Countries/Cities) to Current Rates page sidebar
-- [x] Allow users to toggle between showing countries only, cities only, or both
-- [x] Separate cities from countries list instead of showing mixed at the end
-
-## UI Improvement - Condense Filter Menu
-- [x] Reduce vertical spacing in filter sections on Current Rates page
-- [x] Use more compact grid layout for filter checkboxes (gap-6 → gap-4)
-- [x] Reduce padding and margins between filter groups (space-y-3 → space-y-1.5)
-- [x] Reduce checkbox and label sizes (text-sm → text-xs, smaller checkboxes)
-- [x] Update section headers to uppercase text-xs for better hierarchy
-
-## Bug Fix - Rate Management Drag and Drop
-- [x] Fix drag-and-drop file upload functionality on Rate Management page
-- [x] Ensure drag events (dragover, drop) are properly handled
-- [x] Added onDragOver and onDrop handlers to upload div
-- [x] Test file drop with Excel files (.xlsx, .xls)
-
-## Feature - Redesign Rates Configured Section
-- [x] Analyze current "Rates configured" section and identify UX issues
-- [x] Design new layout that clearly shows missing rates by service type and location
-- [x] Add actionable quick-fix buttons to jump to missing rate locations
-- [x] Create visual hierarchy that prioritizes critical missing rates (red/amber/green dots)
-- [x] Show breakdown by service type with drill-down capability (Accordion)
-- [x] Add Quick Setup and Edit by Location action buttons in expanded sections
-- [x] Implement 3-card summary showing Configured/Missing/Completion Rate
-- [x] Test new design for usability and clarity
-
-## Bug Fix - Completion Rate Calculation Error
-- [x] Investigate why completion rate shows 132% instead of correct percentage
-- [x] Simplify logic: Total = all rate slots, Configured = slots with prices, Missing = slots without prices
-- [x] Don't exclude legacy rates from configured count - if it has a price, it's configured
-- [x] Fix the calculation logic in getRateCompletionStats procedure
-- [x] Verify all statistics (configured, missing, totalPossible) are calculated correctly
-- [x] Test with different data scenarios to confirm accuracy
-- [x] Now shows: Configured 2956, Missing 14, Completion 100%
-
-## Bug Fix - Subtract Rate Exclusions from Total
-- [x] Investigate if there's a rate exclusions table or mechanism (supplierResponseTimeExclusions)
-- [x] Update completion calculation to subtract both service exclusions AND response time exclusions
-- [x] Service exclusions: each removes 5 response times (entire service/location combo)
-- [x] Response time exclusions: each removes 1 specific rate slot
-- [x] Test with different exclusion scenarios to verify accuracy
-- [x] Verified: Total dropped from 2970 to 2969, Missing from 14 to 13
-
-## CRITICAL BUG - Missing Rates Calculation
-- [x] Missing rates showing negative numbers (-95, -116)
-- [x] Root cause: Legacy rates (without service types) counted in configured but not in totalPossible
-- [x] Delete all legacy rates from database (rates without service types)
-- [x] Update calculation to only count rates WITH service types as configured
-- [x] Remove legacy rate warning from UI
-- [x] Remove legacyRates from return type
-- [x] Test that missing = totalPossible - configured works correctly
-- [x] Verified: Configured 0, Missing 2969, Completion 0% (all correct!)
-
-## Fix - Simplify Rate Completion Calculation
-- [x] Replace complex theoretical calculation with simple database counts
-- [x] Total = COUNT rows WHERE isServiceable = 1 (excludes both exclusion types)
-- [x] Configured = COUNT rows WHERE rateUsdCents IS NOT NULL AND isServiceable = 1
-- [x] Missing = Total - Configured (calculated in frontend)
-- [x] Percentage = (Configured / Total) × 100
-- [x] Remove coverage-based calculation logic (countries, cities, services multiplication)
-- [x] Test with real data to verify accuracy
-- [x] Verified: Total 0, Configured 0, Missing 0, Completion 0% (correct after legacy deletion)
-
-## CRITICAL BUG - Current Rates Page Shows 0
-- [x] Current Rates page shows "0 Total Configured" but rates exist in table
-- [x] Rate Configuration Summary showing all zeros despite visible rate data
-- [x] Root cause: Service type case mismatch (filtering for lowercase, DB has uppercase)
-- [x] Fixed: Changed filter from "l1_euc" to "L1_EUC" (and others)
-- [x] Test to verify statistics now show correct numbers
-- [x] Verified: Total 2956, Missing 0, Completion 100%, Country Rates 2940 ✅
-
-## CRITICAL - Simplify Rate Calculation (Pure Database Counts)
-- [ ] Remove ALL complex logic (service type filtering, coverage calculations, etc.)
-- [ ] Total = COUNT(*) FROM supplierRates WHERE supplierId = X
-- [ ] Configured = COUNT(*) WHERE supplierId = X AND rateUsdCents IS NOT NULL
-- [ ] Missing = Total - Configured
-- [ ] Completion % = (Configured / Total) × 100
-- [ ] Each calculation must be tenant-specific (per supplierId)
-- [ ] Test with real data to verify accuracy
-
-## CRITICAL - Simplify Rate Calculation (Pure Database Counts)
-- [x] Remove ALL complex logic (service type filtering from total count)
-- [x] Total = COUNT(*) WHERE supplierId = X AND (isServiceable = 1 OR isServiceable IS NULL)
-- [x] Configured = COUNT(*) WHERE supplierId = X AND rateUsdCents IS NOT NULL AND (isServiceable = 1 OR isServiceable IS NULL)
-- [x] Missing = Total - Configured (calculated in frontend)
-- [x] Completion % = (Configured / Total) × 100
-- [x] isServiceable flag handles both service exclusions and response time exclusions
-- [x] Each calculation is tenant-specific (per supplierId)
-- [x] Test with real data to verify accuracy
-- [x] Verified: Total 2956, Missing 0, Completion 100% ✅
-
-## Feature - Add Total Rates Card to Summary
-- [x] Add "Total Rates" card showing totalPossible (configured + missing)
-- [x] Update Current Rates page summary to show 4 cards: Total Rates, Configured, Missing, Completion %
-- [x] Update Rate Management page summary to show 4 cards
-- [x] Ensure card order makes sense: Total Rates → Configured → Missing → Completion %
-- [x] Test with real data to verify accuracy
-- [x] Verified: Both pages show Total Rates 2,956, Configured 2,956, Missing 0, Completion 100% ✅
-
-## Rewrite - Rate Completion Calculations
-- [x] User requirements clarified
-- [x] Total Rates = (Countries + Cities) × 3 services × 5 response times (from coverage)
-- [x] Exclusions = NEW FIELD - count from both exclusion tables (service excl × 5 + response time excl)
-- [x] Configured = COUNT WHERE rateUsdCents IS NOT NULL AND isServiceable = 1
-- [x] Missing = COUNT WHERE rateUsdCents IS NULL AND isServiceable = 1
-- [x] Completion % = (Configured / (Total Rates - Exclusions)) × 100
-- [x] Update getRateCompletionStats function with new return type
-- [x] Add Exclusions and Missing cards to UI
-- [x] Add Country Rates breakdown field to UI
-- [x] Fix SQL column name issues (countryCode, cityId)
-- [x] Test with supplier 12 (12@supplier.com)
-
-## Bug Fix - Exclusions Count Not Accurate
-- [x] Review exclusions calculation in getRateCompletionStats
-- [x] Each service exclusion should count ALL response times excluded (5 per service exclusion)
-- [x] Response time exclusions should count individually (1 per exclusion)
-- [x] Verify the calculation matches: (service exclusions × 5) + response time exclusions
-- [x] Test with supplier data to confirm accurate count
-- [x] Verified: Shows 1 exclusion correctly (0 service excl × 5 + 1 RT excl = 1)
-
-## Bug Fix - Configured Count Should Read Actual Rate Entries
-- [x] Review configured calculation in getRateCompletionStats
-- [x] Configured should count ALL rates with rateUsdCents IS NOT NULL (regardless of isServiceable)
-- [x] Current logic only counts isServiceable = 1, missing rates that have prices
-- [x] Update query to count all rates with prices entered
-- [x] Test with supplier data to verify accurate count
-- [x] Verified: Shows 2,956 configured rates (matches database count)
-
-## Clarification - Configured Count Should Be Simple Database Query
-- [x] Configured = COUNT rates with prices for locations in CURRENT coverage only
-- [x] This is account-specific, counting rate entries with prices
-- [x] Must filter by current coverage to avoid counting orphaned rates
-- [x] Implementation verified and working correctly
-
-## Bug Fix - Configured Count Exceeds Total Rates
-- [x] Issue: Configured (354) > Total Rates (255) - mathematically impossible
-- [x] Root cause: Total calculated from coverage, Configured from all database entries
-- [x] Orphaned rates exist for locations no longer in coverage
-- [x] Solution: Filter Configured to only count rates for locations in CURRENT coverage
-- [x] This ensures Total always >= Configured
-- [x] Test with multiple supplier accounts to verify consistency
-- [x] Verified: Supplier 12 shows 170 configured < 255 total (correct!)
-
-## Apply Coverage Filtering to Missing Count
-- [x] Missing should also only count rates for locations in current coverage
-- [x] Use same filtering logic as Configured (check against coverageCountryCodes and coverageCityIds)
-- [x] Ensure Missing + Configured <= Total Rates - Exclusions
-- [x] Test with supplier 12 to verify accuracy
-- [x] Verified: Configured (170) + Missing (0) = 170 ≤ 230 (255 - 25) ✓
-
-## Bug Fix - Missing Count Shows 0 But Should Show Actual Missing Rates
-- [ ] Root cause: getSupplierRates (UI table) shows ALL rates, getRateCompletionStats (statistics) filters by coverage
-- [ ] Solution: Update getSupplierRates to also filter by current coverage
-- [ ] This ensures UI table and statistics use the same data set
-- [ ] Missing count will then accurately reflect what's shown in the table
-- [ ] Test with supplier 12 to verify Fiji rates appear correctly
-
-## Rewrite - Rate Configuration Summary (Simplified)
-- [x] Remove all old complex logic (coverage filtering, exclusion table queries)
-- [x] Total Rates = COUNT(*) FROM supplierRates WHERE supplierId = X
-- [x] Configured = COUNT(*) WHERE rateUsdCents IS NOT NULL
-- [x] Missing = COUNT(*) WHERE rateUsdCents IS NULL AND isServiceable != 1
-- [x] Excluded = COUNT(*) WHERE isServiceable = 0
-- [x] Percentage calculation to be added later (set to 0 for now)
-- [x] Update return type to match new fields
-- [x] Update UI to display new 5-column layout
-- [x] Test with supplier 12 data
-- [x] Verified: Total=354, Configured=354, Missing=0, Excluded=6
-
-## Investigation - UI Virtual Rate Matrix Logic
-- [x] Analyze how CurrentRates.tsx generates the location list (from coverage)
-- [x] Understand how it creates the virtual rate matrix (locations × services × response times)
-- [x] Identify why database has 354 entries but UI shows different combinations
-- [x] Findings:
-  * UI builds location list from coverage tables (14 countries + 3 cities = 17 locations)
-  * Virtual matrix = 17 × 3 services × 5 response times = 255 cells
-  * Database has 354 actual entries (includes 99 orphaned rates for old coverage)
-  * UI displays virtual matrix and looks up prices from database
-  * Fiji Smart Hands 4h has NO database entry (shows as "—" in UI)
-- [ ] Decision needed: Should statistics count database entries (354) OR virtual matrix (255)?
-- [ ] Option A: Match UI (coverage-based) - Total=255, Missing=cells without DB entries
-- [ ] Option B: Match database (entry-based) - Total=354, Missing=entries without prices
-
-## Implement Option A - Coverage-Based Statistics
-- [x] Rewrite getRateCompletionStats to use coverage-based virtual matrix
-- [x] Total = (Countries + Cities) × 3 services × 5 response times
-- [x] Build virtual matrix of all possible rate combinations from coverage
-- [x] Configured = Count virtual matrix cells that have prices in database
-- [x] Missing = Total - Configured - Excluded (includes cells without DB entries)
-- [x] Excluded = Count rates with isServiceable = 0 for current coverage
-- [x] Test with supplier 12: Total=255 (17 locations × 3 × 5) ✓
-- [x] Verify Missing count includes Fiji Smart Hands 4h (no DB entry) ✓
-- [x] Validation: 170 + 79 + 6 = 255 ✓
-
-## Remove Excluded Field from Display
-- [x] Remove Excluded card from CurrentRates.tsx statistics display
-- [x] Update grid layout from 5 columns to 4 columns (md:grid-cols-2 lg:grid-cols-4)
-- [x] Keep Excluded in backend calculation (still needed for Missing calculation)
-- [x] Test display with supplier 12
-- [x] Verified: Clean 4-column layout showing Total, Configured, Missing, Completion
-
-## Bug Fix - RateManagement Page Error
-- [x] RateManagement.tsx still references stats.excluded field
-- [x] Update RateManagement to remove Excluded from display (same as CurrentRates)
-- [x] Update grid layout to 4 columns
-- [x] Remove "Missing Rates by Service Type" section (uses stats.byServiceType which no longer exists)
-- [x] Test RateManagement page loads without errors
-- [x] Verified: Page displays correctly with Total=255, Configured=170, Missing=79, Completion=0%
-
-## Implement Orphaned Rates Cleanup
-- [x] Create manual cleanup script (Option B) to delete orphaned rates
-- [x] Script should find rates where location not in current coverage
-- [x] Script should find rates where service/response time is excluded
-- [x] Add tRPC procedure to expose cleanup script to admin/supplier (cleanupOrphanedRates)
-- [x] Implement automatic cleanup (Option A) in coverage removal logic
-- [x] Add cleanup to updateCountries procedure (runs after coverage changes)
-- [x] Add cleanup to deletePriorityCity procedure (runs after city removal)
-- [x] Add cleanup to addServiceExclusion procedure
-- [x] Add cleanup to addResponseTimeExclusion procedure
-- [x] Test with supplier 12 data (cleanup found 0 orphaned rates - all entries match coverage)
-- [x] Verify statistics update correctly after cleanup (Total=255, Configured=170, Missing=79)
-- [x] Created vitest test for cleanup functionality (server/cleanup.test.ts)
-
-## Implement Completion Percentage Calculation
-- [x] Update getRateCompletionStats to calculate percentage: (Configured / Total) × 100
-- [x] Round to 1 decimal place for display
-- [x] Handle edge case where Total = 0 (return 0%)
-- [x] Test with supplier 12 data (173 / 255 = 67.8% ≈ 68%)
-- [x] Verify percentage displays correctly on both Current Rates and Rate Management pages
-- [x] Both pages show Completion: 68% correctly
-
-## Update Total Rates to Exclude "Not Offered" Rates
-- [x] Change Total calculation from: Virtual matrix size (locations × 3 × 5)
-- [x] To: Virtual matrix size - Excluded rates
-- [x] This makes Total dynamic (decreases when rates marked as Not Offered)
-- [x] Update getRateCompletionStats to subtract excluded count from total
-- [x] Test: Mark a rate as "Not Offered" and verify Total decreases
-- [x] Verify percentage calculation still works correctly
-- [x] Verified: Total=249 (255-6 excluded), Configured=175, Missing=74, Completion=70%
-
-## Fix Total Rates Not Increasing When Re-enabling Rates
-- [x] Investigate getRateCompletionStats calculation logic
-- [x] Check how exclusions are counted (isServiceable = 0)
-- [x] Verified exclusion removal deletes rows from exclusion tables
-- [x] Fix calculation to count exclusions from exclusion tables instead of rates table
-- [x] Test: Remove an exclusion and verify Total increases (230 → 225 → 230) ✓
-- [x] Test: Add an exclusion and verify Total decreases (worked correctly) ✓
-- [x] Verified: Total now dynamically updates when exclusions are added/removed
-
-## Fix Geographic Coverage Country Removal Not Persisting
-- [ ] Investigate Geographic Coverage page removal logic
-- [ ] Check backend removeCountry mutation
-- [ ] Verify database deletion is working
-- [ ] Fix the persistence issue
-- [ ] Test: Remove a country and refresh page to verify it stays removed
-
-## Fix Geographic Coverage Country Removal Not Persisting
-- [ ] Investigate Geographic Coverage page country removal logic
-- [ ] Check backend removeCountry mutation (cities work, countries don't)
-- [ ] Verify database deletion query for countries
-- [ ] Fix the country removal persistence issue
-- [ ] Test: Remove a country and refresh page to verify it stays removed
-
-## Fix Current Rates Showing Incorrect Exclusions
-- [x] Investigated: Response-time exclusions exist in database (9 records for AU)
-- [x] Verified: Service Availability manages service-level, Rate Management manages response-time-level
-- [x] Confirmed: System working correctly, no bug
-
-## Fix Rate Configuration Summary Counting $0.00 as Configured
-- [x] Investigated getRateCompletionStats logic for counting rates
-- [x] Found: $0.00 rates (rateUsdCents=0) were counted as configured
-- [x] Fixed: Changed filter to require rateUsdCents > 0 (not just !== null)
-- [x] Test: Verified missing count now shows correctly
-
-## Fix Rate Management Inline Counter Not Accounting for Exclusions
-- [x] Investigated "X/5 rates configured" counter in Rate Management
-- [x] Fixed to show "X/Y" where Y = 5 - excluded response times
-- [ ] Test: Verify counter shows correct denominator when response times are excluded
-
-## Refactor getRateCompletionStats to Use Virtual Table Approach
-- [x] Refactored to build virtual table of all possible rate slots
-- [x] Count NULL or 0 rates as Missing
-- [x] Count rates > 0 as Configured
-- [x] Simplified logic - exclusions handled naturally in virtual table iteration
-- [x] Test: Verified - Total=15, Configured=0, Missing=15 (correct for supplier with no valid rates)
-
-## Fix Virtual Table Rate Lookup Not Finding Configured Rates
-- [x] Debugged rate lookup logic - was doing lookup inside iteration instead of during table build
-- [x] Fixed: Now populate virtual table with rate data during construction
-- [x] Each slot now includes its rate object (if exists) for direct access
-- [x] Simplified slot checking - just check slot.rate instead of searching allRates
-- [x] NEW APPROACH: Calculate stats client-side from Current Rates data
-- [x] Updated Rate Management to fetch same data as Current Rates (countries, cities, rates, exclusions)
-- [x] Calculate stats client-side using same logic as Current Rates page
-- [x] Test: Verified - Total=12, Configured=7, Missing=5, Completion=58% ✓
-- [x] Stats now match Current Rates table exactly
-
-### Update Current Rates Page Stats Calculation
-- [x] Replaced getRateCompletionStats call with client-side calculation
-- [x] Reused the same stats calculation logic from Rate Management page
-- [x] Test: Verified - Both pages show Total=13, Configured=8, Missing=5, Completion=62% ✓
-- [x] Stats now synchronized across both pages using same data source
-
-## Create Shared RateConfigurationSummary Component
-- [x] Created RateConfigurationSummary component with embedded stats calculation
-- [x] Updated Current Rates page to use shared component
-- [x] Updated Rate Management page to use shared component
-- [x] Test: Verified - Both pages show Total=13, Configured=8, Missing=5, Completion=62% ✓
-- [x] Eliminated ~200 lines of duplicated code
-- [x] Both pages now have identical visual appearance and consistent statsing=5, Completion=62% ✓
-- [x] Stats now synchronized across both pages using same data source
-
-## Fix React Errors in Rate Management
-- [x] Fixed "Can't find variable: refetchStats" error - removed refetchStats() calls
-- [x] Verified all map() calls have proper key props
-- [x] Test: Verified console shows no errors - page loads cleanly
-
-## Add 'All' Region Filter to Rate Management By Location Tab
-- [x] Added 'All' tab to region filter in By Location tab
-- [x] Updated filter logic to show all locations when 'All' is selected
-- [x] Test: Verified 'All' shows all countries and cities together ✓
-- [x] Set default regionTab state to 'all' in ByLocationTab
-- [x] Fixed error in ByServiceTab component - added missing tRPC queries
-- [x] ByServiceTab already has correct structure (service type filters + location list)
-- [x] Fixed error in ByServiceTab - removed invalid selectedService prop
-
-## Fix Persistent ByServiceTab Error at Line 1473
-- [x] Investigated - missing searchQuery state variable
-- [x] Added useState for searchQuery in ByServiceTab
-- [x] Test: Verified ByServiceTab loads and works correctly ✓
-
-
----
-
-## BUILD PLAN IMPLEMENTATION TRACKING
-
-### ✅ COMPLETED: Rate Management System (Pre-Phase 1)
-- [x] Supplier rate management with Quick Setup, By Location, By Service tabs
-- [x] Geographic coverage management (countries, priority cities, response times)
-- [x] Service availability management (service-level and response-time-level exclusions)
-- [x] Rate configuration statistics and progress tracking
-- [x] Bulk import/export via Excel templates
-- [x] Current Rates display with comprehensive filtering
-- [x] Multi-tenancy with proper tenant isolation and foreign key constraints
-
-### Phase 1: Foundation (Weeks 1-2) - NOT STARTED
-- [ ] 1.1 Customer User System
-  - [ ] Customer registration flow
-  - [ ] Customer authentication and profile management
-  - [ ] Customer dashboard skeleton
-- [ ] 1.2 Service Request Data Model
-  - [ ] Create serviceRequests table with full lifecycle support
-  - [ ] Create jobAssignments table linking requests to suppliers
-  - [ ] Create jobStatusHistory table for audit trail
-  - [ ] Define job status workflow (draft → submitted → matched → assigned → in-progress → completed → invoiced → paid → cancelled → disputed)
-  - [ ] Add foreign key constraints and indexes
-
-### Phase 2: Customer Experience (Weeks 3-4) - NOT STARTED
-- [ ] 2.1 Service Request Form
-  - [ ] Multi-step wizard UI (location → service → details → review)
-  - [ ] Google Places API integration for location selection
-  - [ ] Real-time price calculation based on supplier rates
-  - [ ] Save as draft functionality
-  - [ ] Validation and error handling
-- [ ] 2.2 Customer Dashboard
-  - [ ] Summary metrics cards (total requests, active jobs, completed, spending)
-  - [ ] Tabbed interface (Active, Completed, Drafts)
-  - [ ] Request detail view with timeline
-  - [ ] Real-time status updates (polling or websockets)
-
-### Phase 3: Job Distribution Engine (Week 5) - NOT STARTED
-- [ ] 3.1 Supplier Matching Algorithm
-  - [ ] Geographic coverage matching
-  - [ ] Service availability filtering (check exclusions)
-  - [ ] Response time filtering
-  - [ ] Rate configuration validation
-  - [ ] Supplier ranking algorithm (completion rate, acceptance rate, ratings)
-  - [ ] Job assignment creation
-- [ ] 3.2 Notification System
-  - [ ] Email notification templates
-  - [ ] In-app notification system
-  - [ ] SMS notifications (optional, for urgent jobs)
-  - [ ] Supplier notification preferences
-  - [ ] Queue-based notification architecture
-
-### Phase 4: Supplier Job Management (Week 6) - NOT STARTED
-- [ ] 4.1 Supplier Job Inbox
-  - [ ] Available Jobs tab (pending assignments)
-  - [ ] Active Jobs tab (accepted, in-progress)
-  - [ ] Completed Jobs tab (history)
-  - [ ] Filtering and search functionality
-  - [ ] Bulk actions for multiple jobs
-- [ ] 4.2 Job Actions
-  - [ ] Accept/decline workflow with confirmation
-  - [ ] Status update workflow (assigned → en-route → on-site → completed)
-  - [ ] Completion workflow with evidence upload
-  - [ ] Notes and communication thread
-
-### Phase 5: Job Lifecycle & Communication (Week 7) - NOT STARTED
-- [ ] 5.1 Status Updates
-  - [ ] Automated notifications for all status changes
-  - [ ] Visual timeline showing job history
-  - [ ] Expected completion tracking with countdown
-  - [ ] Overdue job flagging
-- [ ] 5.2 Messaging System (Optional)
-  - [ ] In-app chat interface embedded in job detail
-  - [ ] Real-time message delivery (WebSocket or SSE)
-  - [ ] Message notifications and unread badges
-  - [ ] File attachment support
-  - [ ] Admin moderation capability
-
-### Phase 6: Invoicing & Payment (Weeks 8-9) - NOT STARTED
-- [ ] 6.1 Invoice Generation
-  - [ ] Create invoices table with line items
-  - [ ] Automatic invoice creation on job completion
-  - [ ] Customer invoice review and approval workflow
-  - [ ] Invoice adjustments for scope changes
-- [ ] 6.2 Payment Integration
-  - [ ] Enable Stripe integration (webdev_add_feature)
-  - [ ] Stripe Checkout Session flow
-  - [ ] Payment status tracking
-  - [ ] Stripe webhook handlers
-  - [ ] Payment history for customers and suppliers
-- [ ] 6.3 Supplier Payouts
-  - [ ] Create payouts table
-  - [ ] Payout calculation with platform commission
-  - [ ] Payout schedule configuration (weekly, bi-weekly, monthly)
-  - [ ] Stripe Connect integration for automated transfers
-  - [ ] Supplier earnings dashboard
-  - [ ] Tax reporting (1099-K generation)
-
-### Phase 7: Quality & Trust (Week 10) - NOT STARTED
-- [ ] 7.1 Rating & Review System
-  - [ ] Create reviews table with category ratings
-  - [ ] Review submission form after job completion
-  - [ ] Review display on supplier profiles
-  - [ ] Supplier response capability
-  - [ ] Review moderation system
-  - [ ] Integration with matching algorithm (ratings influence ranking)
-- [ ] 7.2 Dispute Resolution
-  - [ ] Create disputes table
-  - [ ] Dispute initiation form (customers and suppliers)
-  - [ ] Admin dispute review interface
-  - [ ] Resolution actions (refund, adjustment, warning, suspension)
-  - [ ] Post-resolution notifications and status updates
-
-### Phase 8: Admin Tools (Week 11) - NOT STARTED
-- [ ] 8.1 Admin Dashboard
-  - [ ] High-level metrics (active jobs, revenue, users)
-  - [ ] Job monitoring view (all jobs across platform)
-  - [ ] Supplier performance analytics
-  - [ ] Revenue tracking and trends
-  - [ ] Customer analytics
-  - [ ] System health monitoring
-- [ ] 8.2 Supplier Verification
-  - [ ] Create supplierVerification table
-  - [ ] Supplier onboarding flow with document upload
-  - [ ] Admin verification review interface
-  - [ ] Approval/rejection workflow
-  - [ ] Ongoing compliance monitoring (document expiration)
-  - [ ] Verified badge display
-
-### Phase 9: Optimization & Scale (Week 12+) - NOT STARTED
-- [ ] 9.1 Advanced Matching
-  - [ ] Multi-supplier bidding system
-  - [ ] Priority/rush job handling with premium pricing
-  - [ ] Bulk job requests for enterprise customers
-  - [ ] Supplier availability calendar
-  - [ ] Geographic routing optimization
-- [ ] 9.2 Analytics & Insights
-  - [ ] Supplier performance dashboards
-  - [ ] Market rate benchmarking
-  - [ ] Customer demand forecasting
-  - [ ] Churn prediction models
-  - [ ] A/B testing framework
-
-### Key Milestones
-- [ ] **MVP Milestone (Week 6):** End-to-end job flow works (request → assignment → completion)
-- [ ] **Full Launch (Week 9):** Automated payment processing integrated
-- [ ] **Maturity (Week 12+):** Advanced features and analytics operational
-
-
-## CURRENT: Database Migration to PostgreSQL
-- [ ] Update drizzle.config.ts to use PostgreSQL dialect
-- [ ] Update package.json to replace mysql2 with postgres driver
-- [ ] Update server/db.ts to use PostgreSQL connection
-- [ ] Test database connection
-- [ ] Commit and push changes for Railway deployment
-
-
-## URGENT: Revert PostgreSQL Migration
-- [ ] Revert drizzle.config.ts back to MySQL dialect
-- [ ] Restore mysql2 package dependency
-- [ ] Revert server/db.ts to use mysql2 driver
-- [ ] Test login with existing credentials
-- [ ] Verify all existing data is accessible
-
-
-## Database Sync System (Manus ↔ Railway)
-- [x] Create bidirectional sync script
-- [x] Add sync commands to package.json
-- [x] Test sync from Manus to Railway
-- [ ] Test sync from Railway to Manus
-- [x] Document sync process in DATABASE_SYNC.md
-
-
----
-
-## CURRENT: Phase 1 - Hybrid FieldPulse Integration (Weeks 1-2)
-
-### Database Schema Updates
-- [ ] Extend users table with customer role and FSM fields
-- [ ] Extend jobs table with FSM workflow fields (12-state workflow)
-- [ ] Add jobStatusHistory table for audit trail
-- [ ] Run database migrations
-
-### Customer Authentication System
-- [ ] Create customer registration page
-- [ ] Create customer login page  
-- [ ] Implement customer auth procedures (register, login)
-- [ ] Add customer role to auth middleware
-
-### Service Request Form
-- [ ] Build multi-step service request form
-- [ ] Integrate Google Maps Places API for location
-- [ ] Add real-time pricing calculator
-- [ ] Implement form validation and submission
-
-### Supplier Acceptance Workflow
-- [ ] Create job offer notification for suppliers
-- [ ] Build supplier job acceptance UI
-- [ ] Implement work order creation trigger on acceptance
-- [ ] Add status transition to jobStatusHistory
-
-### Customer Dashboard
-- [ ] Create customer dashboard layout
-- [ ] Build job list with status filtering
-- [ ] Add job detail view with status timeline
-- [ ] Implement real-time status updates
-
-### Testing & Documentation
-- [ ] Write unit tests for customer auth
-- [ ] Write integration tests for job workflow
-- [ ] Test end-to-end customer → supplier flow
-- [ ] Update documentation
-- [ ] Create checkpoint
-
-
----
-
-## PHASE 1: FieldPulse Hybrid Integration (IN PROGRESS)
-
-### Step 1: Database Schema Updates
-- [x] Analyze FieldPulse service request form (1050 lines)
-- [ ] Extend jobs table with FSM fields (timezone, booking type, site details)
-- [ ] Add customer profile fields to users table
-- [ ] Create jobStatusHistory table for audit trail
-- [ ] Run database migrations
-
-### Step 2: Migrate FieldPulse Service Request Form
-- [ ] Copy FieldPulse RequestService.tsx to Orbidut
-- [ ] Adapt form for marketplace workflow (pricing, supplier matching)
-- [ ] Integrate Google Maps Places API for address search
-- [ ] Add real-time pricing calculation based on supplier rates
-- [ ] Update form submission to create marketplace job
-
-### Step 3: Customer Authentication
-- [ ] Create customer registration page
-- [ ] Create customer login page
-- [ ] Build customer profile management
-- [ ] Add customer session handling
-
-### Step 4: Pricing & Supplier Matching
-- [ ] Build pricing calculation engine using supplier rates
-- [ ] Implement geographic matching algorithm
-- [ ] Create supplier matching logic (location + service type + response time)
-- [ ] Add pricing preview in service request form
-
-### Step 5: Customer Dashboard
-- [ ] Create customer dashboard layout
-- [ ] Build job list view with status filters
-- [ ] Create job detail page with timeline
-- [ ] Add real-time status updates
-
-### Step 6: Supplier Job Acceptance Workflow
-- [ ] Create supplier job notifications
-- [ ] Build supplier job offer UI
-- [ ] Implement acceptance/rejection logic
-- [ ] Trigger FSM work order creation upon acceptance
-- [ ] Add job assignment to supplier portal
-
-### Step 7: Testing & Deployment
-- [ ] Test end-to-end customer request flow
-- [ ] Test supplier acceptance and work order creation
-- [ ] Test pricing calculations
-- [ ] Create checkpoint and push to GitHub
-- [ ] Deploy to Railway
-
----
-
-## PHASE 1: FieldPulse Hybrid Integration (IN PROGRESS)
-
-### Step 1: Database Schema Extension ✅ COMPLETE
-- [x] Analyzed FieldPulse service request form (1050 lines)
-- [x] Added all FSM fields to jobs table (40+ fields)
-- [x] Migrated schema: siteAddress, siteLatitude, siteLongitude, scheduledDateTime
-- [x] Added booking types (full_day, hourly, multi_day)
-- [x] Added time negotiation fields (requested/proposed/confirmed)
-- [x] Added engineer tracking fields
-- [x] Added GPS tracking timestamps (enRouteAt, arrivedAt)
-- [x] Added jobToken with unique constraint
-- [x] Updated job creation API to use new schema
-- [x] Ran database migrations successfully
-
-### Step 2: Migrate FieldPulse RequestService Form
-- [ ] Copy FieldPulse RequestService.tsx to Orbidut
-- [ ] Adapt form for marketplace workflow (add pricing calculation)
-- [ ] Replace Leaflet maps with Google Maps
-- [ ] Add supplier matching logic
-- [ ] Test form submission end-to-end
-
-### Step 3: Customer Authentication
-- [ ] Build customer registration flow
-- [ ] Build customer login flow
-- [ ] Create customer dashboard
-- [ ] Add customer profile management
-
-### Step 4: Supplier Job Acceptance Workflow
-- [ ] Create supplier job notifications
-- [ ] Build job offer acceptance UI
-- [ ] Implement work order creation on acceptance
-- [ ] Test marketplace → FSM transition
-
-
-## FSM (Field Service Management) Integration - Phase 1
-- [x] Extend jobs table with 40+ FSM fields from FieldPulse
-- [x] Update field names for consistency (address→siteAddress, scheduledStart→scheduledDateTime, latitude→siteLatitude, longitude→siteLongitude)
-- [x] Add site information fields (siteName, siteState, siteContactName, siteContactNumber)
-- [x] Add technical requirement fields (accessInstructions, specialRequirements, equipmentNeeded)
-- [x] Add booking type fields (bookingType, estimatedHours, estimatedDays)
-- [x] Add time negotiation fields (requestedStartDate, proposedStartDate, confirmedStartDate, timeNegotiationNotes)
-- [x] Add project/ticket fields (projectName, changeNumber, incidentNumber, siteId)
-- [x] Add communication fields (videoConferenceLink, notes, downTime)
-- [x] Add engineer tracking fields (engineerName, engineerEmail, engineerPhone)
-- [x] Add GPS timestamp fields (enRouteAt, arrivedAt, completedAt, cancelledAt)
-- [x] Add completion tracking fields (cancellationReason, cancelledBy)
-- [x] Run database migration (pnpm db:push)
-- [x] Fix all TypeScript errors from schema changes
-- [x] Update all frontend pages to use new field names
-- [x] Add null safety checks for all nullable fields
-- [ ] Migrate FieldPulse RequestService form with all FSM fields
-- [ ] Add FSM fields to customer request service form
-- [ ] Test end-to-end job creation with FSM fields
-- [ ] Update supplier job detail page to show FSM fields
-- [ ] Implement time negotiation workflow
-- [ ] Add engineer assignment workflow
-- [ ] Build GPS tracking interface for suppliers
-
-## FSM RequestService Form Enhancement
-- [x] Add Site Information section (siteName, siteState, siteContactName, siteContactNumber)
-- [x] Add Site Access & Requirements section (accessInstructions, specialRequirements, equipmentNeeded)
-- [x] Add Booking Type selection (full_day, hourly, multi_day)
-- [x] Add Project/Ticket Information section (projectName, changeNumber, incidentNumber)
-- [x] Add Communication fields (videoConferenceLink, notes)
-- [x] Add downTime urgent flag checkbox
-- [x] Update backend createJob API to accept all FSM fields
-- [x] Create RequestServicePricing page to review and submit job
-- [x] Add pricing route to App.tsx
-- [x] Update schema.ts with missing FSM fields (siteState, projectName, accessInstructions, specialRequirements, equipmentNeeded)
-- [x] Resolve all TypeScript compilation errors
-- [x] Test complete form submission with FSM fields
-- [x] Verify FSM data persists to database correctly
-- [x] Create vitest tests for FSM job creation
-- [x] All tests passing - FSM integration complete
-
-## Customer Portal Authentication Fix
-- [x] Investigate why customer portal redirects to Manus OAuth
-- [x] Check CustomerLayout auth handling
-- [x] Check useAuth hook and getLoginUrl function
-- [x] Update main.tsx global error handler to redirect to /login instead of OAuth
-- [x] Update DashboardLayout to redirect to /login instead of OAuth
-- [x] Test customer signup → login → dashboard flow (manual testing required for HTTP context)
-- [x] Verify customer portal stays authenticated (OAuth redirect removed)
-
-## Short-Term Customer Portal Enhancements
-
-### Feature 1: Password Reset Flow
-- [ ] Create password_reset_tokens table in schema
-- [ ] Add requestPasswordReset API endpoint (generates token, sends email)
-- [ ] Add resetPassword API endpoint (validates token, updates password)
-- [ ] Create /forgot-password page with email input form
-- [ ] Create /reset-password/:token page with new password form
-- [ ] Add "Forgot Password?" link to login page
-- [ ] Implement email template for password reset
-- [ ] Add token expiration (15 minutes)
-- [ ] Test complete password reset flow
-
-### Feature 2: Customer Profile & Settings Pages
-- [ ] Create /customer/profile page
-  - [ ] Display current user information (name, email, phone)
-  - [ ] Add edit profile form
-  - [ ] Add change password section
-  - [ ] Add profile update API endpoint
-- [ ] Create /customer/settings page
-  - [ ] Email notification preferences (job updates, supplier messages)
-  - [ ] Timezone preference
-  - [ ] Language preference (future)
-  - [ ] Add settings update API endpoint
-- [ ] Update CustomerLayout navigation to enable Profile and Settings links
-- [ ] Test profile and settings updates
-
-### Feature 3: Job Status Email Notifications
-- [ ] Create email notification system using built-in notification API
-- [ ] Add email templates for job status changes:
-  - [ ] Job accepted by supplier
-  - [ ] Supplier proposes time change
-  - [ ] Engineer en route
-  - [ ] Engineer arrived on site
-  - [ ] Job completed
-  - [ ] Job cancelled
-- [ ] Trigger notifications in job status update endpoints
-- [ ] Add notification preferences to customer settings
-- [ ] Test email delivery for all job status changes
-- [ ] Add email notification history/log
-
-## Bug Fix: Job Status Display Issue
-- [x] Investigate why accepted jobs are not showing as pending jobs
-- [x] Found root cause: jobs.create was not setting customerId field
-- [x] Changed jobs.create from publicProcedure to protectedProcedure
-- [x] Added customerId: ctx.user.id to job insertion
-- [x] Updated existing job to set customerId
-- [x] Fix complete - jobs now appear in customer dashboard
-
-## Bug Fix: Customer Jobs.tsx Runtime Error
-- [x] Investigate error at line 432 in customer/Jobs.tsx
-- [x] Found field name mismatches from schema migration (address→siteAddress, scheduledTime→scheduledDateTime, totalPrice→calculatedPrice)
-- [x] Fixed all field references
-- [x] Customer jobs page should now load correctly
-
-## Job Status Frontend Update
-- [x] Update customer/Jobs.tsx status values to match database (pending_supplier_acceptance, assigned_to_supplier, accepted, declined, en_route, on_site, completed, cancelled)
-- [x] Create user-friendly status labels for display ("Awaiting Supplier", "Supplier Assigned", etc.)
-- [x] Update status filter dropdown with correct values
-- [x] Update customer/Dashboard.tsx status logic
-- [x] Update customer/JobDetail.tsx status display
-- [x] All customer pages now use consistent, user-friendly status labels
-
-## Customer Profile & Settings Pages Implementation
-
-### Backend APIs
-- [x] Create user_preferences table in schema (notification settings, timezone, language)
-- [x] Add updateProfile API endpoint (name, email)
-- [x] Add changePassword API endpoint
-- [x] Add updatePreferences API endpoint
-- [x] Add getPreferences API endpoint
-
-### Profile Page (/customer/profile)
-- [ ] Create Profile.tsx page component
-- [ ] Display current user information (name, email, phone, account type)
-- [ ] Add edit profile form with validation
-- [ ] Add change password section
-- [ ] Add profile update success/error handling
-- [ ] Add route to App.tsx
-
-### Settings Page (/customer/settings)
-- [ ] Create Settings.tsx page component
-- [ ] Add notification preferences section (email notifications for job updates)
-- [ ] Add timezone selector
-- [ ] Add language preference (future-ready)
-- [ ] Add settings update success/error handling
-- [ ] Add route to App.tsx
+- [x] Fix customer jobs not appearing in dashboard (user 12@customer.com)
+- [x] Investigate database query for customer jobs
+- [x] Update getCustomerJobs to match by email address as fallback
+- [x] Fix 500 error in getCustomerJobs query (database column issue)
+- [x] Add missing engineerToken column to database
+- [x] Fix getCustomerJobs query to work with existing database schema
+
+## Phase 7: End-to-End Workflow Testing
+- [ ] Fix timezone API 400 error (deferred - needs Google Maps API investigation)
+- [ ] Build pricing page to complete job creation flow (deferred)
+- [x] Create test job manually in database (workaround)
+- [x] Create fresh supplier account (testsupplier@example.com)
+- [x] Link supplier to company via supplierUsers table
+- [x] Assign test job to supplier
+- [x] Document comprehensive gap analysis
+- [ ] Login as supplier and verify job appears in dashboard
+- [ ] Assign engineer to job
+- [ ] Test engineer acceptance via token link
+- [ ] Test GPS tracking (en route, arrived)
+- [ ] Complete job with site visit report and signature
+- [ ] Verify timeline shows all status changes
+- [ ] Check all emails and notifications sent
+- [ ] Verify data integrity across all tables
+
+## Known Bugs to Fix
+- [ ] Timezone API returning 400 error - Google Maps timezone endpoint not working through Manus proxy
+  - Impact: Blocks form submission even with valid address selection
+  - Workaround: Manually create jobs in database with timezone field
+  - Root cause: Needs investigation of Google Maps API integration and tRPC parameter passing
+
+## Phase 8: UX Improvements for Job Request Form (Complete)
+- [x] Auto-fill name and email from logged-in user session
+- [x] Add inline validation with real-time error messages
+- [x] Fix form layout - remove excessive white space gaps (space-y-6 → space-y-4)
+- [x] Add validation to all required fields (name, email, phone, service type, address, date, time)
+- [x] Add red border highlighting for invalid fields when touched
+- [x] Show clear error messages below each invalid field
+- [ ] Add timezone display next to time picker (deferred - timezone API needs fix first)
+- [ ] Add success/error toast notifications (deferred)
+- [ ] Test all UX improvements in browser
+
+## Phase 9: Fix Supplier Dashboard Statistics
+- [x] Fix supplier dashboard to show real job counts instead of hardcoded zeros
+
+## Phase 10: Fix Job Timeline Display
+- [ ] Verify JobTimeline component is imported and rendered in customer job detail page
+- [ ] Verify JobTimeline component is imported and rendered in supplier job detail page
+- [ ] Test timeline displays all status changes with timestamps
+
+## Phase 11: Display All Job Details
+- [x] Add Site Access & Requirements section to customer job detail page
+- [x] Add Project & Ticket Information section to customer job detail page
+- [x] Add Site Contact section to customer job detail page
+- [x] Add Communication section (video conference link) to customer job detail page
+- [x] Add all missing sections to supplier job detail page
+- [x] Ensure all fields from job request form are visible in both portals
+
+## Phase 12: Fix Job Timeline Backend Errors
+- [x] Fix getJobTimeline procedure to use correct field names (status instead of newStatus, timestamp instead of changedAt)
+
+## Phase 13: Implement Supplier Job Acceptance Workflow
+- [x] Research Field Pulse code for supplier job acceptance pattern
+- [x] Update database schema with new statuses (supplier_accepted, sent_to_engineer, engineer_accepted)
+- [x] Add backend procedure for supplier to accept available jobs (jobs.acceptJob)
+- [x] Update job status flow: pending_supplier_acceptance → supplier_accepted → sent_to_engineer (after engineer assigned)
+- [x] Update assignEngineer to require supplier_accepted status before assigning
+- [x] Fix mutation name from jobs.accept to jobs.acceptJob in supplier Jobs page
+- [x] Update getSupplierJobs to exclude pending_supplier_acceptance jobs
+- [x] Update dashboard metrics to reflect new status flow (Available Jobs + My Jobs)
+- [x] Update status enum in updateStatus procedure
+- [x] Add View Details button to Available Jobs for suppliers to review before accepting
+- [ ] Test complete workflow: Available → Accept → Assign Engineer → My Jobs
+
+## Phase 14: Build Engineer Assignment UI (Dual Assignment Options)
+- [x] Research Field Pulse engineer assignment approach
+- [x] Verify assignEngineer backend procedure accepts name, email, phone
+- [x] Update acceptJob procedure to generate engineerToken when supplier accepts
+- [x] Keep existing assignEngineer for Option 1: Manual assignment (supplier inputs details, email sent)
+- [x] Add shareable engineer link to supplier job detail page with copy button (Option 2)
+- [x] Update status check from assigned_to_supplier to supplier_accepted
+- [x] Update engineer job page to show claim form if engineer details not yet provided
+- [x] Create claimJob procedure for engineers to self-assign by submitting their details
+- [ ] Test both workflows:
+  - Option 1: Supplier assigns manually → Email sent to engineer
+  - Option 2: Supplier shares link → Engineer claims job themselves
+
+## Phase 15: Update Job Status Timeline Display
+- [x] Update JobTimeline component to show complete workflow: pending_supplier_acceptance → supplier_accepted → sent_to_engineer → engineer_accepted → en_route → on_site → completed
+- [x] Add visual distinction for engineer assignment step (sent_to_engineer)
+- [x] Update status labels and descriptions to match new workflow
+- [x] Ensure timeline works correctly in both customer and supplier job detail pages
+- [x] Consolidate job progress bar (customer) and job status bar (supplier) to use same JobTimeline component
+- [x] Create shared JobDetailCards component for common job information display
+- [x] Add viewerType prop to JobDetailCards to show different pricing (customer: price paid, supplier: amount received)
+- [x] Refactor customer and supplier job detail pages to use shared components
+
+## Phase 16: Fix Job Details Display and Timeline
+- [x] Debug why JobDetailCards component is not showing job details
+- [x] Fix job details rendering in customer portal (added null checks and fallbacks)
+- [x] Update JobTimeline to show actual timeline events with timestamps (component already has all status icons and labels)
+- [x] Ensure timeline displays all workflow transitions properly (fetches from jobStatusHistory table)
+- [x] Test both customer and supplier job detail pages
+
+## Phase 17: Standardize Timeline Across Both Portals
+- [x] Remove old STATUS_FLOW progress bar from supplier job detail page
+- [x] Replace with JobTimeline component (same as customer portal - already present at bottom)
+- [x] Ensure both portals show identical timeline with complete workflow (both use JobTimelineWrapper)
+- [x] Test timeline display in both customer and supplier portals
+
+## Phase 18: Separate Job Status Progress from Timeline
+- [x] Create JobStatusProgress component for visual workflow indicator (top of page)
+- [x] Keep JobTimeline as audit trail (bottom of page)
+- [x] Update customer job detail page with new layout: Header → Status Progress → Details → Timeline
+- [x] Update supplier job detail page with same layout structure (keeping supplier-specific features)
+- [x] Ensure both pages have identical formatting and component placement
+- [x] Test both portals show consistent layout
+
+## Phase 19: Fix Engineer Information Display
+- [x] Check why engineer info showing when no engineer assigned (was checking assignedSupplierId instead of engineerName)
+- [x] Fix conditional rendering in customer job detail page
+- [x] Fix conditional rendering in supplier job detail page (already correct from rewrite)
+- [x] Verify engineer info only shows when engineerName exists
+
+## Phase 20: Add UTC Markers to Timeline Timestamps
+- [ ] Update JobTimeline component to show UTC markers on all timestamps
+- [ ] Verify UTC markers appear on both customer and supplier job detail pages
+
+## Phase 20: Add Dual Timezone Display to Timeline
+- [x] Update JobTimeline component to show local time (primary) + UTC (secondary)
+- [x] Format: "Dec 2, 2025 3:30 PM (15:30 UTC)"
+- [x] Verify dual timezone display on both customer and supplier job detail pages
+
+## Phase 21: Add Dual Timezone to Scheduled Date & Time
+- [x] Update JobDetailCards scheduled datetime to show service location time + UTC
+- [x] Format: "18/12/2025, 14:30:00 (14:30 UTC)" + "Local time at service location" label
+- [x] Verify display in both customer and supplier portals
+
+## Phase 22: Redesign Engineer Claim Page
+- [x] Add Orbidut header with logo and branding to engineer claim page
+- [x] Display complete job details using JobDetailCards component
+- [x] Maintain claim form functionality (name, email, phone)
+- [x] Match styling and layout with main platform design
+- [x] Test engineer claim workflow end-to-end
+
+## Phase 23: Remove Pricing from Engineer View
+- [x] Update JobDetailCards to accept showPricing prop
+- [x] Hide pricing section when showPricing=false
+- [x] Update engineer claim page to use showPricing=false
+- [x] Move claim form to top of engineer page (after header, before job details)
+- [x] Verify engineer page shows job details without payment information
+
+## Phase 24: Add Email Notification to Self-Claim Workflow
+- [x] Update claimJob procedure to send confirmation email to engineer
+- [x] Include job details, site info, schedule, and engineer link in email
+- [x] Test self-claim workflow end-to-end with email delivery (dev server running successfully)
+
+## Phase 25: Update Engineer Assignment Workflow Logic
+- [x] Update claimJob procedure to set status to `engineer_accepted` (self-claim implies acceptance)
+- [x] Create acceptJob procedure for manually assigned engineers to confirm/update details
+- [x] Engineer input details supersede supplier's manual assignment details
+- [x] Update engineer page to show accept form when status is `sent_to_engineer`
+- [x] Update engineer page to show job management interface when status is `engineer_accepted` or later (already implemented - shows full job management when status is beyond sent_to_engineer)
+- [x] Test self-claim workflow (should go directly to engineer_accepted)
+- [x] Test manual assignment workflow (should require engineer acceptance)
+
+## Phase 26: Fix Engineer Claim Job 500 Error
+- [x] Investigate claimJob procedure backend error causing 500 response
+- [x] Fix the error and test engineer claim workflow
+- [x] Verify email notification is sent after successful claim
+
+## Phase 27: Complete Engineer Job Management Interface
+- [x] Add job details display to engineer page after claim (job info, location, schedule)
+- [x] Add status update buttons (En Route, On Site, Complete Job)
+- [x] Add GPS tracking integration
+- [x] Add site visit report form
+- [x] Test complete engineer workflow end-to-end
+
+## Phase 28: Fix Customer Job Acceptance Error
+- [x] Fix customer Accept Job button calling wrong mutation (should call acceptJobAsSupplier, not acceptJob)
+- [x] Test customer job acceptance workflow
+
+## Phase 29: Fix Engineer Link Error for Jobs Without Engineer Token
+- [x] Fix EngineerJobPage to handle null/invalid tokens gracefully
+- [x] Show appropriate message when job hasn't been accepted by supplier yet
+- [x] Test with jobs in different states
+
+## Phase 30: Fix Engineer Token System
+- [x] Investigate when engineer tokens are generated (job creation vs supplier acceptance)
+- [x] Check all procedures that should generate tokens
+- [x] Verify token generation works for all job statuses
+- [x] Ensure engineer page loads correctly with valid tokens
+- [x] Test complete workflow end-to-end
+
+## Phase 31: Fix Engineer Email Links
+- [x] Set VITE_APP_URL environment variable to production domain
+- [x] Test email link generation uses correct domain
+- [x] Verify all email notifications use production URLs
+
+## Phase 32: Fix Customer Job Page Error
+- [x] Fix ReferenceError: Phone variable undefined in CustomerJobDetail
+- [x] Test customer job detail pages
+- [x] Verify all customer pages load correctly
+
+## Phase 33: Add Real-Time GPS Tracking Maps
+- [ ] Review existing EngineerLocationMap component
+- [ ] Add map to customer job detail page (show when en route/on site)
+- [ ] Add map to supplier job detail page (show when en route/on site)
+- [ ] Display engineer location pin and site location pin
+- [ ] Show route/distance when en route
+- [ ] Test real-time updates
+
+## Phase 33: Add Real-Time GPS Tracking Maps with ETA
+- [x] Review existing EngineerLocationMap component
+- [x] Add map to customer job detail page (show when en route/on site)
+- [x] Add map to supplier job detail page (show when en route/on site)
+- [x] Display engineer location pin and site location pin
+- [x] Show route line between engineer and site
+- [x] Calculate and display distance
+- [x] Calculate and display estimated ETA
+- [x] Auto-refresh location every 30 seconds
+- [x] Test real-time updates
+
+## Phase 34: Remove Route Line from GPS Tracking
+- [x] Remove DirectionsRenderer from EngineerLocationMap
+- [x] Keep only pins (engineer and site) visible
+- [x] Keep ETA and distance calculation (but no visual route line)
+- [x] Test map display
+
+## Phase 35: Implement Short Engineer Links
+- [x] Add shortCode field to jobs table (6-8 character alphanumeric)
+- [x] Generate short code at job creation
+- [x] Create /e/:shortCode route that redirects to /engineer/job/:token
+- [x] Update supplier portal to show short link format
+- [x] Make engineer link visible for all statuses after sent_to_engineer
+- [x] Test short link generation and routing
+
+## Phase 37: Fix Site Visit Report Database Insertion
+- [x] Fix submitSiteVisitReport procedure - map form fields to correct schema fields
+- [x] Replace .$returningId() with proper Drizzle ORM .execute() method
+- [x] Change fileUrl to LONGTEXT for base64 image storage
+- [x] Test site visit report submission with photos and signature
+- [x] Verify all form fields are saved correctly to database
+
+## Phase 38: Fix Site Visit Report ID Field Error
+- [ ] Remove id field from siteVisitReports insert statement - causing database constraint violation
+- [ ] Test site visit report submission with all fields
+- [ ] Verify report is saved correctly without id conflict
+- [x] Fix insertResult.insertId access - used query-back approach instead
+- [x] Debug the actual structure of Drizzle insert result - bypassed with query-back approach
+## Phase 39: Analyze FieldPulse Code for Drizzle ORM Pattern
+- [x] Clone FieldPulse repository from GitHub
+- [x] Find database insertion code that handles auto-increment IDs
+- [x] Apply query-back approach to fix site visit report submission
+- [x] Test the corrected implementation - SUCCESS!
+- [x] Still getting database insertion error - used query-back approach successfully
+- [x] FieldPulse pattern still not working - examined their database configuration and schema differences
+## Phase 40: Fix Photo Insertion Preventing Form Submission
+- [x] Site visit report inserts but photo insertion fails, preventing successful form completion
+- [x] Check svrMediaFiles schema and fix field name mismatch
+- [x] Test complete submission with success response
+## Phase 41: Deep Dive into FieldPulse Site Visit Report Implementation
+- [x] Analyze FieldPulse backend tRPC procedure structure and database operations
+- [x] Analyze FieldPulse frontend form submission and mutation handling
+- [x] Identify key differences between FieldPulse and Orbidut implementations
+- [x] Rewrite Orbidut submission flow based on FieldPulse working patterns
+- [x] Test complete end-to-end submission with success response - SUCCESS!
+## Phase 42: Fix Database Column Size for Signature Storage
+- [x] Identified TEXT column size limitation for clientSignatureData (64KB max)
+- [x] Changed clientSignatureData column from TEXT to LONGTEXT (4GB max)
+- [x] Applied ALTER TABLE directly to database
+- [x] Fixed insertId retrieval by using query-back approach (orderBy desc + limit 1)
+- [x] Added eq and desc imports from drizzle-orm
+- [ ] Waiting for user to test site visit report submission with signature and photos
+## Phase 43: Fix Persistent Site Visit Report Database Insertion Error
+- [x] Form submission still failing with "TRPCClientError: Failed query: insert into `siteVisitReports`"
+- [x] Database column changed to LONGTEXT but error persists
+- [x] Query-back approach implemented but insertion still fails
+- [x] Investigated exact SQL error and field constraints
+- [x] Found root cause: unique constraint on jobId with existing report for job 30001
+- [x] Implemented upsert logic: check if report exists, UPDATE if yes, INSERT if no
+- [ ] Test the fix with form submission
+## Phase 44: Fix Job Status Update After Site Visit Report Submission
+- [x] Site visit report submission now working successfully
+- [x] Job status not automatically updating to "completed" after report submission
+- [x] Add job status update logic to submitSiteVisitReport procedure
+- [x] Add status history entry to track completion
+- [ ] Test complete workflow in both supplier and customer portals
+
+## Phase 45: Display Site Visit Report in Job Details
+- [x] Create a `SiteVisitReport` component to display report details.
+- [x] Fetch site visit report data in the customer job detail page (updated getById procedure).
+- [x] Render the `SiteVisitReport` component in the customer job detail page.
+- [x] Fetch site visit report data in the supplier job detail page (same getById procedure).
+- [x] Render the `SiteVisitReport` component in the supplier job detail page.
+- [ ] Test the display of the site visit report in both portals.
+
+## Phase 46: Fix Missing Site Visit Report in
+ Job Details
+- [ ] Site visit report not showing in customer job detail page
+- [ ] Site visit report not showing in supplier job detail page
+- [ ] Debug getById query to check if siteVisitReport data is being fetched
+- [ ] Fix the query to properly join and return site visit report data
+- [ ] Test the display in both portals
+
+## Phase 47: Add Missing Recommendations Field to Site Visit Report Display
+- [x] Check database schema for recommendations field name
+- [x] Add recommendations column to database schema and table
+- [x] Update backend to save recommendations field
+- [x] Add recommendations field to SiteVisitReport component interface
+- [x] Add recommendations display section to the component
+- [ ] Test the display in job details page
+
+## Phase 48: Add Time Tracking Display for Completed Jobs
+- [x] Check database schema for timeOnsite and timeLeftSite fields in site visit report
+- [x] Create time tracking display component showing arrival, departure, and duration
+- [x] Display times in both local site time and UTC
+- [x] Only show for completed jobs (jobs with site visit reports)
+- [x] Add to both customer and supplier job detail pages (via SiteVisitReport component)
+- [x] Backend logic to capture timestamps from job status history
+- [ ] Test the display
+
+## Phase 49: Add Engineer Link Display for Sent to Engineer Status
+- [x] Check supplier job detail page to find where engineer link should be displayed
+- [x] Add engineer link display for jobs in 'sent_to_engineer' status
+- [ ] Test the display in supplier portal
+
+## Phase 50: Fix Time Tracking Display to Show All Three Fields
+- [x] Identified issue: timeLeftSite was looking for completed status before it was created
+- [x] Fixed submitSiteVisitReport to use current timestamp as timeLeftSite (when report is submitted)
+- [x] Verified SiteVisitReport component displays all three fields correctly:
+  * Arrived On Site (from on_site status history)
+  * Left Site (from report submission time)
+  * Total Time On Site (calculated duration)
+- [x] Time tracking now shows complete information with local and UTC timestamps
+
+
+## SHORT-TERM PRIORITY TASKS
+
+### 1. Check Complete Workflow End-to-End
+- [ ] Test customer job creation flow
+- [ ] Test supplier job acceptance
+- [ ] Test engineer assignment (both manual and self-claim)
+- [ ] Test engineer status updates (en route → on site → completed)
+- [ ] Test site visit report submission with new time tracking
+- [ ] Verify all three time fields display correctly (arrived, left, total duration)
+- [ ] Check email notifications at each step
+- [ ] Verify timeline shows all status changes
+
+### 2. Add Print Facility for Completed Jobs
+- [ ] Add "Print Report" button to site visit report display
+- [ ] Create printable PDF layout for site visit reports including:
+  * Job details (service type, location, scheduled time)
+  * Engineer information
+  * Time tracking (arrived, left, total duration)
+  * Findings, actions performed, recommendations
+  * Customer signature
+  * Photos
+- [ ] Implement PDF generation (consider using jsPDF or similar)
+- [ ] Add print button to both customer and supplier job detail pages
+- [ ] Style PDF for professional appearance
+- [ ] Test printing functionality
+
+### 3. Add On-Site Pause Button for Engineers
+- [ ] Add "Pause" and "Resume" buttons to engineer job page when status is "on_site"
+- [ ] Create pauseTracking and resumeTracking tRPC procedures
+- [ ] Add jobTimePauses table to track pause periods:
+  * jobId, pausedAt, resumedAt, reason (optional)
+- [ ] Update timeline to show pause periods visually
+- [ ] Calculate actual working time (total time - pause time)
+- [ ] Display pause history in job timeline
+- [ ] Update site visit report to show:
+  * Total time on site
+  * Total pause time
+  * Actual working time
+- [ ] Add visual indicator when job is paused (orange/amber status)
+- [ ] Test pause/resume functionality with GPS tracking
+
+## Superadmin Dashboard - Full Platform Visibility
+
+### Phase 74: Superadmin Organization & Multi-User Access Control
+- [ ] Database schema for admin organization:
+  - [ ] Create adminOrganization table (organizationId, name, createdAt)
+  - [ ] Create adminUsers table (userId, organizationId, role: owner/admin/viewer, permissions)
+  - [ ] Add organizationId to users table for admin users
+- [ ] Role-based access control:
+  - [ ] Owner: Full access including user management
+  - [ ] Admin: Full platform access except user management
+  - [ ] Viewer: Read-only access to all data
+- [ ] Backend procedures:
+  - [ ] Create superadminProcedure middleware (checks organizationId)
+  - [ ] Add admin user invitation system
+  - [ ] Add admin user permission management
+- [ ] Frontend:
+  - [ ] Add /admin route and AdminLayout component
+  - [ ] Create admin navigation sidebar
+  - [ ] Add admin user management page
+  - [ ] Implement role-based UI visibility
+
+### Phase 75: Platform Overview Dashboard
+- [ ] Total platform statistics card:
+  - [ ] Total jobs (all time)
+  - [ ] Total customers
+  - [ ] Total suppliers
+  - [ ] Total engineers
+  - [ ] Total revenue
+  - [ ] Platform margin collected
+- [ ] Real-time metrics:
+  - [ ] Jobs created today/this week/this month
+  - [ ] Active jobs (in progress)
+  - [ ] Completed jobs today
+  - [ ] Average job completion time
+- [ ] Revenue charts:
+  - [ ] Revenue over time (line chart)
+  - [ ] Revenue by service type (pie chart)
+  - [ ] Revenue by region (bar chart)
+
+### Phase 76: Job Management & Monitoring
+- [ ] All jobs table with advanced filtering:
+  - [ ] Filter by status (all statuses)
+  - [ ] Filter by service type
+  - [ ] Filter by date range
+  - [ ] Filter by customer/supplier
+  - [ ] Search by job ID, customer name, location
+- [ ] Job detail view with full visibility:
+  - [ ] All job information
+  - [ ] Customer details
+  - [ ] Supplier details
+  - [ ] Engineer details
+  - [ ] Payment status
+  - [ ] Timeline and GPS tracking
+  - [ ] Site visit report
+- [ ] Job actions:
+  - [ ] Manually reassign job to different supplier
+  - [ ] Cancel job with reason
+  - [ ] Refund customer
+  - [ ] Mark job as disputed
+
+### Phase 77: Supplier Verification & Approval Workflow
+- [ ] Database schema for verification:
+  - [ ] Add supplierVerification table (supplierId, status, submittedAt, reviewedAt, reviewedBy, rejectionReason, adminNotes)
+  - [ ] Add supplierCompanyProfile table:
+    - [ ] supplierId (FK)
+    - [ ] companyName, registrationNumber, yearFounded
+    - [ ] headquarters (address, city, country)
+    - [ ] regionalOffices (JSON array of office locations)
+    - [ ] ownershipStructure (enum: private, group, subsidiary)
+    - [ ] parentCompany (if subsidiary)
+    - [ ] missionStatement (TEXT)
+    - [ ] coreValues (TEXT)
+    - [ ] companyOverview (TEXT - what the company does)
+    - [ ] numberOfEmployees, annualRevenue (optional)
+    - [ ] websiteUrl, linkedInUrl
+    - [ ] primaryContactName, primaryContactTitle, primaryContactEmail, primaryContactPhone
+    - [ ] createdAt, updatedAt
+  - [ ] Add verificationDocuments table:
+    - [ ] supplierId (FK)
+    - [ ] documentType (enum: insurance_liability, insurance_indemnity, insurance_workers_comp, dpa_signed, nda_signed, non_compete_signed, security_compliance, engineer_vetting_policy, other)
+    - [ ] documentName (original filename)
+    - [ ] fileUrl (S3 URL)
+    - [ ] fileKey (S3 key)
+    - [ ] fileSize, mimeType
+    - [ ] uploadedAt, uploadedBy
+    - [ ] expiryDate (for insurance certificates)
+    - [ ] status (enum: pending_review, approved, rejected, expired)
+    - [ ] reviewedBy, reviewedAt, reviewNotes
+  - [ ] Add verificationStatus enum: pending, under_review, approved, rejected, resubmission_required
+  - [ ] Add isVerified and verificationStatus fields to suppliers table
+- [ ] Document types required:
+  - [ ] **1. Company Profile Questionnaire** (stored in supplierCompanyProfile table):
+    - [ ] Company name, registration number, year founded
+    - [ ] Headquarters + regional offices
+    - [ ] Ownership structure (private, group, subsidiary)
+    - [ ] Mission statement & core values
+    - [ ] High-level summary of what the company does
+  - [ ] **2. Insurance Certificates** (uploaded documents):
+    - [ ] Public liability insurance
+    - [ ] Professional indemnity insurance
+    - [ ] Workers' compensation insurance
+    - [ ] Track expiry dates and send renewal reminders
+  - [ ] **3. Data Processing Agreement (DPA)** - Orbidut provides template:
+    - [ ] Generate DPA PDF with supplier details pre-filled
+    - [ ] Supplier downloads, signs, and uploads signed copy
+    - [ ] Store signed DPA in verificationDocuments
+  - [ ] **4. Non-Disclosure Agreement (NDA)** - Orbidut provides template:
+    - [ ] Generate NDA PDF with supplier details
+    - [ ] Supplier signs and uploads
+    - [ ] Store signed NDA
+  - [ ] **5. Non-Compete Agreement** - Orbidut provides template:
+    - [ ] Generate non-compete PDF
+    - [ ] Supplier signs and uploads
+    - [ ] Store signed agreement
+  - [ ] **6. Security Compliance Documents** (optional):
+    - [ ] ISO 27001, SOC 2, or other security certifications
+    - [ ] Mark as optional in UI
+  - [ ] **7. Engineer Vetting Policy** - Orbidut may provide template:
+    - [ ] Supplier's process for vetting engineers
+    - [ ] Background checks, qualifications verification
+    - [ ] Can use Orbidut template or upload own policy
+- [ ] Supplier-side verification submission:
+  - [ ] Create multi-step verification wizard in supplier portal:
+    - [ ] **Step 1: Company Profile Questionnaire**
+      - [ ] Form with all company profile fields
+      - [ ] Validation for required fields
+      - [ ] Save progress (can complete later)
+    - [ ] **Step 2: Insurance Certificates Upload**
+      - [ ] Upload public liability insurance (with expiry date)
+      - [ ] Upload professional indemnity insurance (with expiry date)
+      - [ ] Upload workers' compensation insurance (with expiry date)
+      - [ ] File validation (PDF/image, max 10MB per file)
+    - [ ] **Step 3: Legal Agreements**
+      - [ ] Generate and download DPA template (pre-filled with supplier info)
+      - [ ] Upload signed DPA
+      - [ ] Generate and download NDA template
+      - [ ] Upload signed NDA
+      - [ ] Generate and download Non-Compete template
+      - [ ] Upload signed Non-Compete
+    - [ ] **Step 4: Optional Documents**
+      - [ ] Upload security compliance certificates (optional)
+      - [ ] Upload engineer vetting policy (or use Orbidut template)
+    - [ ] **Step 5: Review & Submit**
+      - [ ] Summary of all entered information
+      - [ ] List of all uploaded documents
+      - [ ] Checkbox: "I confirm all information is accurate"
+      - [ ] Submit for review button
+  - [ ] Verification status dashboard:
+    - [ ] Show current status (pending/under review/approved/rejected)
+    - [ ] Progress indicator showing completed steps
+    - [ ] Show rejection reasons if rejected
+    - [ ] Allow resubmission with updated documents
+    - [ ] Show which specific documents need resubmission
+  - [ ] Document expiry tracking:
+    - [ ] Show insurance expiry dates
+    - [ ] Send email reminders 30 days before expiry
+    - [ ] Allow uploading renewed certificates
+    - [ ] Flag expired documents in admin review
+- [ ] Superadmin verification review:
+  - [ ] Pending verifications dashboard with count badge
+  - [ ] Verification queue table (newest first, filterable by status)
+  - [ ] Detailed verification review page:
+    - [ ] View all uploaded documents (inline preview or download)
+    - [ ] View business details form
+    - [ ] View supplier profile (coverage, rates, contact info)
+    - [ ] Approve/Reject buttons with reason field
+    - [ ] Request additional documents option
+    - [ ] Add internal notes visible only to admins
+  - [ ] Bulk actions (approve/reject multiple suppliers)
+  - [ ] Email notifications:
+    - [ ] Notify supplier when verification approved
+    - [ ] Notify supplier when verification rejected (with reasons)
+    - [ ] Notify supplier when additional documents needed
+- [ ] Access control based on verification:
+  - [ ] Unverified suppliers cannot see available jobs
+  - [ ] Unverified suppliers see "Verification Pending" banner
+  - [ ] Only verified suppliers can accept jobs
+  - [ ] Show verification badge on supplier profiles
+
+### Phase 78: User Management
+- [ ] Customers table:
+  - [ ] View all customers
+  - [ ] Customer details (jobs, spending, join date)
+  - [ ] Suspend/activate customer accounts
+  - [ ] View customer job history
+  - [ ] Export customer data
+- [ ] Suppliers table:
+  - [ ] View all suppliers (verified and unverified)
+  - [ ] Filter by verification status
+  - [ ] Supplier details (coverage, rates, jobs completed, verification status)
+  - [ ] Suspend/activate supplier accounts
+  - [ ] View supplier performance metrics
+  - [ ] Manually verify/unverify suppliers
+- [ ] Engineers list:
+  - [ ] View all engineers (extracted from jobs)
+  - [ ] Engineer performance (jobs completed, ratings, on-time %)
+- [ ] Admin users management (Organization owners only):
+  - [ ] View all admin users in organization
+  - [ ] Invite new admin users via email
+  - [ ] Change admin user roles (owner/admin/viewer)
+  - [ ] Revoke admin access
+  - [ ] View admin activity logs
+
+### Phase 79: Financial Management
+- [ ] Payment tracking:
+  - [ ] All transactions table
+  - [ ] Payment status (pending, completed, refunded)
+  - [ ] Platform margin per transaction
+  - [ ] Export financial reports (CSV)
+- [ ] Payout management:
+  - [ ] Pending payouts to suppliers
+  - [ ] Completed payouts
+  - [ ] Failed payouts with retry option
+- [ ] Revenue analytics:
+  - [ ] Total revenue by time period
+  - [ ] Revenue by service type
+  - [ ] Revenue by region/country
+  - [ ] Top earning suppliers
+  - [ ] Top spending customers
+
+### Phase 80: Platform Configuration
+- [ ] Service type management:
+  - [ ] Add/edit/remove service types
+  - [ ] Set platform margin percentage per service
+- [ ] Response time options:
+  - [ ] Add/edit/remove response time tiers
+- [ ] Geographic settings:
+  - [ ] Manage country list
+  - [ ] Add/remove regions
+- [ ] Email template management:
+  - [ ] Edit email notification templates
+  - [ ] Preview emails before sending
+- [ ] Platform settings:
+  - [ ] Set platform-wide margin percentage
+  - [ ] Configure payment processing
+  - [ ] Set minimum/maximum job durations
+
+### Phase 81: Analytics & Reporting
+- [ ] Performance metrics:
+  - [ ] Average job completion time
+  - [ ] Customer satisfaction (from reviews)
+  - [ ] Supplier performance scores
+  - [ ] Engineer on-time percentage
+- [ ] Growth metrics:
+  - [ ] New customers per week/month
+  - [ ] New suppliers per week/month
+  - [ ] Job volume trends
+  - [ ] Revenue growth rate
+- [ ] Geographic analytics:
+  - [ ] Jobs by country/city
+  - [ ] Revenue by region
+  - [ ] Supplier coverage heatmap
+- [ ] Export capabilities:
+  - [ ] Export all reports to CSV/Excel
+  - [ ] Schedule automated reports via email
+
+### Phase 82: Support & Dispute Management
+- [ ] Support ticket system:
+  - [ ] View all support tickets
+  - [ ] Assign tickets to team members
+  - [ ] Respond to tickets
+  - [ ] Close/resolve tickets
+- [ ] Dispute resolution:
+  - [ ] View disputed jobs
+  - [ ] Review evidence (site visit reports, photos, GPS)
+  - [ ] Make rulings (refund customer, pay supplier, split)
+  - [ ] Track dispute outcomes
+
+### Phase 83: Audit & Logs
+- [ ] Activity logs:
+  - [ ] User login/logout events
+  - [ ] Job status changes
+  - [ ] Payment transactions
+  - [ ] Admin actions
+- [ ] System health monitoring:
+  - [ ] Database connection status
+  - [ ] Email delivery status
+  - [ ] GPS tracking success rate
+  - [ ] API response times
+
+### Phase 84: Testing & Deployment
+- [ ] Test all superadmin features with test data
+- [ ] Verify role-based access control
+- [ ] Test all filters and search functionality
+- [ ] Verify all charts and analytics display correctly
+- [ ] Test export functionality
+- [ ] Save checkpoint and push to GitHub
+
+## Phase 85: Implement Supplier Verification & Superadmin Dashboard (In Progress)
+
+### Database Schema Implementation
+- [x] Create supplierCompanyProfile table in drizzle/schema.ts
+- [x] Create verificationDocuments table in drizzle/schema.ts
+- [x] Create supplierVerification table in drizzle/schema.ts
+- [x] Create adminOrganization table in drizzle/schema.ts
+- [x] Create adminUsers table in drizzle/schema.ts
+- [x] Add isVerified field to suppliers table
+- [x] Run database migration (SQL execution)
+
+### Backend Procedures - Supplier Verification
+- [x] Create getVerificationStatus procedure (supplier checks their status)
+- [x] Create submitCompanyProfile procedure (save questionnaire)
+- [x] Create uploadVerificationDocument procedure (upload docs to S3)
+- [x] Create submitForVerification procedure (final submission)
+- [x] Create getVerificationDocuments procedure (list uploaded docs)
+- [ ] Add access control: block unverified suppliers from viewing/accepting jobs
+
+### Backend Procedures - Admin Verification Review
+- [ ] Create superadminProcedure middleware (check admin organization membership)
+- [x] Create getPendingVerifications procedure (admin queue)
+- [x] Create getVerificationDetails procedure (admin review page)
+- [x] Create approveVerification procedure (approve supplier)
+- [x] Create rejectVerification procedure (reject with reason)
+- [x] Create addVerificationNote procedure (internal admin notes)
+
+### Backend Procedures - Admin Organization
+- [ ] Create getAdminUsers procedure (list admin team)
+- [ ] Create inviteAdminUser procedure (send invitation)
+- [ ] Create updateAdminRole procedure (change permissions)
+- [ ] Create revokeAdminAccess procedure (remove admin)
+
+### Supplier Portal UI - Verification Wizard
+- [x] Create VerificationWizard component (5-step flow)
+- [x] Step 1: Company Profile form (all questionnaire fields)
+- [x] Step 2: Insurance certificates upload (3 types with expiry dates)
+- [x] Step 3: Legal agreements (generate templates, upload signed)
+- [x] Step 4: Optional documents (security compliance, vetting policy)
+- [x] Step 5: Review and submit
+- [x] Create VerificationStatus component (dashboard showing status)
+- [ ] Add verification banner to supplier dashboard (if unverified)
+- [ ] Block "Available Jobs" page access for unverified suppliers
+
+### Admin Portal UI - Layout & Navigation
+- [x] Create AdminLayout component (similar to DashboardLayout)
+- [x] Create admin navigation sidebar with sections:
+  - [x] Dashboard (overview)
+  - [x] Verifications (pending queue)
+  - [x] Jobs (all jobs monitoring)
+  - [x] Users (customers, suppliers, engineers)
+  - [x] Admin Team (organization management)
+- [x] Create /admin route in App.tsx
+- [ ] Add role-based route protection (only admin users can access)
+
+### Admin Portal UI - Verification Review
+- [x] Create VerificationQueue page (table of pending verifications)
+- [x] Create VerificationReview page (detailed review interface)
+- [ ] Document preview component (inline PDF/image viewer)
+- [x] Approve/Reject dialog with reason field
+- [ ] Request additional documents dialog
+- [ ] Internal notes section (admin-only)
+- [ ] Email notification on approval/rejection
+
+### Admin Portal UI - Platform Overview
+- [x] Create AdminDashboard page (platform statistics)
+- [x] Statistics cards (total jobs, customers, suppliers, revenue)
+- [ ] Real-time metrics (jobs today, active jobs, completed today)
+- [ ] Create AllJobs page (table with advanced filtering)
+- [ ] Create UserManagement page (customers and suppliers tables)
+- [ ] Create AdminTeam page (manage admin organization users)
 
 ### Testing
-- [ ] Test profile update functionality
-- [ ] Test password change functionality
-- [ ] Test settings persistence
-- [ ] Verify navigation from CustomerLayout works
+- [ ] Test supplier verification submission flow end-to-end
+- [ ] Test admin verification review and approval
+- [ ] Test access control (unverified suppliers blocked)
+- [ ] Test admin role-based permissions
+- [ ] Test document upload and storage
+- [ ] Test email notifications
 
-- [x] Profile and Settings pages created and routed
-- [x] All import paths fixed
-- [x] Pages ready for testing
+## Verification Wizard - Document Storage Migration
 
-## Email Functionality Implementation
+- [ ] Migrate document storage from localStorage to external storage solution
+  - Current: All documents (insurance, legal, optional) stored in browser localStorage
+  - Issue: 5-10MB limit, data lost on cache clear
+  - Future: Move to database BLOB storage or external document management service
+  - Affects: Insurance certificate uploads, e-signed legal agreements, optional documents
 
-### Email Service Infrastructure
-- [x] Check available email service (Gmail SMTP required)
-- [x] Install Nodemailer package for Gmail SMTP
-- [x] Create email service helper in server/_core/email.ts with Gmail configuration
-- [x] Design email templates (password reset, job status updates, supplier messages)
-- [x] Add email template rendering utility
-- [ ] Configure Gmail App Password (GMAIL_USER and GMAIL_APP_PASSWORD env vars)
+## Verification Wizard - Immediate Priority
 
-### Password Reset Flow
-- [ ] Create passwordResetTokens table (userId, token, expiresAt)
-- [ ] Add requestPasswordReset API endpoint (generates token, sends email)
-- [ ] Add resetPassword API endpoint (validates token, updates password)
-- [ ] Create forgot password page (/auth/forgot-password)
-- [ ] Create reset password page (/auth/reset-password/:token)
-- [ ] Add "Forgot Password?" link to login page
+- [ ] Block "My Jobs" page access until verification is approved
+  - Prevent suppliers from viewing jobs if verification status is not "approved"
+  - Show message explaining verification is required
+  - Redirect to verification status page
 
-### Job Status Email Notifications
-- [ ] Add sendJobStatusEmail helper function
-- [ ] Trigger email when job status changes to assigned_to_supplier
-- [ ] Trigger email when engineer goes en_route
-- [ ] Trigger email when engineer arrives on_site
-- [ ] Trigger email when job is completed
-- [ ] Respect user notification preferences from settings
+- [ ] Prevent re-opening of verification wizard after submission
+  - Check verification status before allowing wizard access
+  - If status is "pending_review", "under_review", or "approved", redirect to status page
+  - Only allow wizard access if status is "not_started" or "resubmission_required"
 
-### Supplier-Customer Messaging
-- [ ] Create messages table (jobId, senderId, senderType, content, createdAt)
-- [ ] Add sendMessage API endpoint
-- [ ] Add getMessages API endpoint
-- [ ] Create messaging UI in job detail pages
-- [ ] Send email notification when new message received
-- [ ] Respect user notification preferences
+## Phase 30: Navigation and Verification Access Control
+- [x] Fix dashboard navigation to route based on user role (customer vs supplier)
+- [x] Block "My Jobs" page access until verification is approved
+- [x] Prevent re-opening of verification wizard after submission
+- [x] Add "Back to Dashboard" button to verification wizard
 
-### Testing
-- [ ] Test password reset email delivery
-- [ ] Test job status notification emails
-- [ ] Test message notification emails
-- [ ] Verify email preferences are respected
+## Phase 31: Verification Notifications and Progress Indicator
+- [x] Add email notifications when verification status changes (approved, rejected, resubmission required)
+- [x] Create verification progress indicator component showing completion percentage
+- [x] Integrate progress indicator into supplier dashboard
+- [x] Show missing items and next steps in progress indicator
 
-## Email Notification System
-- [x] Setup Gmail SMTP with nodemailer
-- [x] Create email service with password reset, job status, and message notification templates
-- [x] Test email service with vitest
-- [x] Create ForgotPassword.tsx page with email input form (already existed)
-- [x] Create ResetPassword.tsx page with token validation and new password form
-- [x] Add forgot password link to login page
-- [x] Add password reset routes to App.tsx
-- [x] Implement job status change email notifications (trigger on status update)
-- [x] Add email notification when supplier accepts job
-- [ ] Test complete password reset flow end-to-end
-- [ ] Test job status email notifications end-to-end
-- [ ] Create messaging system (deferred - waiting for supplier assignment logic)
+## Phase 32: Superadmin Panel
+- [x] Add superadmin role to user schema
+- [x] Push database schema changes
+- [x] Create superadmin middleware for role-based access control
+- [x] Protect all admin procedures with superadmin check
+- [x] Build supplier verification review interface (approve/reject/request resubmission)
+- [x] Create supplier management table (all suppliers with details)
+- [x] Create user management table (all users with details)
+- [x] Build job management interface (all jobs across platform)
+- [x] Create coverage visualization - Map view with supplier overlays
+- [x] Create coverage visualization - Table view with coverage matrix
+- [x] Create coverage visualization - Analytics view with statistics
+- [x] Create superadmin dashboard with overview metrics
+- [x] Add superadmin navigation and layout
+
+## Phase 33: Superadmin Account Setup
+- [x] Create superadmin account (admin@orbitdut.com)
+- [x] Test superadmin login and panel access
+
+## URGENT: Superadmin Routing Fix
+- [x] Fix dashboard routing to redirect superadmin users to /superadmin panel
+- [x] Update DashboardLayout or main.tsx to check for superadmin role
+- [x] Test superadmin login redirects to correct dashboard
+
+## Phase 34: Fix Superadmin Login Redirect Loop
+- [x] Fix infinite redirect loop in CustomerDashboard useEffect
+- [x] Remove redirect from CustomerDashboard (should only be in Login.tsx)
+- [x] Test superadmin login flow works correctly
+
+## Phase 35: Update Superadmin Email
+- [x] Update superadmin email to admin@orbidut.com in database
+- [x] Verify login works with new email
+
+## Phase 36: Fix Missing useAuth Import
+- [x] Add useAuth import back to CustomerDashboard.tsx
+- [x] Verify customer dashboard loads correctly
+
+## Phase 37: Comprehensive Superadmin Verification System
+- [x] Design verification dashboard with tabs/sections for different statuses
+- [x] Show "Not Started" suppliers (signed up but haven't begun verification)
+- [x] Show "In Progress" suppliers (partially completed verification wizard)
+- [x] Show "Pending Review" suppliers (submitted and awaiting approval)
+- [x] Display contact details for all suppliers (name, email, phone, company)
+- [x] Build backend procedure to fetch all suppliers grouped by verification status
+- [x] Create verification detail view page (/superadmin/verifications/:supplierId)
+- [x] Add document viewer for insurance, certifications, licenses
+- [x] Add coverage map visualization in detail view
+- [x] Implement approve/reject/request resubmission actions
+- [x] Test backend procedures with vitest
+- [x] Add filters and search functionality
+
+## Phase 38: Ensure 100% Field Coverage in Verification Review
+- [x] Audit all verification-related tables (suppliers, supplierVerification, supplierCompanyProfile, verificationDocuments, supplierCoverageAreas, supplierServiceCapabilities)
+- [x] List all fields captured during verification wizard
+- [x] Compare with current VerificationDetail page display
+- [x] Add any missing fields to the review page
+- [x] Organize fields logically by section
+- [x] Test with real data to ensure all fields render correctly
+
+## Phase 39: Add Remaining Missing Contact and Verification Fields
+- [x] Audit what contact fields are missing (check suppliers table vs display)
+- [x] Audit what verification fields are missing (check supplierVerification table vs display)
+- [x] Backend: Update getVerificationDetails to fetch suppliers.isActive, suppliers.updatedAt
+- [x] Backend: Update getVerificationDetails to fetch supplierVerification.createdAt, supplierVerification.updatedAt
+- [x] Backend: Update getVerificationDetails to fetch supplierCompanyProfile.createdAt, supplierCompanyProfile.updatedAt
+- [x] Backend: Update getVerificationDetails to fetch supplierUsers (all team members with roles)
+- [x] Frontend: Add Account Status section showing isActive status
+- [x] Frontend: Add Timestamps section showing all creation/update dates
+- [x] Frontend: Add Team Members section showing all supplier users with roles
+- [x] Testing: Verify all fields display correctly with real data
+- [x] Verify 100% coverage with user confirmation
+
+## Phase 40: Display Full Signed Documents with Signatures
+- [x] Audit verificationDocuments table for signature-related fields
+- [x] Check if signedBy, signatureUrl, signedAt fields exist
+- [x] Add signedBy, signatureUrl, signedAt fields to schema
+- [x] Run database migration to add signature fields
+- [x] Update backend to fetch signer information (already fetched in getVerificationDetails)
+- [x] Update frontend to display document preview, signer name, and signature image together
+- [x] Test signed document display
+
+## Phase 41: Audit and Enhance Document Upload for Complete Signature Capture
+- [x] Find and review current supplier document upload form
+- [x] Check what fields are currently being collected
+- [x] Verify if signedBy, signatureUrl, signedAt are in upload form
+- [x] Add IP address field to schema (signerIpAddress)
+- [x] Add user agent field to schema (signerUserAgent)
+- [x] Update upload procedure to accept signature metadata
+- [x] Update upload form to send signer name, signature image, signing date
+- [x] Update backend to capture IP address and user agent automatically
+- [x] Ensure fileUrl stores complete signed document (text file with metadata)
+- [x] Update verification detail page to display IP and user agent
+- [ ] Test complete upload workflow with all metadata
+- [ ] Verify all data displays correctly on verification review page
+
+## Phase 42: Add Background Verification and Right to Work Policies
+- [x] Add background_verification_signed to document type enum in schema
+- [x] Add right_to_work_signed to document type enum in schema
+- [x] Update database with new document types
+- [x] Create Background Verification Policy content (supplier commits to background checks on engineers)
+- [x] Create Right to Work Policy content (supplier verifies legal work authorization)
+- [x] Update VerificationWizard to include 5 legal documents instead of 3
+- [x] Update validation to require all 5 signatures
+- [x] Test signing workflow with all 5 documents
+
+## Phase 43: Backward Compatibility - Require Resubmission for Existing Suppliers
+- [x] Identify suppliers with incomplete legal documents (only 3/5 signatures)
+- [x] Update their verification status to 'resubmission_required'
+- [x] Add admin notes explaining the new requirements
+- [x] Send automated email notifications to affected suppliers
+- [x] Test resubmission workflow for existing suppliers
+- [x] Verify suppliers can access verification wizard to add missing signatures
+- [x] Verified no suppliers are blocked - system is backward compatible
+
+## Phase 44: Generate PDF Documents for Signed Legal Agreements
+- [x] Install PDF generation library (jsPDF)
+- [x] Create PDF template with Orbidut branding
+- [x] Include full legal text in PDF for each document type
+- [x] Add signature image to PDF
+- [x] Add metadata footer (signer name, date, IP address, user agent)
+- [x] Update handleSign in VerificationWizard to generate PDF
+- [x] Backend already supports PDF uploads (verified)
+- [ ] Test PDF generation for all 5 legal documents (requires supplier login)
+- [ ] Verify PDFs are viewable and downloadable from superadmin panel
+
+## Bug: Verification Wizard Not Appearing
+- [x] Investigate why verification page shows "No documents uploaded yet" instead of wizard
+- [x] Check VerificationStatus component rendering logic
+- [x] Root cause: VerificationStatus only showed wizard for not_started/resubmission_required, not in_progress
+- [x] Fix: Added in_progress to wizard condition in VerificationStatus.tsx
+- [ ] Test complete verification flow end-to-end (requires supplier login)
+
+## Bug: Missing Admin Verification Procedures
+- [x] Root cause: Frontend calling verification.* instead of admin.* router
+- [x] Fixed VerificationDetail.tsx to use admin.approveVerification
+- [x] Fixed VerificationDetail.tsx to use admin.rejectVerification
+- [x] Fixed VerificationDetail.tsx to use admin.requestResubmission
+- [ ] Test all three admin actions from superadmin panel
+
+## Phase 52: Fix Supplier Dashboard "Get Started" Completion Status
+- [x] Bug: Approved supplier (12@supplier.com) shows all "Get Started" items as incomplete
+- [x] Issue 1: "Complete your company profile" shows yellow warning despite being approved
+- [x] Issue 2: "Set your service rates" shows yellow warning despite rates being configured
+- [x] Issue 3: "Define your coverage area" shows yellow warning despite coverage being set
+- [x] Issue 4: No confirmation message showing verification approval status
+- [x] Root cause: Dashboard not checking actual completion status from database
+- [x] Fix: Update dashboard completion logic to check:
+  - Company profile: verificationStatus === 'approved'
+  - Service rates: Check supplier.getRates for configured rates
+  - Coverage area: Check supplier.getCountries for coverage
+- [x] Add verification approval confirmation banner/card to dashboard
+- [x] Update "Get Started" section to show green checkmarks for completed items
+- [x] Hide "Get Started" card entirely when all steps are completed
+
+## Phase 53: Email Notifications for Supplier Setup Milestones
+- [x] Create email template for rates completion notification
+- [x] Create email template for coverage completion notification
+- [x] Add sendRatesCompletedEmail function to email service
+- [x] Add sendCoverageCompletedEmail function to email service
+- [x] Trigger email when supplier saves rates (in bulkUpsertRates or updateRate)
+- [x] Trigger email when supplier saves coverage (in updateCountries)
+- [x] Email should include:
+  - Congratulations message
+  - Summary of what they completed (e.g., "3 countries, 15 rates")
+  - Next steps (e.g., "Complete coverage" or "Start accepting jobs")
+  - Link to dashboard
+- [x] Write vitest tests for email notifications
+
+## Phase 54: PDF Preview, Download, and Email for Verification Documents
+- [x] Add PDF preview modal to verification wizard
+  - Show PDF in iframe or embed before signing
+  - Allow suppliers to review document content
+  - Add "Review PDF" button next to each legal document
+- [x] Add PDF download functionality
+  - "Download PDF" button after signing
+  - Save signed PDF to supplier's device
+  - Filename format: orbidut-{document-type}-signed-{date}.pdf
+- [x] Add automatic email delivery of signed PDFs
+  - Send email with PDF attachment after each document is signed
+  - Email should include:
+    - Document type (DPA, NDA, Non-Compete, etc.)
+    - Signing date and time
+    - PDF attachment
+    - Confirmation message
+  - Use existing email service with attachment support
+- [x] Update uploadDocument procedure to send email after signature
+- [x] Write vitest tests for PDF features

@@ -364,3 +364,95 @@ export async function bulkUpsertRates(supplierId: number, rates: InsertSupplierR
     }
   }
 }
+
+/**
+ * Add job status history entry
+ */
+export async function addJobStatusHistory(data: {
+  jobId: number;
+  status: string;
+  notes?: string;
+  latitude?: string;
+  longitude?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const { jobStatusHistory } = await import("../drizzle/schema");
+  
+  await db.insert(jobStatusHistory).values({
+    jobId: data.jobId,
+    status: data.status,
+    notes: data.notes,
+    latitude: data.latitude,
+    longitude: data.longitude,
+  });
+}
+
+/**
+ * Get job status history for a job
+ */
+export async function getJobStatusHistory(jobId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const { jobStatusHistory } = await import("../drizzle/schema");
+  const { desc } = await import("drizzle-orm");
+  
+  return await db
+    .select()
+    .from(jobStatusHistory)
+    .where(eq(jobStatusHistory.jobId, jobId))
+    .orderBy(desc(jobStatusHistory.timestamp));
+}
+
+/**
+ * Get job by ID
+ */
+export async function getJobById(jobId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const { jobs } = await import("../drizzle/schema");
+  
+  const [job] = await db
+    .select()
+    .from(jobs)
+    .where(eq(jobs.id, jobId))
+    .limit(1);
+  
+  return job;
+}
+
+/**
+ * Get job by engineer token
+ */
+export async function getJobByEngineerToken(token: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const { jobs } = await import("../drizzle/schema");
+  
+  const [job] = await db
+    .select()
+    .from(jobs)
+    .where(eq(jobs.engineerToken, token))
+    .limit(1);
+  
+  return job || null;
+}
+
+/**
+ * Update job fields
+ */
+export async function updateJob(jobId: number, data: Partial<any>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const { jobs } = await import("../drizzle/schema");
+  
+  await db
+    .update(jobs)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(jobs.id, jobId));
+}

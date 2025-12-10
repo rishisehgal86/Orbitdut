@@ -1,0 +1,21 @@
+{
+  "query": "SELECT \n  u.id as userId, \n  u.email as userEmail,\n  u.name as userName,\n  j.id as jobId,\n  j.customerId,\n  j.customerEmail,\n  j.customerName,\n  j.status,\n  j.serviceType\nFROM users u\nLEFT JOIN jobs j ON (j.customerId = u.id OR j.customerEmail = u.email)\nWHERE u.email LIKE '%12%customer%'\nORDER BY j.createdAt DESC\nLIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT \n  u.id as userId, \n  u.email as userEmail,\n  u.name as userName,\n  j.id as jobId,\n  j.customerId,\n  j.customerEmail,\n  j.customerName,\n  j.status,\n  j.serviceType\nFROM users u\nLEFT JOIN jobs j ON (j.customerId = u.id OR j.customerEmail = u.email)\nWHERE u.email LIKE '%12%customer%'\nORDER BY j.createdAt DESC\nLIMIT 5;",
+  "rows": [
+    {
+      "userId": "180001",
+      "userEmail": "12@customer.com",
+      "userName": "Tester",
+      "jobId": "30001",
+      "customerId": "180001",
+      "customerEmail": "12@customer.com",
+      "customerName": "Tester",
+      "status": "pending_supplier_acceptance",
+      "serviceType": "Level 1 End User Compute Engineer"
+    }
+  ],
+  "messages": [],
+  "stdout": "userId\tuserEmail\tuserName\tjobId\tcustomerId\tcustomerEmail\tcustomerName\tstatus\tserviceType\n180001\t12@customer.com\tTester\t30001\t180001\t12@customer.com\tTester\tpending_supplier_acceptance\tLevel 1 End User Compute Engineer\n",
+  "stderr": "",
+  "execution_time_ms": 77
+}

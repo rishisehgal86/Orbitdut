@@ -12,7 +12,10 @@ export default function SupplierSignup() {
   const [, setLocation] = useLocation();
   const [formData, setFormData] = useState({
     name: "",
+    companyName: "",
     email: "",
+    phone: "",
+    country: "US",
     password: "",
     confirmPassword: "",
   });
@@ -42,7 +45,10 @@ export default function SupplierSignup() {
 
     signupMutation.mutate({
       name: formData.name,
+      companyName: formData.companyName,
       email: formData.email,
+      phone: formData.phone,
+      country: formData.country,
       password: formData.password,
       accountType: "supplier",
     });
@@ -70,6 +76,18 @@ export default function SupplierSignup() {
                 placeholder="John Doe"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="companyName">Company Name</Label>
+              <Input
+                id="companyName"
+                type="text"
+                placeholder="Acme Services Ltd"
+                value={formData.companyName}
+                onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
                 required
               />
             </div>

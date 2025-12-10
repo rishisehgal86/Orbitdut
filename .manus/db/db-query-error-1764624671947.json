@@ -1,0 +1,8 @@
+{
+  "query": "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS engineerToken VARCHAR(64) UNIQUE;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute ALTER TABLE jobs ADD COLUMN IF NOT EXISTS engineerToken VARCHAR(64) UNIQUE;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 8200 (HY000) at line 1: unsupported add column 'engineertoken' constraint UNIQUE KEY when altering '2cukUCNz2S5THQpLSDbdYn.jobs'"
+  ]
+}

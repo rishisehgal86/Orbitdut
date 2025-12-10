@@ -28,6 +28,22 @@ import CustomerJobs from "./pages/customer/Jobs";
 import CustomerJobDetail from "./pages/customer/JobDetail";
 import CustomerProfile from "./pages/customer/Profile";
 import CustomerSettings from "./pages/customer/Settings";
+import EngineerJobPage from "./pages/EngineerJobPage";
+import ShortLinkRedirect from "./pages/ShortLinkRedirect";
+import VerificationStatus from "./pages/VerificationStatus";
+import AdminDashboard from "./pages/admin/Dashboard";
+import AdminVerifications from "./pages/admin/Verifications";
+import VerificationDetail from "./pages/admin/VerificationDetail";
+import AdminJobs from "./pages/admin/Jobs";
+import AdminUsers from "./pages/admin/Users";
+import AdminTeam from "./pages/admin/Team";
+import SuperadminDashboard from "./pages/superadmin/Dashboard";
+import SuperadminVerifications from "./pages/superadmin/Verifications";
+import SuperadminVerificationDetail from "./pages/superadmin/VerificationDetail";
+import SuperadminSuppliers from "./pages/superadmin/Suppliers";
+import SuperadminUsers from "./pages/superadmin/Users";
+import SuperadminJobs from "./pages/superadmin/Jobs";
+import SuperadminCoverage from "./pages/superadmin/Coverage";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -60,7 +76,24 @@ function Router() {
       <Route path={"/supplier/rates"} component={CurrentRates} />
       <Route path={"/supplier/jobs"} component={SupplierJobs} />
       <Route path={"/supplier/jobs/:id"} component={SupplierJobDetail} />
-      <Route path={"/supplier/coverage"} component={SupplierCoverage} />          <Route path="/supplier/coverage/availability" component={ServiceAvailability} />      <Route path={"/404"} component={NotFound} />
+      <Route path={"/supplier/coverage"} component={SupplierCoverage} />      <Route path="/e/:shortCode" component={ShortLinkRedirect} />
+      <Route path="/engineer/job/:token" component={EngineerJobPage} />
+      <Route path="/supplier/coverage/availability" component={ServiceAvailability} />
+      <Route path="/supplier/verification" component={VerificationStatus} />
+      <Route path="/admin" component={AdminDashboard} />
+      <Route path="/admin/verifications" component={AdminVerifications} />
+      <Route path="/admin/verifications/:supplierId" component={VerificationDetail} />
+      <Route path="/admin/jobs" component={AdminJobs} />
+      <Route path="/admin/users" component={AdminUsers} />
+      <Route path="/admin/team" component={AdminTeam} />
+      <Route path="/superadmin" component={SuperadminDashboard} />
+      <Route path="/superadmin/verifications" component={SuperadminVerifications} />
+      <Route path="/superadmin/verifications/:supplierId" component={SuperadminVerificationDetail} />
+      <Route path="/superadmin/suppliers" component={SuperadminSuppliers} />
+      <Route path="/superadmin/users" component={SuperadminUsers} />
+      <Route path="/superadmin/jobs" component={SuperadminJobs} />
+      <Route path="/superadmin/coverage" component={SuperadminCoverage} />
+      <Route path="/404" component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
     </Switch>

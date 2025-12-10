@@ -1,0 +1,16 @@
+{
+  "query": "SELECT \n  u.email,\n  su.supplierId,\n  s.companyName,\n  (SELECT COUNT(*) FROM jobs WHERE assignedSupplierId = su.supplierId) as jobCount\nFROM users u \nJOIN supplierUsers su ON u.id = su.userId \nJOIN suppliers s ON su.supplierId = s.id\nWHERE u.email = '12@supplier.com'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT \n  u.email,\n  su.supplierId,\n  s.companyName,\n  (SELECT COUNT(*) FROM jobs WHERE assignedSupplierId = su.supplierId) as jobCount\nFROM users u \nJOIN supplierUsers su ON u.id = su.userId \nJOIN suppliers s ON su.supplierId = s.id\nWHERE u.email = '12@supplier.com'",
+  "rows": [
+    {
+      "email": "12@supplier.com",
+      "supplierId": "240001",
+      "companyName": "test",
+      "jobCount": "2"
+    }
+  ],
+  "messages": [],
+  "stdout": "email\tsupplierId\tcompanyName\tjobCount\n12@supplier.com\t240001\ttest\t2\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}

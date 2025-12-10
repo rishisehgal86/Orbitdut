@@ -1,0 +1,55 @@
+{
+  "query": "SELECT * FROM jobLocations WHERE jobId = 90001 ORDER BY timestamp DESC LIMIT 5",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT * FROM jobLocations WHERE jobId = 90001 ORDER BY timestamp DESC LIMIT 5",
+  "rows": [
+    {
+      "id": "30006",
+      "jobId": "90001",
+      "latitude": "51.53401254431967",
+      "longitude": "-0.4563519796880787",
+      "accuracy": "40",
+      "trackingType": "en_route",
+      "timestamp": "2025-12-03 15:05:11"
+    },
+    {
+      "id": "30005",
+      "jobId": "90001",
+      "latitude": "51.53401254431059",
+      "longitude": "-0.4563519797058865",
+      "accuracy": "40",
+      "trackingType": "en_route",
+      "timestamp": "2025-12-03 15:05:11"
+    },
+    {
+      "id": "30004",
+      "jobId": "90001",
+      "latitude": "51.5340125443155",
+      "longitude": "-0.45635197969555086",
+      "accuracy": "40",
+      "trackingType": "en_route",
+      "timestamp": "2025-12-03 15:05:11"
+    },
+    {
+      "id": "30002",
+      "jobId": "90001",
+      "latitude": "51.53401254430232",
+      "longitude": "-0.45635197972139196",
+      "accuracy": "40",
+      "trackingType": "en_route",
+      "timestamp": "2025-12-03 15:04:56"
+    },
+    {
+      "id": "30003",
+      "jobId": "90001",
+      "latitude": "51.5340125443155",
+      "longitude": "-0.45635197969555086",
+      "accuracy": "40",
+      "trackingType": "en_route",
+      "timestamp": "2025-12-03 15:04:56"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tjobId\tlatitude\tlongitude\taccuracy\ttrackingType\ttimestamp\n30006\t90001\t51.53401254431967\t-0.4563519796880787\t40\ten_route\t2025-12-03 15:05:11\n30005\t90001\t51.53401254431059\t-0.4563519797058865\t40\ten_route\t2025-12-03 15:05:11\n30004\t90001\t51.5340125443155\t-0.45635197969555086\t40\ten_route\t2025-12-03 15:05:11\n30002\t90001\t51.53401254430232\t-0.45635197972139196\t40\ten_route\t2025-12-03 15:04:56\n30003\t90001\t51.5340125443155\t-0.45635197969555086\t40\ten_route\t2025-12-03 15:04:56\n",
+  "stderr": "",
+  "execution_time_ms": 147
+}

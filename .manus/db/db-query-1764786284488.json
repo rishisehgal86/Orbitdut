@@ -1,0 +1,34 @@
+{
+  "query": "SELECT id, jobId, engineerName, timeOnsite, timeLeftSite, visitDate FROM siteVisitReports ORDER BY id DESC LIMIT 5",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT id, jobId, engineerName, timeOnsite, timeLeftSite, visitDate FROM siteVisitReports ORDER BY id DESC LIMIT 5",
+  "rows": [
+    {
+      "id": "120002",
+      "jobId": "180001",
+      "engineerName": "Test Engineer",
+      "timeOnsite": "NULL",
+      "timeLeftSite": "2025-12-03T18:22:52.602Z",
+      "visitDate": "2025-12-03 18:22:53"
+    },
+    {
+      "id": "120001",
+      "jobId": "90001",
+      "engineerName": "bob engineer",
+      "timeOnsite": "2025-12-03T18:16:58.000Z",
+      "timeLeftSite": "NULL",
+      "visitDate": "2025-12-03 18:17:20"
+    },
+    {
+      "id": "1",
+      "jobId": "30001",
+      "engineerName": "bob engineer",
+      "timeOnsite": "NULL",
+      "timeLeftSite": "NULL",
+      "visitDate": "2025-12-03 18:01:40"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tjobId\tengineerName\ttimeOnsite\ttimeLeftSite\tvisitDate\n120002\t180001\tTest Engineer\tNULL\t2025-12-03T18:22:52.602Z\t2025-12-03 18:22:53\n120001\t90001\tbob engineer\t2025-12-03T18:16:58.000Z\tNULL\t2025-12-03 18:17:20\n1\t30001\tbob engineer\tNULL\tNULL\t2025-12-03 18:01:40\n",
+  "stderr": "",
+  "execution_time_ms": 50
+}

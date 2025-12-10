@@ -1,0 +1,16 @@
+{
+  "query": "SELECT id, jobId, engineerName, createdAt FROM siteVisitReports WHERE jobId = 30001",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT id, jobId, engineerName, createdAt FROM siteVisitReports WHERE jobId = 30001",
+  "rows": [
+    {
+      "id": "1",
+      "jobId": "30001",
+      "engineerName": "bob engineer",
+      "createdAt": "2025-12-03 16:07:24"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tjobId\tengineerName\tcreatedAt\n1\t30001\tbob engineer\t2025-12-03 16:07:24\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

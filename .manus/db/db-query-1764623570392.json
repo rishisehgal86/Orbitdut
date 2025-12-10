@@ -1,0 +1,19 @@
+{
+  "query": "SELECT id, customerEmail, customerId, customerName, status, serviceType, createdAt\nFROM jobs\nWHERE customerEmail = '12@customer.com'\nLIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT id, customerEmail, customerId, customerName, status, serviceType, createdAt\nFROM jobs\nWHERE customerEmail = '12@customer.com'\nLIMIT 1;",
+  "rows": [
+    {
+      "id": "30001",
+      "customerEmail": "12@customer.com",
+      "customerId": "180001",
+      "customerName": "Tester",
+      "status": "pending_supplier_acceptance",
+      "serviceType": "Level 1 End User Compute Engineer",
+      "createdAt": "2025-12-01 16:55:38"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcustomerEmail\tcustomerId\tcustomerName\tstatus\tserviceType\tcreatedAt\n30001\t12@customer.com\t180001\tTester\tpending_supplier_acceptance\tLevel 1 End User Compute Engineer\t2025-12-01 16:55:38\n",
+  "stderr": "",
+  "execution_time_ms": 147
+}

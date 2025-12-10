@@ -1,11 +1,24 @@
+import { useAuth } from "@/_core/hooks/useAuth";
 import CustomerLayout from "@/components/CustomerLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
 import { Calendar, CheckCircle, Clock, Loader2, Plus } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
+import { useEffect } from "react";
+
 
 export default function CustomerDashboard() {
+  const { user } = useAuth();
+  const [, setLocation] = useLocation();
+
+  // Redirect superadmin users to superadmin panel
+  useEffect(() => {
+    if (user?.role === 'superadmin') {
+      setLocation('/superadmin');
+    }
+  }, [user, setLocation]);
+
   const { data: jobs, isLoading } = trpc.jobs.getCustomerJobs.useQuery();
 
   const getStatusBadge = (status: string) => {

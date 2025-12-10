@@ -5,16 +5,71 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
-import { Calendar, CheckCircle, Clock, DollarSign, Loader2, MapPin } from "lucide-react";
-import { Link } from "wouter";
+import { Calendar, CheckCircle, Clock, DollarSign, Eye, Loader2, MapPin, AlertTriangle, AlertCircle } from "lucide-react";
+import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useEffect } from "react";
 
 export default function SupplierJobs() {
+  const [, setLocation] = useLocation();
+  const { data: profile } = trpc.suppliers.getProfile.useQuery();
+  const { data: verificationStatus } = trpc.verification.getStatus.useQuery();
   const { data: availableJobs, isLoading: loadingAvailable, refetch: refetchAvailable } =
     trpc.jobs.getAvailableForSupplier.useQuery();
   const { data: myJobs, isLoading: loadingMy, refetch: refetchMy } =
     trpc.jobs.getSupplierJobs.useQuery();
-  const acceptJob = trpc.jobs.accept.useMutation();
+  const acceptJob = trpc.jobs.acceptJobAsSupplier.useMutation();
+
+  const isVerified = profile?.isVerified === 1;
+  const currentVerificationStatus = verificationStatus?.verification?.status || "not_started";
+  const isApproved = currentVerificationStatus === "approved";
+
+  // Show blocking message if not approved
+  if (profile && !isApproved) {
+    return (
+      <SupplierLayout>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="w-8 h-8 text-yellow-600" />
+                <div>
+                  <CardTitle>Verification Required</CardTitle>
+                  <CardDescription>
+                    You must complete and be approved for verification before accessing jobs
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Current Status: {currentVerificationStatus.replace(/_/g, " ").toUpperCase()}</AlertTitle>
+                <AlertDescription>
+                  {currentVerificationStatus === "not_started" && "You haven't started the verification process yet."}
+                  {currentVerificationStatus === "in_progress" && "Your verification application is in progress."}
+                  {currentVerificationStatus === "pending_review" && "Your application has been submitted and is awaiting review."}
+                  {currentVerificationStatus === "under_review" && "Our team is currently reviewing your application."}
+                  {currentVerificationStatus === "rejected" && "Your application was not approved. Please review the feedback and resubmit."}
+                  {currentVerificationStatus === "resubmission_required" && "Additional information is needed. Please update your application."}
+                </AlertDescription>
+              </Alert>
+              
+              <div className="flex gap-3">
+                <Button asChild>
+                  <Link href="/supplier/verification">Go to Verification</Link>
+                </Button>
+                <Button variant="outline" asChild>
+                  <Link href="/supplier/dashboard">Back to Dashboard</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </SupplierLayout>
+    );
+  }
 
   const handleAcceptJob = async (jobId: number) => {
     try {
@@ -176,22 +231,30 @@ export default function SupplierJobs() {
                       <div className="text-sm text-muted-foreground">
                         Customer: {job.customerName}
                       </div>
-                      <Button
-                        onClick={() => handleAcceptJob(job.id)}
-                        disabled={acceptJob.isPending}
-                      >
-                        {acceptJob.isPending ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Accepting...
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle className="mr-2 h-4 w-4" />
-                            Accept Job
-                          </>
-                        )}
-                      </Button>
+                      <div className="flex gap-2">
+                        <Link href={`/supplier/jobs/${job.id}`}>
+                          <Button variant="outline">
+                            <Eye className="mr-2 h-4 w-4" />
+                            View Details
+                          </Button>
+                        </Link>
+                        <Button
+                          onClick={() => handleAcceptJob(job.id)}
+                          disabled={acceptJob.isPending}
+                        >
+                          {acceptJob.isPending ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Accepting...
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle className="mr-2 h-4 w-4" />
+                              Accept Job
+                            </>
+                          )}
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
