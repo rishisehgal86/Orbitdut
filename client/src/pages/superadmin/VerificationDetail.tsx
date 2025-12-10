@@ -47,9 +47,9 @@ export default function VerificationDetail() {
   const [feedback, setFeedback] = useState("");
   const [adminNotes, setAdminNotes] = useState("");
 
-  const approveMutation = trpc.verification.approveVerification.useMutation();
-  const rejectMutation = trpc.verification.rejectVerification.useMutation();
-  const resubmitMutation = trpc.verification.requestResubmission.useMutation();
+  const approveMutation = trpc.admin.approveVerification.useMutation();
+  const rejectMutation = trpc.admin.rejectVerification.useMutation();
+  const resubmitMutation = trpc.admin.requestResubmission.useMutation();
 
   const handleAction = async () => {
     if (!supplierId) return;

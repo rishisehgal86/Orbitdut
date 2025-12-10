@@ -994,3 +994,10 @@
 - [x] Root cause: VerificationStatus only showed wizard for not_started/resubmission_required, not in_progress
 - [x] Fix: Added in_progress to wizard condition in VerificationStatus.tsx
 - [ ] Test complete verification flow end-to-end (requires supplier login)
+
+## Bug: Missing Admin Verification Procedures
+- [x] Root cause: Frontend calling verification.* instead of admin.* router
+- [x] Fixed VerificationDetail.tsx to use admin.approveVerification
+- [x] Fixed VerificationDetail.tsx to use admin.rejectVerification
+- [x] Fixed VerificationDetail.tsx to use admin.requestResubmission
+- [ ] Test all three admin actions from superadmin panel
