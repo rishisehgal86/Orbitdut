@@ -221,16 +221,7 @@ export default function CurrentRates() {
         </div>
 
         {/* Progress Summary */}
-        {/* TODO: Update RateConfigurationSummary to use serviceLevel */}
-        {/* {countries && cities && rates && serviceExclusions && responseTimeExclusions && (
-          <RateConfigurationSummary
-            countries={countries}
-            cities={cities}
-            rates={rates}
-            serviceExclusions={serviceExclusions}
-            responseTimeExclusions={responseTimeExclusions}
-          />
-        )} */}
+        <RateConfigurationSummary supplierId={supplierId} />
 
         {/* Filters and Table */}
         <Card>

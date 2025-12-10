@@ -606,13 +606,12 @@ export const appRouter = router({
       }),
 
     // Get rate completion statistics
-    // TODO: Re-implement getRateCompletionStats for service level system
-    // getRateCompletionStats: protectedProcedure
-    //   .input(z.object({ supplierId: z.number() }))
-    //   .query(async ({ input }) => {
-    //     const { getRateCompletionStats } = await import("./rates");
-    //     return await getRateCompletionStats(input.supplierId);
-    //   }),
+    getRateCompletionStats: protectedProcedure
+      .input(z.object({ supplierId: z.number() }))
+      .query(async ({ input }) => {
+        const { getRateCompletionStats } = await import("./rates");
+        return await getRateCompletionStats(input.supplierId);
+      }),
 
     // Clean up orphaned rates (manual cleanup script)
     // TODO: Re-implement cleanupOrphanedRates for service level system
