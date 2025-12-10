@@ -2994,6 +2994,8 @@ export const appRouter = router({
     getAllJobs: superadminProcedure.query(async () => {
       const { jobs, users } = await import("../drizzle/schema");
       const { eq } = await import("drizzle-orm");
+      const db = await getDb();
+      if (!db) throw new Error("Database connection failed");
 
       const allJobs = await db.select({
         id: jobs.id,
@@ -3031,20 +3033,19 @@ export const appRouter = router({
 
     // Get coverage statistics
     getCoverageStats: superadminProcedure.query(async () => {
-      const { supplierCoverageAreas, suppliers } = await import("../drizzle/schema");
+      const { supplierCoverageCountries, suppliers } = await import("../drizzle/schema");
       const { eq } = await import("drizzle-orm");
+      const db = await getDb();
+      if (!db) throw new Error("Database connection failed");
 
       const coverageAreas = await db.select({
-        id: supplierCoverageAreas.id,
-        supplierId: supplierCoverageAreas.supplierId,
-        country: supplierCoverageAreas.country,
-        region: supplierCoverageAreas.region,
-        city: supplierCoverageAreas.city,
-        postalCode: supplierCoverageAreas.postalCode,
+        id: supplierCoverageCountries.id,
+        supplierId: supplierCoverageCountries.supplierId,
+        country: supplierCoverageCountries.country,
         companyName: suppliers.companyName,
       })
-        .from(supplierCoverageAreas)
-        .leftJoin(suppliers, eq(supplierCoverageAreas.supplierId, suppliers.id));
+        .from(supplierCoverageCountries)
+        .leftJoin(suppliers, eq(supplierCoverageCountries.supplierId, suppliers.id));
 
       return coverageAreas;
     }),
