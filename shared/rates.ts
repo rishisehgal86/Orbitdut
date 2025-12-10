@@ -27,7 +27,8 @@ export const RATE_SERVICE_TYPES = [
 // Response Times (in hours) - 3 active levels + 2 legacy
 // New rate configuration should only use: 4, 24, 48
 // 72 and 96 are preserved for backward compatibility only
-export const RESPONSE_TIME_HOURS = [4, 24, 48, 72, 96] as const;
+// NOTE: This is being phased out in favor of SERVICE_LEVELS enum
+export const RESPONSE_TIME_HOURS = [4, 24, 48] as const; // Removed legacy 72, 96
 
 // Active response times for new configurations (3 levels)
 export const ACTIVE_RESPONSE_TIME_HOURS = [4, 24, 48] as const;
@@ -35,13 +36,63 @@ export const ACTIVE_RESPONSE_TIME_HOURS = [4, 24, 48] as const;
 export type RateResponseTime = typeof RESPONSE_TIME_HOURS[number];
 export type ActiveRateResponseTime = typeof ACTIVE_RESPONSE_TIME_HOURS[number];
 
+// Service Levels (new 3-tier system)
+export const SERVICE_LEVELS = {
+  SAME_BUSINESS_DAY: "same_business_day",
+  NEXT_BUSINESS_DAY: "next_business_day",
+  SCHEDULED: "scheduled",
+} as const;
+
+export type ServiceLevel = typeof SERVICE_LEVELS[keyof typeof SERVICE_LEVELS];
+
+// Mapping between response time hours and service levels (including legacy)
+export const HOURS_TO_SERVICE_LEVEL: Record<number, ServiceLevel> = {
+  4: SERVICE_LEVELS.SAME_BUSINESS_DAY,
+  24: SERVICE_LEVELS.NEXT_BUSINESS_DAY,
+  48: SERVICE_LEVELS.SCHEDULED,
+  72: SERVICE_LEVELS.SCHEDULED, // Legacy - maps to scheduled
+  96: SERVICE_LEVELS.SCHEDULED, // Legacy - maps to scheduled
+};
+
+export const SERVICE_LEVEL_TO_HOURS: Record<ServiceLevel, RateResponseTime> = {
+  [SERVICE_LEVELS.SAME_BUSINESS_DAY]: 4,
+  [SERVICE_LEVELS.NEXT_BUSINESS_DAY]: 24,
+  [SERVICE_LEVELS.SCHEDULED]: 48,
+};
+
+export const SERVICE_LEVEL_LABELS: Record<ServiceLevel, string> = {
+  [SERVICE_LEVELS.SAME_BUSINESS_DAY]: "Same Business Day",
+  [SERVICE_LEVELS.NEXT_BUSINESS_DAY]: "Next Business Day",
+  [SERVICE_LEVELS.SCHEDULED]: "Scheduled",
+};
+
+// For UI components - array of service level objects
+export const RATE_SERVICE_LEVELS = [
+  { 
+    value: SERVICE_LEVELS.SAME_BUSINESS_DAY,
+    label: "Same Business Day",
+    hours: 4,
+    tooltip: "Response within 4 hours during business hours (9 AM - 5 PM local time). Ideal for urgent issues requiring immediate attention."
+  },
+  { 
+    value: SERVICE_LEVELS.NEXT_BUSINESS_DAY,
+    label: "Next Business Day",
+    hours: 24,
+    tooltip: "Response within 24 hours (next business day). Standard service level for most requests."
+  },
+  { 
+    value: SERVICE_LEVELS.SCHEDULED,
+    label: "Scheduled",
+    hours: 48,
+    tooltip: "Response within 48 hours (2 business days). Suitable for planned maintenance and non-urgent work."
+  },
+];
+
 // Semantic labels for response times
 export const RESPONSE_TIME_LABELS: Record<RateResponseTime, string> = {
   4: "Same Business Day",
   24: "Next Business Day",
   48: "Scheduled",
-  72: "72h (Legacy)", // Preserved for existing data
-  96: "96h (Legacy)", // Preserved for existing data
 };
 
 // For UI components - array of objects with hours and label

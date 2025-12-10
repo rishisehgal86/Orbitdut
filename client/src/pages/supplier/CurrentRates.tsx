@@ -8,18 +8,17 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Search, Download, ChevronDown, ChevronRight, Info } from "lucide-react";
 import SupplierLayout from "@/components/SupplierLayout";
-import { RATE_SERVICE_TYPES, RESPONSE_TIME_HOURS, RESPONSE_TIME_LABELS, formatCurrency, ALL_RATE_RESPONSE_TIMES } from "@shared/rates";
+import { RATE_SERVICE_TYPES, RATE_SERVICE_LEVELS, SERVICE_LEVEL_LABELS, formatCurrency, SERVICE_LEVEL_TO_HOURS, type ServiceLevel } from "@shared/rates";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { RateConfigurationSummary } from "@/components/RateConfigurationSummary";
 
 type ServiceType = typeof RATE_SERVICE_TYPES[number]["value"];
-type ResponseTime = typeof RESPONSE_TIME_HOURS[number];
 
 interface FilterState {
   serviceTypes: ServiceType[];
   locationTypes: string[];
   regions: string[];
-  responseTimes: ResponseTime[];
+  serviceLevels: ServiceLevel[];
   statuses: string[];
 }
 
@@ -30,7 +29,7 @@ export default function CurrentRates() {
     serviceTypes: RATE_SERVICE_TYPES.map(s => s.value),
     locationTypes: ["countries", "cities"],
     regions: ["africa", "americas", "asia", "europe", "oceania", "cities"],
-    responseTimes: [...RESPONSE_TIME_HOURS], // Shows all including legacy
+    serviceLevels: RATE_SERVICE_LEVELS.map(sl => sl.value),
     statuses: ["configured", "missing"],
   });
 
@@ -66,7 +65,7 @@ export default function CurrentRates() {
     if (!rates) return map;
 
     rates.forEach((rate) => {
-      const key = `${rate.countryCode || ""}-${rate.cityId || ""}-${rate.serviceType}-${rate.responseTimeHours}`;
+      const key = `${rate.countryCode || ""}-${rate.cityId || ""}-${rate.serviceType}-${rate.serviceLevel}`;
       map.set(key, rate.rateUsdCents || 0);
     });
 
@@ -126,33 +125,33 @@ export default function CurrentRates() {
     });
   };
 
-  // Check if response time is excluded for a location/service
-  const isResponseTimeExcluded = (location: any, serviceType: ServiceType, responseTime: ResponseTime) => {
+  // Check if service level is excluded for a location/service
+  const isResponseTimeExcluded = (location: any, serviceType: ServiceType, serviceLevel: ServiceLevel) => {
     if (!responseTimeExclusions) return false;
     return responseTimeExclusions.some((exc) => {
       const matchesCountry = location.type === "country" && exc.countryCode === location.code;
       const matchesCity = location.type === "city" && exc.cityId === location.cityId;
       const matchesService = exc.serviceType === serviceType;
-      const matchesResponseTime = exc.responseTimeHours === responseTime;
-      return (matchesCountry || matchesCity) && matchesService && matchesResponseTime;
+      const matchesServiceLevel = exc.serviceLevel === serviceLevel;
+      return (matchesCountry || matchesCity) && matchesService && matchesServiceLevel;
     });
   };
 
-  // Get rate for a location/service/response time
-  const getRate = (location: any, serviceType: ServiceType, responseTime: ResponseTime) => {
-    const key = `${location.code || ""}-${location.cityId || ""}-${serviceType}-${responseTime}`;
+  // Get rate for a location/service/service level
+  const getRate = (location: any, serviceType: ServiceType, serviceLevel: ServiceLevel) => {
+    const key = `${location.code || ""}-${location.cityId || ""}-${serviceType}-${serviceLevel}`;
     return rateMap.get(key);
   };
 
   // Get status for a location/service combination
   const getLocationServiceStatus = (location: any, serviceType: ServiceType) => {
-    const configuredCount = RESPONSE_TIME_HOURS.filter((rt) => {
-      const rate = getRate(location, serviceType, rt);
+    const configuredCount = RATE_SERVICE_LEVELS.filter((sl) => {
+      const rate = getRate(location, serviceType, sl.value);
       return rate !== undefined && rate > 0;
     }).length;
 
     if (configuredCount === 0) return "missing";
-    if (configuredCount === RESPONSE_TIME_HOURS.length) return "configured";
+    if (configuredCount === RATE_SERVICE_LEVELS.length) return "configured";
     return "partial";
   };
 
@@ -222,7 +221,8 @@ export default function CurrentRates() {
         </div>
 
         {/* Progress Summary */}
-        {countries && cities && rates && serviceExclusions && responseTimeExclusions && (
+        {/* TODO: Update RateConfigurationSummary to use serviceLevel */}
+        {/* {countries && cities && rates && serviceExclusions && responseTimeExclusions && (
           <RateConfigurationSummary
             countries={countries}
             cities={cities}
@@ -230,7 +230,7 @@ export default function CurrentRates() {
             serviceExclusions={serviceExclusions}
             responseTimeExclusions={responseTimeExclusions}
           />
-        )}
+        )} */}
 
         {/* Filters and Table */}
         <Card>
@@ -325,19 +325,19 @@ export default function CurrentRates() {
                 ))}
               </div>
 
-              {/* Response Times */}
+              {/* Service Levels */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Response Times</Label>
-                {RESPONSE_TIME_HOURS.map((rt) => (
-                  <div key={rt} className="flex items-center space-x-1.5">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Service Levels</Label>
+                {RATE_SERVICE_LEVELS.map((sl) => (
+                  <div key={sl.value} className="flex items-center space-x-1.5">
                     <Checkbox
-                      id={`rt-${rt}`}
-                      checked={filters.responseTimes.includes(rt)}
-                      onCheckedChange={() => toggleFilter("responseTimes", rt)}
+                      id={`sl-${sl.value}`}
+                      checked={filters.serviceLevels.includes(sl.value)}
+                      onCheckedChange={() => toggleFilter("serviceLevels", sl.value)}
                       className="h-3.5 w-3.5"
                     />
-                    <label htmlFor={`rt-${rt}`} className="text-xs cursor-pointer leading-none">
-                      {rt}h
+                    <label htmlFor={`sl-${sl.value}`} className="text-xs cursor-pointer leading-none">
+                      {sl.label}
                     </label>
                   </div>
                 ))}
@@ -459,21 +459,21 @@ export default function CurrentRates() {
                             </tr>
 
                             {/* Expanded response time rows */}
-                            {isExpanded && filters.responseTimes.map((rt) => {
-                              const rtOption = ALL_RATE_RESPONSE_TIMES.find(opt => opt.hours === rt);
+                            {isExpanded && filters.serviceLevels.map((serviceLevel) => {
+                              const slOption = RATE_SERVICE_LEVELS.find(opt => opt.value === serviceLevel);
                               return (
-                              <tr key={`${locationKey}-${rt}`} className="bg-muted/30">
+                              <tr key={`${locationKey}-${serviceLevel}`} className="bg-muted/30">
                                 <td className="py-1.5 px-3 pl-12 text-sm text-muted-foreground">
                                   <div className="flex items-center gap-1.5">
-                                    {RESPONSE_TIME_LABELS[rt]}
-                                    {rtOption?.tooltip && (
+                                    {SERVICE_LEVEL_LABELS[serviceLevel]}
+                                    {slOption?.tooltip && (
                                       <TooltipProvider>
                                         <Tooltip>
                                           <TooltipTrigger asChild>
                                             <Info className="h-3 w-3 text-muted-foreground cursor-help" />
                                           </TooltipTrigger>
                                           <TooltipContent className="max-w-xs">
-                                            <p className="text-sm">{rtOption.tooltip}</p>
+                                            <p className="text-sm">{slOption.tooltip}</p>
                                           </TooltipContent>
                                         </Tooltip>
                                       </TooltipProvider>
@@ -482,8 +482,8 @@ export default function CurrentRates() {
                                 </td>
                                 {filters.serviceTypes.map((serviceType) => {
                                   const serviceExcluded = isServiceExcluded(location, serviceType);
-                                  const rtExcluded = isResponseTimeExcluded(location, serviceType, rt);
-                                  const rate = getRate(location, serviceType, rt);
+                                  const rtExcluded = isResponseTimeExcluded(location, serviceType, serviceLevel);
+                                  const rate = getRate(location, serviceType, serviceLevel);
                                   return (
                                     <td key={serviceType} className="py-1.5 px-3 text-sm">
                                       {serviceExcluded ? (

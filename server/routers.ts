@@ -548,7 +548,7 @@ export const appRouter = router({
           countryCode: z.string().length(2).optional(),
           cityId: z.number().optional(),
           serviceType: z.string(),
-          responseTimeHours: z.number(),
+          serviceLevel: z.enum(["same_business_day", "next_business_day", "scheduled"]),
           rateUsdCents: z.number().nullable(),
         })
       )
@@ -568,7 +568,7 @@ export const appRouter = router({
               countryCode: z.string().length(2).optional(),
               cityId: z.number().optional(),
               serviceType: z.string(),
-              responseTimeHours: z.number(),
+              serviceLevel: z.enum(["same_business_day", "next_business_day", "scheduled"]),
               rateUsdCents: z.number().nullable(),
             })
           ),
@@ -601,21 +601,23 @@ export const appRouter = router({
       }),
 
     // Get rate completion statistics
-    getRateCompletionStats: protectedProcedure
-      .input(z.object({ supplierId: z.number() }))
-      .query(async ({ input }) => {
-        const { getRateCompletionStats } = await import("./rates");
-        return await getRateCompletionStats(input.supplierId);
-      }),
+    // TODO: Re-implement getRateCompletionStats for service level system
+    // getRateCompletionStats: protectedProcedure
+    //   .input(z.object({ supplierId: z.number() }))
+    //   .query(async ({ input }) => {
+    //     const { getRateCompletionStats } = await import("./rates");
+    //     return await getRateCompletionStats(input.supplierId);
+    //   }),
 
     // Clean up orphaned rates (manual cleanup script)
-    cleanupOrphanedRates: protectedProcedure
-      .input(z.object({ supplierId: z.number() }))
-      .mutation(async ({ input }) => {
-        const { cleanupOrphanedRates } = await import("./rates");
-        const deletedCount = await cleanupOrphanedRates(input.supplierId);
-        return { success: true, deletedCount };
-      }),
+    // TODO: Re-implement cleanupOrphanedRates for service level system
+    // cleanupOrphanedRates: protectedProcedure
+    //   .input(z.object({ supplierId: z.number() }))
+    //   .mutation(async ({ input }) => {
+    //     const { cleanupOrphanedRates } = await import("./rates");
+    //     const deletedCount = await cleanupOrphanedRates(input.supplierId);
+    //     return { success: true, deletedCount };
+    //   }),
 
     // Download Excel template with current rates
     downloadExcelTemplate: protectedProcedure
@@ -702,10 +704,19 @@ export const appRouter = router({
             cityId = city[0].id;
           }
 
+          // Map response time hours to service level
+          const { HOURS_TO_SERVICE_LEVEL } = await import("../shared/rates");
+          const serviceLevel = HOURS_TO_SERVICE_LEVEL[rate.responseTimeHours as 4 | 24 | 48 | 72 | 96];
+          
+          if (!serviceLevel) {
+            // Skip invalid response times
+            continue;
+          }
+
           ratesToInsert.push({
             supplierId: input.supplierId,
             serviceType: rate.serviceType,
-            responseTimeHours: rate.responseTimeHours,
+            serviceLevel,
             countryCode: rate.locationType === "country" ? rate.countryCode : null,
             cityId: rate.locationType === "city" ? cityId : null,
             rateUsdCents: dollarsToCents(rate.rateUsd),
@@ -746,9 +757,9 @@ export const appRouter = router({
         const { addServiceExclusion } = await import("./serviceExclusions");
         await addServiceExclusion(input);
         
-        // Automatic cleanup: Remove orphaned rates after service exclusion
-        const { cleanupOrphanedRates } = await import("./rates");
-        await cleanupOrphanedRates(input.supplierId);
+        // TODO: Re-implement automatic cleanup for service level system
+        // const { cleanupOrphanedRates } = await import("./rates");
+        // await cleanupOrphanedRates(input.supplierId);
         
         return { success: true };
       }),
@@ -845,7 +856,7 @@ export const appRouter = router({
         return { success: true };
       }),
 
-    // Response time exclusions - granular control at response time level
+    // Response time exclusions - granular control at service level
     addResponseTimeExclusion: protectedProcedure
       .input(
         z.object({
@@ -853,17 +864,12 @@ export const appRouter = router({
           countryCode: z.string().length(2).optional(),
           cityId: z.number().optional(),
           serviceType: z.string(),
-          responseTimeHours: z.number(),
+          serviceLevel: z.enum(["same_business_day", "next_business_day", "scheduled"]),
         })
       )
       .mutation(async ({ input }) => {
         const { addResponseTimeExclusion } = await import("./responseTimeExclusions");
         await addResponseTimeExclusion(input);
-        
-        // Automatic cleanup: Remove orphaned rates after response time exclusion
-        const { cleanupOrphanedRates } = await import("./rates");
-        await cleanupOrphanedRates(input.supplierId);
-        
         return { success: true };
       }),
 
@@ -874,7 +880,7 @@ export const appRouter = router({
           countryCode: z.string().length(2).optional(),
           cityId: z.number().optional(),
           serviceType: z.string(),
-          responseTimeHours: z.number(),
+          serviceLevel: z.enum(["same_business_day", "next_business_day", "scheduled"]),
         })
       )
       .mutation(async ({ input }) => {
@@ -912,9 +918,9 @@ export const appRouter = router({
         const { upsertSupplierCountries } = await import("./db");
         await upsertSupplierCountries(input.supplierId, input.countryCodes, input.isExcluded);
         
-        // Automatic cleanup: Remove orphaned rates after coverage change
-        const { cleanupOrphanedRates } = await import("./rates");
-        await cleanupOrphanedRates(input.supplierId);
+        // TODO: Re-implement automatic cleanup for service level system
+        // const { cleanupOrphanedRates } = await import("./rates");
+        // await cleanupOrphanedRates(input.supplierId);
         
         // Send email notification when coverage is configured
         if (input.countryCodes.length > 0 && ctx.user) {
@@ -968,9 +974,9 @@ export const appRouter = router({
         const { deleteSupplierPriorityCity } = await import("./db");
         await deleteSupplierPriorityCity(input.id, input.supplierId);
         
-        // Automatic cleanup: Remove orphaned rates after city removal
-        const { cleanupOrphanedRates } = await import("./rates");
-        await cleanupOrphanedRates(input.supplierId);
+        // TODO: Re-implement automatic cleanup for service level system
+        // const { cleanupOrphanedRates } = await import("./rates");
+        // await cleanupOrphanedRates(input.supplierId);
         
         return { success: true };
       }),

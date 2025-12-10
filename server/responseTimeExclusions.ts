@@ -1,16 +1,17 @@
 import { eq, and } from "drizzle-orm";
 import { getDb } from "./db";
 import { supplierResponseTimeExclusions } from "../drizzle/schema";
+import type { ServiceLevel } from "../shared/rates";
 
 /**
- * Add a response time exclusion for a specific service/location/response time combination
+ * Add a response time exclusion for a specific service/location/service level combination
  */
 export async function addResponseTimeExclusion(exclusion: {
   supplierId: number;
   countryCode?: string;
   cityId?: number;
   serviceType: string;
-  responseTimeHours: number;
+  serviceLevel: ServiceLevel;
 }) {
   const db = await getDb();
   if (!db) throw new Error("Database connection failed");
@@ -22,21 +23,21 @@ export async function addResponseTimeExclusion(exclusion: {
 }
 
 /**
- * Remove a response time exclusion for a specific service/location/response time combination
+ * Remove a response time exclusion for a specific service/location/service level combination
  */
 export async function removeResponseTimeExclusion(exclusion: {
   supplierId: number;
   countryCode?: string;
   cityId?: number;
   serviceType: string;
-  responseTimeHours: number;
+  serviceLevel: ServiceLevel;
 }) {
   const db = await getDb();
   if (!db) throw new Error("Database connection failed");
   const conditions = [
     eq(supplierResponseTimeExclusions.supplierId, exclusion.supplierId),
     eq(supplierResponseTimeExclusions.serviceType, exclusion.serviceType),
-    eq(supplierResponseTimeExclusions.responseTimeHours, exclusion.responseTimeHours),
+    eq(supplierResponseTimeExclusions.serviceLevel, exclusion.serviceLevel),
   ];
 
   if (exclusion.countryCode) {

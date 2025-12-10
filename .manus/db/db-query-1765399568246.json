@@ -1,0 +1,31 @@
+{
+  "query": "SHOW CREATE TABLE supplierRates",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SHOW CREATE TABLE supplierRates",
+  "rows": [
+    {
+      "Table": "supplierRates",
+      "Create Table": "CREATE TABLE `supplierRates` ("
+    }
+  ],
+  "messages": [
+    "  `id` int(11) NOT NULL AUTO_INCREMENT,",
+    "  `supplierId` int(11) NOT NULL,",
+    "  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,",
+    "  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,",
+    "  `countryCode` varchar(2) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `cityId` int(11) DEFAULT NULL,",
+    "  `serviceType` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,",
+    "  `serviceLevel` enum('same_business_day','next_business_day','scheduled') COLLATE utf8mb4_unicode_ci NOT NULL,",
+    "  `rateUsdCents` int(11) DEFAULT NULL,",
+    "  `isServiceable` int(10) unsigned DEFAULT NULL,",
+    "  PRIMARY KEY (`id`) /*T![clustered_index] CLUSTERED */,",
+    "  KEY `supplierRates_supplierId_suppliers_id_fk` (`supplierId`),",
+    "  KEY `supplierRates_cityId_supplierPriorityCities_id_fk` (`cityId`),",
+    "  CONSTRAINT `supplierRates_supplierId_suppliers_id_fk` FOREIGN KEY (`supplierId`) REFERENCES `2cukUCNz2S5THQpLSDbdYn`.`suppliers` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,",
+    "  CONSTRAINT `supplierRates_cityId_supplierPriorityCities_id_fk` FOREIGN KEY (`cityId`) REFERENCES `2cukUCNz2S5THQpLSDbdYn`.`supplierPriorityCities` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION",
+    ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=570001"
+  ],
+  "stdout": "Table\tCreate Table\nsupplierRates\tCREATE TABLE `supplierRates` (\n  `id` int(11) NOT NULL AUTO_INCREMENT,\n  `supplierId` int(11) NOT NULL,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  `countryCode` varchar(2) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `cityId` int(11) DEFAULT NULL,\n  `serviceType` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `serviceLevel` enum('same_business_day','next_business_day','scheduled') COLLATE utf8mb4_unicode_ci NOT NULL,\n  `rateUsdCents` int(11) DEFAULT NULL,\n  `isServiceable` int(10) unsigned DEFAULT NULL,\n  PRIMARY KEY (`id`) /*T![clustered_index] CLUSTERED */,\n  KEY `supplierRates_supplierId_suppliers_id_fk` (`supplierId`),\n  KEY `supplierRates_cityId_supplierPriorityCities_id_fk` (`cityId`),\n  CONSTRAINT `supplierRates_supplierId_suppliers_id_fk` FOREIGN KEY (`supplierId`) REFERENCES `2cukUCNz2S5THQpLSDbdYn`.`suppliers` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,\n  CONSTRAINT `supplierRates_cityId_supplierPriorityCities_id_fk` FOREIGN KEY (`cityId`) REFERENCES `2cukUCNz2S5THQpLSDbdYn`.`supplierPriorityCities` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=570001\n",
+  "stderr": "",
+  "execution_time_ms": 110
+}

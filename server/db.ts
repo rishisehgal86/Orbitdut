@@ -316,7 +316,7 @@ export async function deleteSupplierResponseTime(id: number, supplierId: number)
 
 /**
  * Bulk upsert supplier rates
- * Inserts new rates or updates existing ones based on supplierId, serviceType, responseTimeHours, and location
+ * Inserts new rates or updates existing ones based on supplierId, serviceType, serviceLevel, and location
  */
 export async function bulkUpsertRates(supplierId: number, rates: InsertSupplierRate[]) {
   const db = await getDb();
@@ -327,7 +327,7 @@ export async function bulkUpsertRates(supplierId: number, rates: InsertSupplierR
     const conditions = [
       eq(supplierRates.supplierId, supplierId),
       eq(supplierRates.serviceType, rate.serviceType),
-      eq(supplierRates.responseTimeHours, rate.responseTimeHours),
+      eq(supplierRates.serviceLevel, rate.serviceLevel),
     ];
 
     // Add location-specific conditions

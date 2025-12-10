@@ -4,13 +4,14 @@
 import { getDb } from "./db";
 import { supplierRates, type InsertSupplierRate, type SupplierRate } from "../drizzle/schema";
 import { eq, and, isNull } from "drizzle-orm";
+import type { ServiceLevel } from "../shared/rates";
 
 interface RateInput {
   supplierId: number;
   countryCode?: string | null;
   cityId?: number | null;
   serviceType: string;
-  responseTimeHours: number;
+  serviceLevel: ServiceLevel;
   rateUsdCents: number | null;
 }
 
@@ -22,7 +23,7 @@ export async function upsertRate(rate: RateInput): Promise<void> {
   const conditions = [
     eq(supplierRates.supplierId, rate.supplierId),
     eq(supplierRates.serviceType, rate.serviceType),
-    eq(supplierRates.responseTimeHours, rate.responseTimeHours),
+    eq(supplierRates.serviceLevel, rate.serviceLevel),
   ];
 
   // Add location condition (country OR city)
@@ -64,7 +65,7 @@ export async function upsertRate(rate: RateInput): Promise<void> {
       countryCode: rate.countryCode || null,
       cityId: rate.cityId || null,
       serviceType: rate.serviceType,
-      responseTimeHours: rate.responseTimeHours,
+      serviceLevel: rate.serviceLevel,
       rateUsdCents: rate.rateUsdCents,
     });
   }
@@ -94,284 +95,169 @@ export async function getSupplierRates(supplierId: number) {
     .from(supplierCoverageCountries)
     .where(eq(supplierCoverageCountries.supplierId, supplierId));
   
-  const coverageCountryCodes = new Set(coverageCountries.map(c => c.countryCode));
-  // Note: City coverage would be added here if the table exists
+  const coverageCountryCodes = coverageCountries.map(c => c.countryCode);
   
-  // Get all rates where:
-  // 1. Service is available (isServiceable = 1 or null for legacy data)
-  // 2. Response time is NOT excluded in supplierResponseTimeExclusions
-  const allRates = await db
+  // Get all rates for this supplier's covered locations
+  const rates = await db
     .select()
     .from(supplierRates)
     .where(
       and(
         eq(supplierRates.supplierId, supplierId),
         or(
-          eq(supplierRates.isServiceable, 1),
-          isNull(supplierRates.isServiceable)
+          // Country rates in coverage
+          and(
+            sql`${supplierRates.countryCode} IS NOT NULL`,
+            sql`${supplierRates.countryCode} IN (${coverageCountryCodes.join(',')})`
+          ),
+          // City rates (always included if they exist)
+          sql`${supplierRates.cityId} IS NOT NULL`
         )
       )
     );
-
-  // Get all response time exclusions for this supplier
-  const responseTimeExcl = await db
-    .select()
-    .from(supplierResponseTimeExclusions)
-    .where(eq(supplierResponseTimeExclusions.supplierId, supplierId));
-
-  // Filter rates by:
-  // 1. Current coverage (country or city)
-  // 2. NOT matching response time exclusions
-  return allRates.filter(rate => {
-    // Check if rate is for a location in current coverage
-    const inCoverage = 
-      (rate.countryCode && coverageCountryCodes.has(rate.countryCode));
-      // TODO: Add city coverage check: || (rate.cityId && coverageCityIds.has(rate.cityId))
-    
-    if (!inCoverage) return false;
-    
-    // Check if rate matches any response time exclusion
-    const isExcluded = responseTimeExcl.some(excl => {
-      const locationMatch = 
-        (excl.countryCode && excl.countryCode === rate.countryCode) ||
-        (excl.cityId && excl.cityId === rate.cityId);
-      const serviceMatch = excl.serviceType === rate.serviceType;
-      const responseTimeMatch = excl.responseTimeHours === rate.responseTimeHours;
-      return locationMatch && serviceMatch && responseTimeMatch;
-    });
-    
-    return !isExcluded;
-  });
+  
+  return rates;
 }
 
 /**
- * Get rate completion statistics (simplified - direct database counts)
+ * Check if a rate is excluded by response time exclusion rules
  */
-export async function getRateCompletionStats(supplierId: number): Promise<{
-  total: number;
-  configured: number;
-  missing: number;
-  excluded: number;
-  percentage: number;
-}> {
+export async function isRateExcluded(rate: SupplierRate, exclusions: any[]): Promise<boolean> {
+  for (const excl of exclusions) {
+    // Check if exclusion matches this rate
+    const locationMatch = 
+      (excl.countryCode && excl.countryCode === rate.countryCode) ||
+      (excl.cityId && excl.cityId === rate.cityId);
+    
+    const serviceTypeMatch = excl.serviceType === rate.serviceType;
+    const serviceLevelMatch = excl.serviceLevel === rate.serviceLevel;
+    
+    if (locationMatch && serviceTypeMatch && serviceLevelMatch) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+/**
+ * Get all missing rate slots for a supplier
+ * Returns locations/services/service levels that need rates configured
+ */
+export async function getMissingRateSlots(supplierId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const { supplierCoverageCountries, supplierPriorityCities } = await import("../drizzle/schema");
-  const { sql } = await import("drizzle-orm");
+  const { supplierCoverageCountries, supplierPriorityCities, supplierServiceExclusions } = await import("../drizzle/schema");
+  const { SERVICE_TYPES } = await import("../shared/rates");
+  const { RATE_SERVICE_LEVELS } = await import("../shared/rates");
   
-  // 1. Get coverage locations
-  const coverageCountries = await db
-    .select({ countryCode: supplierCoverageCountries.countryCode })
+  // Get coverage
+  const countries = await db
+    .select()
     .from(supplierCoverageCountries)
     .where(eq(supplierCoverageCountries.supplierId, supplierId));
   
-  const coverageCities = await db
-    .select({ id: supplierPriorityCities.id })
+  const cities = await db
+    .select()
     .from(supplierPriorityCities)
     .where(eq(supplierPriorityCities.supplierId, supplierId));
   
-  // 2. Get all rates for this supplier
-  const allRates = await db
-    .select()
-    .from(supplierRates)
-    .where(eq(supplierRates.supplierId, supplierId));
+  // Get existing rates
+  const rates = await getSupplierRates(supplierId);
   
-  // 3. Get exclusions
-  const { supplierServiceExclusions, supplierResponseTimeExclusions } = await import("../drizzle/schema");
-  
+  // Get service exclusions
   const serviceExclusions = await db
     .select()
     .from(supplierServiceExclusions)
     .where(eq(supplierServiceExclusions.supplierId, supplierId));
   
-  const responseTimeExclusions = await db
-    .select()
-    .from(supplierResponseTimeExclusions)
-    .where(eq(supplierResponseTimeExclusions.supplierId, supplierId));
-  
-  // 4. Build virtual table: all possible rate slots with their data
-  const SERVICE_TYPES = ['L1 End User Computing', 'L1 Network Support', 'Smart Hands'];
-  const RESPONSE_TIMES = [4, 24, 48, 72, 96];
-  
-  const virtualTable: Array<{
-    location: { type: 'country', code: string } | { type: 'city', id: number };
+  // Build expected slots
+  const expectedSlots: {
+    locationType: "country" | "city";
+    locationId: string | number;
+    locationName: string;
     serviceType: string;
-    responseTimeHours: number;
-    rate: typeof allRates[0] | undefined;
-  }> = [];
+    serviceLevel: ServiceLevel;
+  }[] = [];
   
-  // Add country slots
-  for (const country of coverageCountries) {
-    for (const serviceType of SERVICE_TYPES) {
-      for (const responseTimeHours of RESPONSE_TIMES) {
-        // Find matching rate from database
-        const rate = allRates.find(r => 
-          r.countryCode === country.countryCode && 
-          r.serviceType === serviceType && 
-          r.responseTimeHours === responseTimeHours
+  // For each country
+  for (const country of countries) {
+    for (const serviceLevel of RATE_SERVICE_LEVELS) {
+      for (const serviceType of Object.values(SERVICE_TYPES)) {
+        // Check if service is excluded
+        const isExcluded = serviceExclusions.some(
+          e => e.countryCode === country.countryCode && e.serviceType === serviceType
         );
         
-        virtualTable.push({
-          location: { type: 'country', code: country.countryCode },
-          serviceType,
-          responseTimeHours,
-          rate,
-        });
+        if (!isExcluded) {
+          expectedSlots.push({
+            locationType: "country",
+            locationId: country.countryCode,
+            locationName: country.countryCode,
+            serviceType,
+            serviceLevel: serviceLevel.value,
+          });
+        }
       }
     }
   }
   
-  // Add city slots
-  for (const city of coverageCities) {
-    for (const serviceType of SERVICE_TYPES) {
-      for (const responseTimeHours of RESPONSE_TIMES) {
-        // Find matching rate from database
-        const rate = allRates.find(r => 
-          r.cityId === city.id && 
-          r.serviceType === serviceType && 
-          r.responseTimeHours === responseTimeHours
+  // For each city
+  for (const city of cities) {
+    for (const serviceLevel of RATE_SERVICE_LEVELS) {
+      for (const serviceType of Object.values(SERVICE_TYPES)) {
+        // Check if service is excluded
+        const isExcluded = serviceExclusions.some(
+          e => e.cityId === city.id && e.serviceType === serviceType
         );
         
-        virtualTable.push({
-          location: { type: 'city', id: city.id },
-          serviceType,
-          responseTimeHours,
-          rate,
-        });
+        if (!isExcluded) {
+          expectedSlots.push({
+            locationType: "city",
+            locationId: city.id,
+            locationName: `${city.cityName}, ${city.countryCode}`,
+            serviceType,
+            serviceLevel: serviceLevel.value,
+          });
+        }
       }
     }
   }
   
-  // 5. Check each slot: is it excluded? does it have a rate > 0?
-  let configured = 0;
-  let missing = 0;
-  let excluded = 0;
-  
-  for (const slot of virtualTable) {
-    const isCountry = slot.location.type === 'country';
-    const locationId = isCountry 
-      ? (slot.location as { type: 'country', code: string }).code 
-      : (slot.location as { type: 'city', id: number }).id;
-    
-    // Check if service-level excluded
-    const serviceExcluded = serviceExclusions.some(excl => {
-      if (isCountry && excl.countryCode === locationId && excl.serviceType === slot.serviceType) return true;
-      if (!isCountry && excl.cityId === locationId && excl.serviceType === slot.serviceType) return true;
-      return false;
+  // Filter out slots that have rates
+  const missingSlots = expectedSlots.filter(slot => {
+    const hasRate = rates.some(r => {
+      const locationMatch = 
+        (slot.locationType === "country" && r.countryCode === slot.locationId) ||
+        (slot.locationType === "city" && r.cityId === slot.locationId);
+      
+      return locationMatch && 
+             r.serviceType === slot.serviceType && 
+             r.serviceLevel === slot.serviceLevel &&
+             r.rateUsdCents !== null &&
+             r.rateUsdCents > 0;
     });
     
-    if (serviceExcluded) {
-      excluded++;
-      continue;
-    }
-    
-    // Check if response-time-level excluded
-    const responseTimeExcluded = responseTimeExclusions.some(excl => {
-      if (isCountry && excl.countryCode === locationId && excl.serviceType === slot.serviceType && excl.responseTimeHours === slot.responseTimeHours) return true;
-      if (!isCountry && excl.cityId === locationId && excl.serviceType === slot.serviceType && excl.responseTimeHours === slot.responseTimeHours) return true;
-      return false;
-    });
-    
-    if (responseTimeExcluded) {
-      excluded++;
-      continue;
-    }
-    
-    // Check if rate is configured (exists and > 0)
-    if (slot.rate && slot.rate.rateUsdCents !== null && slot.rate.rateUsdCents > 0) {
-      configured++;
-    } else {
-      missing++;
-    }
-  }
+    return !hasRate;
+  });
   
-  // 6. Calculate totals
-  const total = configured + missing; // Excludes excluded slots
-  const percentage = total > 0 ? Math.round((configured / total) * 1000) / 10 : 0;
-  
-  return {
-    total,
-    configured,
-    missing,
-    excluded,
-    percentage,
-  };
+  return missingSlots;
 }
 
 /**
- * Delete a rate
+ * Check if a location/service/service level combination is excluded
  */
-export async function deleteRate(rateId: number, supplierId: number): Promise<void> {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.delete(supplierRates).where(
-    and(
-      eq(supplierRates.id, rateId),
-      eq(supplierRates.supplierId, supplierId)
-    )
-  );
-}
-
-/**
- * Clean up orphaned rates - rates that exist in the database but are no longer in coverage
- * or have been excluded. Returns the number of rates deleted.
- */
-export async function cleanupOrphanedRates(supplierId: number): Promise<number> {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  
-  const { supplierCoverageCountries, supplierPriorityCities } = await import("../drizzle/schema");
-  const { sql } = await import("drizzle-orm");
-  
-  // Get current coverage
-  const coverageCountries = await db
-    .select({ countryCode: supplierCoverageCountries.countryCode })
-    .from(supplierCoverageCountries)
-    .where(eq(supplierCoverageCountries.supplierId, supplierId));
-  
-  const coverageCities = await db
-    .select({ cityId: supplierPriorityCities.id })
-    .from(supplierPriorityCities)
-    .where(eq(supplierPriorityCities.supplierId, supplierId));
-  
-  const coverageCountryCodes = new Set(coverageCountries.map(c => c.countryCode));
-  const coverageCityIds = new Set(coverageCities.map(c => c.cityId));
-  
-  // Get all rates for this supplier
-  const allRates = await db
-    .select()
-    .from(supplierRates)
-    .where(eq(supplierRates.supplierId, supplierId));
-  
-  // Find orphaned rates (not in current coverage)
-  const orphanedRateIds: number[] = [];
-  
-  for (const rate of allRates) {
-    const isOrphaned = 
-      (rate.countryCode && !coverageCountryCodes.has(rate.countryCode)) ||
-      (rate.cityId && !coverageCityIds.has(rate.cityId));
-    
-    if (isOrphaned && rate.id) {
-      orphanedRateIds.push(rate.id);
-    }
+export function isSlotExcluded(
+  locationId: string | number,
+  isCountry: boolean,
+  serviceType: string,
+  serviceLevel: ServiceLevel,
+  exclusions: any[]
+): boolean {
+  for (const excl of exclusions) {
+    if (isCountry && excl.countryCode === locationId && excl.serviceType === serviceType && excl.serviceLevel === serviceLevel) return true;
+    if (!isCountry && excl.cityId === locationId && excl.serviceType === serviceType && excl.serviceLevel === serviceLevel) return true;
   }
-  
-  // Delete orphaned rates in batches
-  if (orphanedRateIds.length > 0) {
-    // Delete in batches of 100 to avoid SQL query limits
-    for (let i = 0; i < orphanedRateIds.length; i += 100) {
-      const batch = orphanedRateIds.slice(i, i + 100);
-      await db
-        .delete(supplierRates)
-        .where(
-          and(
-            eq(supplierRates.supplierId, supplierId),
-            sql`${supplierRates.id} IN (${sql.join(batch.map(id => sql`${id}`), sql`, `)})`
-          )
-        );
-    }
-  }
-  
-  return orphanedRateIds.length;
+  return false;
 }

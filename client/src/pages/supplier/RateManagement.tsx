@@ -11,7 +11,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Link } from "wouter";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import SupplierLayout from "@/components/SupplierLayout";
-import { RATE_SERVICE_TYPES, RATE_RESPONSE_TIMES } from "@shared/rates";
+import { RATE_SERVICE_TYPES, RATE_SERVICE_LEVELS } from "@shared/rates";
 import { validateBaseRates } from "@shared/rateValidation";
 import { RateConfigurationSummary } from "@/components/RateConfigurationSummary";
 
@@ -81,7 +81,8 @@ export default function RateManagement() {
         </Alert>
 
         {/* Rate Configuration Summary */}
-        {countries && cities && rates && serviceExclusions && responseTimeExclusions && (
+        {/* TODO: Update RateConfigurationSummary to use serviceLevel */}
+        {/* {countries && cities && rates && serviceExclusions && responseTimeExclusions && (
           <RateConfigurationSummary
             countries={countries}
             cities={cities}
@@ -89,7 +90,7 @@ export default function RateManagement() {
             serviceExclusions={serviceExclusions}
             responseTimeExclusions={responseTimeExclusions}
           />
-        )}
+        )} */}
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -198,14 +199,14 @@ function QuickSetupTab({ supplierId, onSuccess }: { supplierId: number; onSucces
     if (regionTab === "cities") {
       // Apply to all priority cities
       for (const city of cities || []) {
-        for (const responseTime of RATE_RESPONSE_TIMES) {
-          const rateValue = baseRates[responseTime.hours];
+        for (const serviceLevel of RATE_SERVICE_LEVELS) {
+          const rateValue = baseRates[serviceLevel.hours];
           if (rateValue && rateValue !== "") {
             rateEntries.push({
               supplierId,
               cityId: city.id,
               serviceType: selectedService,
-              responseTimeHours: responseTime.hours,
+              serviceLevel: serviceLevel.value,
               rateUsdCents: Math.round(parseFloat(rateValue) * 100),
             });
           }
@@ -215,14 +216,14 @@ function QuickSetupTab({ supplierId, onSuccess }: { supplierId: number; onSucces
       // Apply to countries in selected region
       const regionCountries = countryByRegion[regionTab] || [];
       for (const country of regionCountries) {
-        for (const responseTime of RATE_RESPONSE_TIMES) {
-          const rateValue = baseRates[responseTime.hours];
+        for (const serviceLevel of RATE_SERVICE_LEVELS) {
+          const rateValue = baseRates[serviceLevel.hours];
           if (rateValue && rateValue !== "") {
             rateEntries.push({
               supplierId,
               countryCode: country.countryCode,
               serviceType: selectedService,
-              responseTimeHours: responseTime.hours,
+              serviceLevel: serviceLevel.value,
               rateUsdCents: Math.round(parseFloat(rateValue) * 100),
             });
           }
@@ -299,7 +300,7 @@ function QuickSetupTab({ supplierId, onSuccess }: { supplierId: number; onSucces
             <div className="mt-6 space-y-4">
               <label className="text-sm font-medium">Base Rates (USD per hour)</label>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {RATE_RESPONSE_TIMES.map((responseTime) => (
+                {RATE_SERVICE_LEVELS.map((responseTime) => (
                   <div key={responseTime.hours} className="space-y-2">
                     <div className="flex items-center gap-1.5">
                       <label className="text-sm text-muted-foreground">{responseTime.label}</label>
@@ -606,10 +607,13 @@ function LocationRatesTable({
 
   // Helper to check if a specific response time is excluded (response time-level)
   const isResponseTimeExcluded = (location: any, serviceType: string, responseTimeHours: number): boolean => {
+    const { HOURS_TO_SERVICE_LEVEL } = require("@shared/rates");
+    const serviceLevel = HOURS_TO_SERVICE_LEVEL[responseTimeHours];
+    
     return responseTimeExclusions.some((exclusion: any) => {
-      // Check if service type and response time match
+      // Check if service type and service level match
       if (exclusion.serviceType !== serviceType) return false;
-      if (exclusion.responseTimeHours !== responseTimeHours) return false;
+      if (exclusion.serviceLevel !== serviceLevel) return false;
       
       // Check if location matches (country or city)
       if (location.type === "country") {
@@ -624,7 +628,8 @@ function LocationRatesTable({
     onSuccess: (_, variables) => {
       const locationKey = variables.countryCode || `city-${variables.cityId}`;
       const stateKey = `${locationKey}-${variables.serviceType}`;
-      const responseTimeHours = variables.responseTimeHours;
+      const { SERVICE_LEVEL_TO_HOURS } = require("@shared/rates");
+      const responseTimeHours = SERVICE_LEVEL_TO_HOURS[variables.serviceLevel];
       
       // Set saved state
       setSavingStates((prev) => ({
@@ -654,7 +659,8 @@ function LocationRatesTable({
     onError: (error, variables) => {
       const locationKey = variables.countryCode || `city-${variables.cityId}`;
       const stateKey = `${locationKey}-${variables.serviceType}`;
-      const responseTimeHours = variables.responseTimeHours;
+      const { SERVICE_LEVEL_TO_HOURS } = require("@shared/rates");
+      const responseTimeHours = SERVICE_LEVEL_TO_HOURS[variables.serviceLevel];
       
       setSavingStates((prev) => ({
         ...prev,
@@ -717,7 +723,7 @@ function LocationRatesTable({
           const matchesCountry = exclusionToRemove.countryCode && exc.countryCode === exclusionToRemove.countryCode;
           const matchesCity = exclusionToRemove.cityId && exc.cityId === exclusionToRemove.cityId;
           const matchesService = exc.serviceType === exclusionToRemove.serviceType;
-          const matchesResponseTime = exc.responseTimeHours === exclusionToRemove.responseTimeHours;
+          const matchesResponseTime = exc.serviceLevel === exclusionToRemove.serviceLevel;
           
           // Keep the exclusion if it doesn't match all criteria
           return !((matchesCountry || matchesCity) && matchesService && matchesResponseTime);
@@ -744,6 +750,8 @@ function LocationRatesTable({
 
   const handleToggleResponseTimeExclusion = (location: any, serviceType: string, responseTimeHours: number) => {
     const isExcluded = isResponseTimeExcluded(location, serviceType, responseTimeHours);
+    const { HOURS_TO_SERVICE_LEVEL } = require("@shared/rates");
+    const serviceLevel = HOURS_TO_SERVICE_LEVEL[responseTimeHours];
     
     if (isExcluded) {
       // Remove exclusion (enable this response time)
@@ -752,7 +760,7 @@ function LocationRatesTable({
         countryCode: location.type === "country" ? location.code : undefined,
         cityId: location.type === "city" ? location.id : undefined,
         serviceType,
-        responseTimeHours,
+        serviceLevel,
       });
     } else {
       // Add exclusion (disable this response time)
@@ -761,7 +769,7 @@ function LocationRatesTable({
         countryCode: location.type === "country" ? location.code : undefined,
         cityId: location.type === "city" ? location.id : undefined,
         serviceType,
-        responseTimeHours,
+        serviceLevel,
       });
     }
   };
@@ -809,13 +817,15 @@ function LocationRatesTable({
     }));
 
     const rateUsdCents = value === "" ? null : Math.round(parseFloat(value) * 100);
+    const { HOURS_TO_SERVICE_LEVEL } = require("@shared/rates");
+    const serviceLevel = HOURS_TO_SERVICE_LEVEL[responseTimeHours];
 
     await upsertMutation.mutateAsync({
       supplierId,
       countryCode: location.type === "country" ? location.code : undefined,
       cityId: location.type === "city" ? location.id : undefined,
       serviceType,
-      responseTimeHours,
+      serviceLevel,
       rateUsdCents,
     });
 
@@ -859,7 +869,7 @@ function LocationRatesTable({
     const currentRate = parseFloat(currentValue);
     
     // Check if faster response times are more expensive (as they should be)
-    for (const rt of RATE_RESPONSE_TIMES) {
+    for (const rt of RATE_SERVICE_LEVELS) {
       if (rt.hours < responseTimeHours) {
         const fasterValue = getRateValue(location, serviceType, rt.hours);
         if (fasterValue && parseFloat(fasterValue) > 0) {
@@ -904,18 +914,18 @@ function LocationRatesTable({
                   const stateKey = `${locationKey}-${service.value}`;
                   
                   // Count configured rates (valid prices > 0)
-                  const configuredCount = RATE_RESPONSE_TIMES.filter(rt => {
+                  const configuredCount = RATE_SERVICE_LEVELS.filter(rt => {
                     const val = getRateValue(location, service.value, rt.hours);
                     return val !== "" && parseFloat(val) > 0;
                   }).length;
                   
                   // Count excluded response times for this service/location
-                  const excludedCount = RATE_RESPONSE_TIMES.filter(rt => 
+                  const excludedCount = RATE_SERVICE_LEVELS.filter(rt => 
                     isResponseTimeExcluded(location, service.value, rt.hours)
                   ).length;
                   
-                  // Total possible rates = 5 - excluded
-                  const totalPossibleRates = RATE_RESPONSE_TIMES.length - excludedCount;
+                  // Total possible rates = 3 - excluded
+                  const totalPossibleRates = RATE_SERVICE_LEVELS.length - excludedCount;
 
                   return (
                     <div key={service.value} className="space-y-3">
@@ -933,7 +943,7 @@ function LocationRatesTable({
                       </div>
                       
                       <div className="grid grid-cols-3 gap-4">
-                        {RATE_RESPONSE_TIMES.map((rt) => {
+                        {RATE_SERVICE_LEVELS.map((rt) => {
                           const isResponseTimeDisabled = serviceExcluded || isResponseTimeExcluded(location, service.value, rt.hours);
                           
                           return (

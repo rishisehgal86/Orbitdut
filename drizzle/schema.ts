@@ -122,8 +122,8 @@ export const supplierRates = mysqlTable("supplierRates", {
   // Service Type: L1_EUC, L1_NETWORK, SMART_HANDS
   serviceType: varchar("serviceType", { length: 50 }).notNull(),
   
-  // Response Time: 4, 24, 48, 72, 96 (hours)
-  responseTimeHours: int("responseTimeHours").notNull(),
+  // Service Level: same_business_day, next_business_day, scheduled
+  serviceLevel: mysqlEnum("serviceLevel", ["same_business_day", "next_business_day", "scheduled"]).notNull(),
   
   // Rate in USD cents (nullable - allows opt-out)
   rateUsdCents: int("rateUsdCents"),
@@ -136,13 +136,13 @@ export const supplierRates = mysqlTable("supplierRates", {
 }, (table) => ({
   // Index for tenant isolation queries
   supplierIdIdx: index("supplierRates_supplierId_idx").on(table.supplierId),
-  // Composite unique constraint: prevent duplicate rates for same location/service/response time
+  // Composite unique constraint: prevent duplicate rates for same location/service/service level
   uniqueRate: index("supplierRates_unique").on(
     table.supplierId,
     table.countryCode,
     table.cityId,
     table.serviceType,
-    table.responseTimeHours
+    table.serviceLevel
   ),
 }));
 
@@ -425,8 +425,8 @@ export const supplierResponseTimeExclusions = mysqlTable("supplierResponseTimeEx
   // Service Type: L1_EUC, L1_NETWORK, SMART_HANDS
   serviceType: varchar("serviceType", { length: 50 }).notNull(),
   
-  // Response Time Hours: 4, 24, 48, 72, 96
-  responseTimeHours: int("responseTimeHours").notNull(),
+  // Service Level: same_business_day, next_business_day, scheduled
+  serviceLevel: mysqlEnum("serviceLevel", ["same_business_day", "next_business_day", "scheduled"]).notNull(),
   
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => ({
@@ -449,7 +449,7 @@ export const supplierResponseTimeExclusions = mysqlTable("supplierResponseTimeEx
     table.countryCode,
     table.cityId,
     table.serviceType,
-    table.responseTimeHours
+    table.serviceLevel
   ),
 }));
 

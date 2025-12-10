@@ -1070,3 +1070,30 @@
 - [x] Update customer job detail pages to show semantic labels
 - [x] Test tooltips display correctly on hover
 - [x] Verify all customer-facing pages use semantic labels
+
+
+## Hide Legacy Response Times from Current Rates Page
+- [x] Update Current Rates page to filter out 72h and 96h legacy response time rows
+- [ ] Test that only 3 active service levels are displayed (Same Business Day, Next Business Day, Scheduled)
+
+## Fix Bulk Rate Upload - Refactor to Service Level System
+- [x] Identify schema mismatch (DB has serviceLevel, code has responseTimeHours)
+- [x] Create service level mapping utilities (hours to enum conversion)
+- [x] Update shared/rates.ts constants to use service levels
+- [x] Update server/rates.ts to use serviceLevel field
+- [x] Update server/db.ts to use serviceLevel field
+- [x] Update server/routers.ts procedures to use serviceLevel
+- [x] Update server/responseTimeExclusions.ts to use serviceLevel
+- [x] Update drizzle/schema.ts to use serviceLevel
+- [x] Update frontend Rate Management page
+- [x] Update frontend Current Rates page
+- [x] Fix all TypeScript compilation errors (0 errors) ✅
+- [ ] Test bulk rate upload with new service level system
+- [ ] Test all rate management workflows end-to-end
+
+## Known Issues from Refactoring
+- RateConfigurationSummary component temporarily disabled (needs service level update)
+- getRateCompletionStats procedure temporarily disabled (needs reimplementation)
+- cleanupOrphanedRates functionality temporarily disabled (needs reimplementation)
+- Database migration pending (interactive prompts for unrelated job table columns)
+- Login testing blocked - need to verify test user credentials
