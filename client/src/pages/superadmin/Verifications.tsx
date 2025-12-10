@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { trpc } from "@/lib/trpc";
 import { 
   CheckCircle, 
@@ -19,7 +20,9 @@ import {
   Phone,
   Building2,
   Calendar,
-  TrendingUp
+  TrendingUp,
+  Filter,
+  X
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { Link } from "wouter";
@@ -29,6 +32,12 @@ export default function SuperadminVerifications() {
   const { data, isLoading } = trpc.admin.getAllSupplierVerifications.useQuery();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  
+  // Column filters
+  const [companyFilter, setCompanyFilter] = useState("");
+  const [contactFilter, setContactFilter] = useState("");
+  const [countryFilter, setCountryFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
 
   // Calculate totals
   const totals = useMemo(() => {
@@ -42,6 +51,17 @@ export default function SuperadminVerifications() {
       rejected: data.rejected.length,
       resubmissionRequired: data.resubmissionRequired.length,
     };
+  }, [data]);
+
+  // Get unique values for filter dropdowns
+  const filterOptions = useMemo(() => {
+    if (!data) return { countries: [], statuses: [] };
+    
+    const allSuppliers = Object.values(data).flat();
+    const countries = [...new Set(allSuppliers.map(s => s.country).filter(Boolean))].sort();
+    const statuses = [...new Set(allSuppliers.map(s => s.verificationStatus).filter(Boolean))];
+    
+    return { countries, statuses };
   }, [data]);
 
   // Get filtered suppliers based on active tab
@@ -82,8 +102,36 @@ export default function SuperadminVerifications() {
       );
     }
 
+    // Apply column filters
+    if (companyFilter) {
+      const term = companyFilter.toLowerCase();
+      suppliers = suppliers.filter(s => s.companyName?.toLowerCase().includes(term));
+    }
+    
+    if (contactFilter) {
+      const term = contactFilter.toLowerCase();
+      suppliers = suppliers.filter(s => s.contactName?.toLowerCase().includes(term));
+    }
+    
+    if (countryFilter && countryFilter !== "all") {
+      suppliers = suppliers.filter(s => s.country === countryFilter);
+    }
+    
+    if (statusFilter && statusFilter !== "all") {
+      suppliers = suppliers.filter(s => s.verificationStatus === statusFilter);
+    }
+
     return suppliers;
-  }, [data, activeTab, searchTerm]);
+  }, [data, activeTab, searchTerm, companyFilter, contactFilter, countryFilter, statusFilter]);
+
+  const clearFilters = () => {
+    setCompanyFilter("");
+    setContactFilter("");
+    setCountryFilter("");
+    setStatusFilter("");
+  };
+
+  const hasActiveFilters = companyFilter || contactFilter || countryFilter || statusFilter;
 
   const getStatusBadge = (status: string | null) => {
     if (!status || status === "not_started") {
@@ -104,6 +152,19 @@ export default function SuperadminVerifications() {
         return <Badge variant="outline" className="gap-1 border-purple-500 text-purple-600"><AlertCircle className="w-3 h-3" /> Resubmission Required</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "not_started": return "Not Started";
+      case "in_progress": return "In Progress";
+      case "pending_review": return "Pending Review";
+      case "under_review": return "Under Review";
+      case "approved": return "Approved";
+      case "rejected": return "Rejected";
+      case "resubmission_required": return "Resubmission Required";
+      default: return status;
     }
   };
 
@@ -180,6 +241,12 @@ export default function SuperadminVerifications() {
               className="pl-9"
             />
           </div>
+          {hasActiveFilters && (
+            <Button variant="outline" size="sm" onClick={clearFilters} className="gap-2">
+              <X className="w-4 h-4" />
+              Clear Filters
+            </Button>
+          )}
         </div>
 
         {/* Tabs */}
@@ -199,10 +266,72 @@ export default function SuperadminVerifications() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Company</TableHead>
-                    <TableHead>Contact Person</TableHead>
-                    <TableHead>Contact Details</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-1">
+                          <Filter className="w-3 h-3 text-muted-foreground" />
+                          <span>Company</span>
+                        </div>
+                        <Input
+                          placeholder="Filter..."
+                          value={companyFilter}
+                          onChange={(e) => setCompanyFilter(e.target.value)}
+                          className="h-8 text-xs"
+                        />
+                      </div>
+                    </TableHead>
+                    <TableHead>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-1">
+                          <Filter className="w-3 h-3 text-muted-foreground" />
+                          <span>Contact Person</span>
+                        </div>
+                        <Input
+                          placeholder="Filter..."
+                          value={contactFilter}
+                          onChange={(e) => setContactFilter(e.target.value)}
+                          className="h-8 text-xs"
+                        />
+                      </div>
+                    </TableHead>
+                    <TableHead>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-1">
+                          <Filter className="w-3 h-3 text-muted-foreground" />
+                          <span>Country</span>
+                        </div>
+                        <Select value={countryFilter} onValueChange={setCountryFilter}>
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue placeholder="All" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Countries</SelectItem>
+                            {filterOptions.countries.map(country => (
+                              <SelectItem key={country} value={country}>{country}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </TableHead>
+                    <TableHead>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-1">
+                          <Filter className="w-3 h-3 text-muted-foreground" />
+                          <span>Status</span>
+                        </div>
+                        <Select value={statusFilter} onValueChange={setStatusFilter}>
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue placeholder="All" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Statuses</SelectItem>
+                            {filterOptions.statuses.map(status => (
+                              <SelectItem key={status} value={status}>{getStatusLabel(status)}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </TableHead>
                     <TableHead>Progress</TableHead>
                     <TableHead>Last Updated</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -216,7 +345,7 @@ export default function SuperadminVerifications() {
                           <FileText className="w-12 h-12 text-muted-foreground" />
                           <p className="text-lg font-medium">No suppliers found</p>
                           <p className="text-sm text-muted-foreground">
-                            {searchTerm ? "Try adjusting your search" : "No suppliers in this category"}
+                            {searchTerm || hasActiveFilters ? "Try adjusting your filters" : "No suppliers in this category"}
                           </p>
                         </div>
                       </TableCell>
