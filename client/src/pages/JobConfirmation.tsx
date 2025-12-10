@@ -141,7 +141,7 @@ export default function JobConfirmation() {
                     <p className="text-sm text-muted-foreground">
                       {job.status === "pending_supplier_acceptance" &&
                         "We're matching you with the best available supplier"}
-                      {job.status === "assigned_to_supplier" &&
+                      {job.status === "supplier_accepted" &&
                         "Your supplier will contact you shortly"}
                       {job.status === "en_route" &&
                         "Your supplier is heading to your location"}

@@ -159,7 +159,7 @@ export default function SuperadminJobs() {
                       {new Date(job.createdAt).toLocaleDateString()}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {job.scheduledStart ? new Date(job.scheduledStart).toLocaleDateString() : "N/A"}
+                      {job.scheduledDateTime ? new Date(job.scheduledDateTime).toLocaleDateString() : "N/A"}
                     </TableCell>
                   </TableRow>
                 ))}

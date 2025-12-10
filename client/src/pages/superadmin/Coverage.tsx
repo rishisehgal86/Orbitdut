@@ -15,7 +15,7 @@ export default function SuperadminCoverage() {
     if (!coverageData) return null;
 
     const byCountry = coverageData.reduce((acc, area) => {
-      acc[area.country] = (acc[area.country] || 0) + 1;
+      acc[area.countryCode] = (acc[area.countryCode] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
@@ -25,8 +25,9 @@ export default function SuperadminCoverage() {
       return acc;
     }, {} as Record<string, number>);
 
-    const regions = [...new Set(coverageData.map(a => a.region).filter(Boolean))];
-    const cities = [...new Set(coverageData.map(a => a.city).filter(Boolean))];
+    // Note: region and city data not available in current schema
+    const regions: string[] = [];
+    const cities: string[] = [];
 
     return {
       byCountry,
@@ -41,16 +42,13 @@ export default function SuperadminCoverage() {
   const coverageMatrix = useMemo(() => {
     if (!coverageData) return null;
 
-    const suppliers = [...new Set(coverageData.map(a => a.companyName).filter(Boolean))];
-    const regions = [...new Set(coverageData.map(a => `${a.country}-${a.region || "General"}`))];
+    const suppliers = Array.from(new Set(coverageData.map(a => a.companyName).filter(Boolean)));
+    const regions = Array.from(new Set(coverageData.map(a => a.countryCode)));
 
     const matrix = suppliers.map(supplier => {
       const supplierAreas = coverageData.filter(a => a.companyName === supplier);
-      const coverage = regions.map(region => {
-        const [country, regionName] = region.split("-");
-        return supplierAreas.some(a => 
-          a.country === country && (a.region === regionName || (!a.region && regionName === "General"))
-        );
+      const coverage = regions.map(countryCode => {
+        return supplierAreas.some(a => a.countryCode === countryCode);
       });
       return { supplier, coverage };
     });
@@ -160,10 +158,9 @@ export default function SuperadminCoverage() {
                       <TableHeader>
                         <TableRow>
                           <TableHead className="sticky left-0 bg-background">Supplier</TableHead>
-                          {coverageMatrix.regions.map((region, idx) => (
+                          {coverageMatrix.regions.map((countryCode, idx) => (
                             <TableHead key={idx} className="text-center min-w-[100px]">
-                              {region.split("-")[1]}
-                              <div className="text-xs text-muted-foreground">{region.split("-")[0]}</div>
+                              {countryCode}
                             </TableHead>
                           ))}
                         </TableRow>
@@ -244,20 +241,14 @@ export default function SuperadminCoverage() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Supplier</TableHead>
-                        <TableHead>Country</TableHead>
-                        <TableHead>Region</TableHead>
-                        <TableHead>City</TableHead>
-                        <TableHead>Postal Code</TableHead>
+                        <TableHead>Country Code</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {coverageData?.map((area) => (
                         <TableRow key={area.id}>
                           <TableCell className="font-medium">{area.companyName || "N/A"}</TableCell>
-                          <TableCell>{area.country}</TableCell>
-                          <TableCell>{area.region || "-"}</TableCell>
-                          <TableCell>{area.city || "-"}</TableCell>
-                          <TableCell>{area.postalCode || "-"}</TableCell>
+                          <TableCell>{area.countryCode}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>

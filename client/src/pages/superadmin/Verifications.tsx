@@ -58,8 +58,8 @@ export default function SuperadminVerifications() {
     if (!data) return { countries: [], statuses: [] };
     
     const allSuppliers = Object.values(data).flat();
-    const countries = [...new Set(allSuppliers.map(s => s.country).filter(Boolean))].sort();
-    const statuses = [...new Set(allSuppliers.map(s => s.verificationStatus).filter(Boolean))];
+    const countries = Array.from(new Set(allSuppliers.map(s => s.country).filter(Boolean))).sort();
+    const statuses = Array.from(new Set(allSuppliers.map(s => s.verificationStatus).filter(Boolean)));
     
     return { countries, statuses };
   }, [data]);

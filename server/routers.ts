@@ -7,7 +7,6 @@ import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { getDb } from "./db";
 import { users, jobs, siteVisitReports, svrMediaFiles } from "../drizzle/schema";
-import { generateJobToken } from "./_core/tokens";
 import { invokeLLM } from "./_core/llm";
 import { notifyOwner } from "./_core/notification";
 
@@ -1250,7 +1249,7 @@ export const appRouter = router({
           .update(jobs)
           .set({
             assignedSupplierId: supplier.supplier.id,
-            status: "assigned_to_supplier",
+            status: "supplier_accepted",
             acceptedAt: new Date(),
           })
           .where(eq(jobs.id, input.jobId));
@@ -2535,6 +2534,8 @@ export const appRouter = router({
     getPendingVerifications: superadminProcedure.query(async ({ ctx }) => {
       const { supplierVerification, suppliers } = await import("../drizzle/schema");
       const { eq, inArray } = await import("drizzle-orm");
+      const db = await getDb();
+      if (!db) throw new Error("Database connection failed");
 
       // TODO: Add admin role check
       // if (ctx.user.role !== "admin") {
@@ -2819,6 +2820,8 @@ export const appRouter = router({
       .mutation(async ({ input, ctx }) => {
         const { supplierVerification } = await import("../drizzle/schema");
         const { eq } = await import("drizzle-orm");
+        const db = await getDb();
+        if (!db) throw new Error("Database connection failed");
 
         // TODO: Add admin role check
 
@@ -2934,6 +2937,8 @@ export const appRouter = router({
     getAllSuppliers: superadminProcedure.query(async () => {
       const { suppliers, supplierUsers, users } = await import("../drizzle/schema");
       const { eq } = await import("drizzle-orm");
+      const db = await getDb();
+      if (!db) throw new Error("Database connection failed");
 
       const allSuppliers = await db.select({
         id: suppliers.id,
@@ -2975,6 +2980,8 @@ export const appRouter = router({
     // Get all users
     getAllUsers: superadminProcedure.query(async () => {
       const { users } = await import("../drizzle/schema");
+      const db = await getDb();
+      if (!db) throw new Error("Database connection failed");
 
       const allUsers = await db.select({
         id: users.id,
@@ -3000,18 +3007,25 @@ export const appRouter = router({
       const allJobs = await db.select({
         id: jobs.id,
         customerId: jobs.customerId,
-        supplierId: jobs.supplierId,
+        assignedSupplierId: jobs.assignedSupplierId,
         siteName: jobs.siteName,
         siteAddress: jobs.siteAddress,
         status: jobs.status,
         calculatedPrice: jobs.calculatedPrice,
         createdAt: jobs.createdAt,
-        scheduledStart: jobs.scheduledStart,
+        scheduledDateTime: jobs.scheduledDateTime,
       }).from(jobs);
 
       // Get customer info for each job
       const jobsWithCustomer = await Promise.all(
         allJobs.map(async (job) => {
+          if (!job.customerId) {
+            return {
+              ...job,
+              customer: null,
+            };
+          }
+
           const customer = await db.select({
             customerName: users.name,
             customerEmail: users.email,
@@ -3041,7 +3055,7 @@ export const appRouter = router({
       const coverageAreas = await db.select({
         id: supplierCoverageCountries.id,
         supplierId: supplierCoverageCountries.supplierId,
-        country: supplierCoverageCountries.country,
+        countryCode: supplierCoverageCountries.countryCode,
         companyName: suppliers.companyName,
       })
         .from(supplierCoverageCountries)

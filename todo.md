@@ -1050,3 +1050,13 @@
   - Use existing email service with attachment support
 - [x] Update uploadDocument procedure to send email after signature
 - [x] Write vitest tests for PDF features
+
+## TypeScript Error Fixes (In Progress)
+- [x] Fix missing db imports in 5 procedures (getPendingVerifications, addAdminNote, getAllSuppliers, getAllUsers, getAllJobs)
+- [x] Fix field name mismatches (supplierId → assignedSupplierId, scheduledStart → scheduledDateTime, country → countryCode)
+- [x] Fix wrong status value (assigned_to_supplier → supplier_accepted)
+- [x] Add null check for customerId in join operation
+- [x] Remove non-existent tokens module import
+- [x] Fix Set iteration issues (converted to Array.from)
+- [x] Reduced TypeScript errors from 70+ to 30
+- [ ] Fix remaining 30 TypeScript errors (function argument mismatches, type annotations, etc.)
