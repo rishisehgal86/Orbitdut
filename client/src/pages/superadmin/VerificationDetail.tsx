@@ -506,7 +506,7 @@ export default function VerificationDetail() {
                         {(doc.signedBy || doc.signatureUrl || doc.signedAt) && (
                           <>
                             <Separator />
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                               <p className="text-sm font-medium">Signature Details</p>
                               <div className="grid gap-3 md:grid-cols-2">
                                 {doc.signedBy && (
@@ -519,6 +519,18 @@ export default function VerificationDetail() {
                                   <div>
                                     <p className="text-xs text-muted-foreground">Signed On</p>
                                     <p className="text-sm">{format(new Date(doc.signedAt), "MMM d, yyyy 'at' h:mm a")}</p>
+                                  </div>
+                                )}
+                                {doc.signerIpAddress && (
+                                  <div>
+                                    <p className="text-xs text-muted-foreground">IP Address</p>
+                                    <p className="text-sm font-mono text-xs">{doc.signerIpAddress}</p>
+                                  </div>
+                                )}
+                                {doc.signerUserAgent && (
+                                  <div className="md:col-span-2">
+                                    <p className="text-xs text-muted-foreground">Device/Browser</p>
+                                    <p className="text-sm text-xs break-all">{doc.signerUserAgent}</p>
                                   </div>
                                 )}
                               </div>

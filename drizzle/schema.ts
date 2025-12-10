@@ -647,6 +647,8 @@ export const verificationDocuments = mysqlTable("verificationDocuments", {
   signedBy: varchar("signedBy", { length: 255 }), // Name of person who signed
   signatureUrl: varchar("signatureUrl", { length: 500 }), // S3 URL to signature image
   signedAt: timestamp("signedAt"), // When document was signed
+  signerIpAddress: varchar("signerIpAddress", { length: 45 }), // IP address of signer (IPv6 max length)
+  signerUserAgent: varchar("signerUserAgent", { length: 500 }), // Browser/device info
   
   // Review Status
   status: mysqlEnum("status", ["pending_review", "approved", "rejected", "expired"]).default("pending_review").notNull(),

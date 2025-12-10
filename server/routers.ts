@@ -2302,6 +2302,10 @@ export const appRouter = router({
           mimeType: z.string(),
           fileSize: z.number(),
           expiryDate: z.string().optional(),
+          // Signature metadata (for signed documents)
+          signedBy: z.string().optional(),
+          signatureData: z.string().optional(), // base64 signature image
+          signedAt: z.string().optional(),
         })
       )
       .mutation(async ({ input, ctx }) => {
@@ -2324,6 +2328,19 @@ export const appRouter = router({
         const fileKey = `verification/${supplier.id}/${input.documentType}/${Date.now()}-${input.documentName}`;
         const { url: fileUrl } = await storagePut(fileKey, fileBuffer, input.mimeType);
 
+        // Upload signature image if provided
+        let signatureUrl: string | null = null;
+        if (input.signatureData) {
+          const signatureBuffer = Buffer.from(input.signatureData.split(",")[1], "base64");
+          const signatureKey = `verification/${supplier.id}/${input.documentType}/signature-${Date.now()}.png`;
+          const signatureResult = await storagePut(signatureKey, signatureBuffer, "image/png");
+          signatureUrl = signatureResult.url;
+        }
+
+        // Get client IP and user agent from request
+        const clientIp = ctx.req?.headers['x-forwarded-for'] || ctx.req?.socket?.remoteAddress || null;
+        const userAgent = ctx.req?.headers['user-agent'] || null;
+
         // Save to database
         await db.insert(verificationDocuments).values({
           supplierId: supplier.id,
@@ -2336,6 +2353,12 @@ export const appRouter = router({
           uploadedBy: ctx.user.id,
           expiryDate: input.expiryDate ? new Date(input.expiryDate) : null,
           status: "pending_review",
+          // Signature metadata
+          signedBy: input.signedBy || null,
+          signatureUrl: signatureUrl,
+          signedAt: input.signedAt ? new Date(input.signedAt) : null,
+          signerIpAddress: typeof clientIp === 'string' ? clientIp : (Array.isArray(clientIp) ? clientIp[0] : null),
+          signerUserAgent: typeof userAgent === 'string' ? userAgent : null,
         });
 
         // Update verification status

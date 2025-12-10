@@ -943,3 +943,17 @@
 - [x] Update backend to fetch signer information (already fetched in getVerificationDetails)
 - [x] Update frontend to display document preview, signer name, and signature image together
 - [x] Test signed document display
+
+## Phase 41: Audit and Enhance Document Upload for Complete Signature Capture
+- [x] Find and review current supplier document upload form
+- [x] Check what fields are currently being collected
+- [x] Verify if signedBy, signatureUrl, signedAt are in upload form
+- [x] Add IP address field to schema (signerIpAddress)
+- [x] Add user agent field to schema (signerUserAgent)
+- [x] Update upload procedure to accept signature metadata
+- [x] Update upload form to send signer name, signature image, signing date
+- [x] Update backend to capture IP address and user agent automatically
+- [x] Ensure fileUrl stores complete signed document (text file with metadata)
+- [x] Update verification detail page to display IP and user agent
+- [ ] Test complete upload workflow with all metadata
+- [ ] Verify all data displays correctly on verification review page

@@ -350,27 +350,49 @@ export function VerificationWizard() {
   // handleFileUpload removed - files now upload immediately on selection
 
   const handleSign = async (docType: string, signatureData: string, title: string) => {
-    const signedAt = new Date().toLocaleDateString("en-GB");
+    const signedAt = new Date().toISOString();
     
     try {
-      // Convert signature data URL to file
-      const response = await fetch(signatureData);
-      const blob = await response.blob();
-      const file = new File([blob], `${docType}_signature.png`, { type: "image/png" });
+      // For now, we'll create a simple text representation of the signed document
+      // In a production system, you would generate a proper PDF with the legal text + signature
+      const documentText = `
+===========================================
+${docType.replace(/_/g, ' ').toUpperCase()}
+===========================================
+
+This document has been digitally signed.
+
+Signed by: ${title}
+Date: ${new Date(signedAt).toLocaleDateString("en-GB")}
+Time: ${new Date(signedAt).toLocaleTimeString("en-GB")}
+
+Signature on file.
+
+This is a legally binding agreement.
+===========================================
+      `;
       
-      // Convert to base64 for upload
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const base64Data = reader.result as string;
+      // Create a blob for the document text
+      const documentBlob = new Blob([documentText], { type: 'text/plain' });
+      const documentFile = new File([documentBlob], `${docType}.txt`, { type: 'text/plain' });
+      
+      // Convert document to base64
+      const documentReader = new FileReader();
+      documentReader.onload = async () => {
+        const documentBase64 = documentReader.result as string;
         
         try {
-          // Upload signature to S3
+          // Upload complete signed document with signature metadata
           const result = await uploadDocumentMutation.mutateAsync({
             documentType: docType,
-            documentName: `${docType}_signature.png`,
-            fileData: base64Data,
-            mimeType: "image/png",
-            fileSize: file.size,
+            documentName: `${docType}.txt`,
+            fileData: documentBase64,
+            mimeType: "text/plain",
+            fileSize: documentFile.size,
+            // Signature metadata
+            signedBy: title,
+            signatureData: signatureData, // base64 signature image
+            signedAt: signedAt,
           });
           
           // Update state with signature
@@ -380,24 +402,24 @@ export function VerificationWizard() {
               signed: true,
               signatureData,
               title,
-              signedAt,
+              signedAt: new Date(signedAt).toLocaleDateString("en-GB"),
               fileUrl: result.fileUrl,
             },
           }));
 
           toast({
             title: "Document signed",
-            description: "Your signature has been saved.",
+            description: "Your signature and document have been saved.",
           });
         } catch (error) {
           toast({
             title: "Upload failed",
-            description: "Failed to save signature. Please try again.",
+            description: "Failed to save signed document. Please try again.",
             variant: "destructive",
           });
         }
       };
-      reader.readAsDataURL(blob);
+      documentReader.readAsDataURL(documentFile);
     } catch (error) {
       toast({
         title: "Signature error",
