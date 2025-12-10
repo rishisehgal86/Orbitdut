@@ -298,7 +298,7 @@ function QuickSetupTab({ supplierId, onSuccess }: { supplierId: number; onSucces
             {/* Base Rates Grid (same for all tabs) */}
             <div className="mt-6 space-y-4">
               <label className="text-sm font-medium">Base Rates (USD per hour)</label>
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {RATE_RESPONSE_TIMES.map((responseTime) => (
                   <div key={responseTime.hours} className="space-y-2">
                     <label className="text-sm text-muted-foreground">{responseTime.label}</label>
@@ -920,7 +920,7 @@ function LocationRatesTable({
                         )}
                       </div>
                       
-                      <div className="grid grid-cols-5 gap-4">
+                      <div className="grid grid-cols-3 gap-4">
                         {RATE_RESPONSE_TIMES.map((rt) => {
                           const isResponseTimeDisabled = serviceExcluded || isResponseTimeExcluded(location, service.value, rt.hours);
                           

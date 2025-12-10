@@ -24,26 +24,41 @@ export const RATE_SERVICE_TYPES = [
   { value: SERVICE_TYPES.SMART_HANDS, label: "Smart Hands" },
 ];
 
-// Response Times (in hours)
+// Response Times (in hours) - 3 active levels + 2 legacy
+// New rate configuration should only use: 4, 24, 48
+// 72 and 96 are preserved for backward compatibility only
 export const RESPONSE_TIME_HOURS = [4, 24, 48, 72, 96] as const;
 
-export type RateResponseTime = typeof RESPONSE_TIME_HOURS[number];
+// Active response times for new configurations (3 levels)
+export const ACTIVE_RESPONSE_TIME_HOURS = [4, 24, 48] as const;
 
+export type RateResponseTime = typeof RESPONSE_TIME_HOURS[number];
+export type ActiveRateResponseTime = typeof ACTIVE_RESPONSE_TIME_HOURS[number];
+
+// Semantic labels for response times
 export const RESPONSE_TIME_LABELS: Record<RateResponseTime, string> = {
-  4: "4h",
-  24: "24h",
-  48: "48h",
-  72: "72h",
-  96: "96h",
+  4: "Same Business Day",
+  24: "Next Business Day",
+  48: "Scheduled",
+  72: "72h (Legacy)", // Preserved for existing data
+  96: "96h (Legacy)", // Preserved for existing data
 };
 
 // For UI components - array of objects with hours and label
+// Only includes active 3 levels for new rate configuration
 export const RATE_RESPONSE_TIMES = [
-  { hours: 4, label: "4h" },
-  { hours: 24, label: "24h" },
-  { hours: 48, label: "48h" },
-  { hours: 72, label: "72h" },
-  { hours: 96, label: "96h" },
+  { hours: 4, label: "Same Business Day" },
+  { hours: 24, label: "Next Business Day" },
+  { hours: 48, label: "Scheduled" },
+];
+
+// All response times including legacy (for viewing existing rates)
+export const ALL_RATE_RESPONSE_TIMES = [
+  { hours: 4, label: "Same Business Day" },
+  { hours: 24, label: "Next Business Day" },
+  { hours: 48, label: "Scheduled" },
+  { hours: 72, label: "72h (Legacy)" },
+  { hours: 96, label: "96h (Legacy)" },
 ];
 
 // Currency utilities

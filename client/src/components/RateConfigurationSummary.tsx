@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { RATE_SERVICE_TYPES, RESPONSE_TIME_HOURS } from "../../../shared/rates";
+import { RATE_SERVICE_TYPES, RESPONSE_TIME_HOURS, RESPONSE_TIME_LABELS } from "../../../shared/rates";
 
 interface RateConfigurationSummaryProps {
   countries: Array<{ countryCode: string }>;
