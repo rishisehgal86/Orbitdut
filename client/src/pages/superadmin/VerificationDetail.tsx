@@ -501,6 +501,42 @@ export default function VerificationDetail() {
                             </a>
                           </div>
                         </div>
+
+                        {/* Signature Information for Signed Documents */}
+                        {(doc.signedBy || doc.signatureUrl || doc.signedAt) && (
+                          <>
+                            <Separator />
+                            <div className="space-y-2">
+                              <p className="text-sm font-medium">Signature Details</p>
+                              <div className="grid gap-3 md:grid-cols-2">
+                                {doc.signedBy && (
+                                  <div>
+                                    <p className="text-xs text-muted-foreground">Signed By</p>
+                                    <p className="text-sm font-medium">{doc.signedBy}</p>
+                                  </div>
+                                )}
+                                {doc.signedAt && (
+                                  <div>
+                                    <p className="text-xs text-muted-foreground">Signed On</p>
+                                    <p className="text-sm">{format(new Date(doc.signedAt), "MMM d, yyyy 'at' h:mm a")}</p>
+                                  </div>
+                                )}
+                              </div>
+                              {doc.signatureUrl && (
+                                <div>
+                                  <p className="text-xs text-muted-foreground mb-2">Signature</p>
+                                  <div className="border rounded p-2 bg-white inline-block">
+                                    <img 
+                                      src={doc.signatureUrl} 
+                                      alt="Signature" 
+                                      className="max-w-[200px] max-h-[80px] object-contain"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </>
+                        )}
                       </div>
                     ))}
                   </div>

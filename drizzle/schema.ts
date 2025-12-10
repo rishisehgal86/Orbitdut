@@ -643,6 +643,11 @@ export const verificationDocuments = mysqlTable("verificationDocuments", {
   // Expiry (for insurance certificates)
   expiryDate: timestamp("expiryDate"),
   
+  // Signature Information (for signed documents like DPA, NDA, non-compete)
+  signedBy: varchar("signedBy", { length: 255 }), // Name of person who signed
+  signatureUrl: varchar("signatureUrl", { length: 500 }), // S3 URL to signature image
+  signedAt: timestamp("signedAt"), // When document was signed
+  
   // Review Status
   status: mysqlEnum("status", ["pending_review", "approved", "rejected", "expired"]).default("pending_review").notNull(),
   reviewedBy: int("reviewedBy").references(() => users.id), // Admin who reviewed

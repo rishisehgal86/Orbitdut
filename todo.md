@@ -934,3 +934,12 @@
 - [x] Frontend: Add Team Members section showing all supplier users with roles
 - [x] Testing: Verify all fields display correctly with real data
 - [x] Verify 100% coverage with user confirmation
+
+## Phase 40: Display Full Signed Documents with Signatures
+- [x] Audit verificationDocuments table for signature-related fields
+- [x] Check if signedBy, signatureUrl, signedAt fields exist
+- [x] Add signedBy, signatureUrl, signedAt fields to schema
+- [x] Run database migration to add signature fields
+- [x] Update backend to fetch signer information (already fetched in getVerificationDetails)
+- [x] Update frontend to display document preview, signer name, and signature image together
+- [x] Test signed document display
