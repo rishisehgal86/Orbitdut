@@ -94,7 +94,7 @@ export const appRouter = router({
 
           // Send welcome email
           const { sendSupplierWelcomeEmail } = await import("./_core/email");
-          await sendSupplierWelcomeEmail(input.email, input.name, input.companyName);
+          await sendSupplierWelcomeEmail(input.email, input.name || "Supplier", input.companyName || "Your Company");
         }
 
         // Create JWT token
@@ -182,6 +182,7 @@ export const appRouter = router({
             name: user.name,
             email: user.email,
             accountType: user.accountType,
+            role: user.role,
           },
         };
       }),
@@ -222,7 +223,7 @@ export const appRouter = router({
         });
 
         // Send email
-        await sendPasswordResetEmail(user.email, user.name || "User", token);
+        await sendPasswordResetEmail(user.email, token);
 
         return { success: true, message: "If an account exists, a reset email has been sent" };
       }),
@@ -917,9 +918,8 @@ export const appRouter = router({
         
         // Send email notification when coverage is configured
         if (input.countryCodes.length > 0 && ctx.user) {
-          const { getSupplierById, getSupplierCities } = await import("./db");
+          const { getSupplierById } = await import("./db");
           const supplier = await getSupplierById(input.supplierId);
-          const cities = await getSupplierCities(input.supplierId);
           
           if (supplier) {
             const { sendCoverageCompletedEmail } = await import("./_core/email");
@@ -927,7 +927,7 @@ export const appRouter = router({
               ctx.user.email,
               supplier.companyName,
               input.countryCodes.length,
-              cities.length
+              0 // City count not available
             );
           }
         }
@@ -1268,11 +1268,10 @@ export const appRouter = router({
             // Fire and forget - don't wait for email
             sendJobStatusEmail(
               customer.email,
-              customer.name,
               job.id,
-              job.serviceType,
-              "pending_supplier_acceptance",
-              "assigned_to_supplier"
+              "supplier_accepted",
+              customer.name || "Customer",
+              job.siteAddress
             ).catch((error) => {
               console.error("Failed to send job acceptance email:", error);
             });
@@ -1382,11 +1381,10 @@ export const appRouter = router({
             // Fire and forget - don't wait for email
             sendJobStatusEmail(
               customer.email,
-              customer.name,
               job.id,
-              job.serviceType,
-              oldStatus,
-              input.status
+              input.status,
+              customer.name || "Customer",
+              job.siteAddress
             ).catch((error) => {
               console.error("Failed to send job status email:", error);
             });
@@ -1481,17 +1479,15 @@ export const appRouter = router({
         });
 
         // Send email to engineer (using existing token from job creation)
-        const baseUrl = process.env.VITE_APP_URL || "http://localhost:3000";
-        await sendJobAssignmentNotification({
-          engineerEmail: input.engineerEmail,
-          engineerName: input.engineerName,
-          jobId: job.id,
-          siteName: job.siteName || "Site",
-          siteAddress: job.siteAddress,
-          scheduledDateTime: job.scheduledDateTime,
-          jobToken: job.engineerToken!,
-          baseUrl,
-        });
+        await sendJobAssignmentNotification(
+          input.engineerEmail,
+          input.engineerName,
+          job.id,
+          job.siteName || "Site",
+          job.siteAddress,
+          job.scheduledDateTime?.toISOString() || new Date().toISOString(),
+          job.engineerToken!
+        );
 
         return { success: true, engineerToken: job.engineerToken };
       }),
@@ -1538,17 +1534,15 @@ export const appRouter = router({
         });
 
         // Send confirmation email to engineer
-        const baseUrl = process.env.VITE_APP_URL || "http://localhost:3000";
-        await sendJobAssignmentNotification({
-          engineerEmail: input.engineerEmail,
-          engineerName: input.engineerName,
-          jobId: job.id,
-          siteName: job.siteName || "Site",
-          siteAddress: job.siteAddress,
-          scheduledDateTime: job.scheduledDateTime,
-          jobToken: input.token,
-          baseUrl,
-        });
+        await sendJobAssignmentNotification(
+          input.engineerEmail,
+          input.engineerName,
+          job.id,
+          job.siteName || "Site",
+          job.siteAddress,
+          job.scheduledDateTime?.toISOString() || new Date().toISOString(),
+          input.token
+        );
 
         return { success: true };
       }),
@@ -1591,17 +1585,15 @@ export const appRouter = router({
         });
 
         // Send confirmation email to engineer with updated details
-        const baseUrl = process.env.VITE_APP_URL || "http://localhost:3000";
-        await sendJobAssignmentNotification({
-          engineerEmail: input.engineerEmail,
-          engineerName: input.engineerName,
-          jobId: job.id,
-          siteName: job.siteName || "Site",
-          siteAddress: job.siteAddress,
-          scheduledDateTime: job.scheduledDateTime,
-          jobToken: input.token,
-          baseUrl,
-        });
+        await sendJobAssignmentNotification(
+          input.engineerEmail,
+          input.engineerName,
+          job.id,
+          job.siteName || "Site",
+          job.siteAddress,
+          job.scheduledDateTime?.toISOString() || new Date().toISOString(),
+          input.token
+        );
 
         return { success: true };
       }),
@@ -1759,11 +1751,10 @@ export const appRouter = router({
               const { sendJobStatusEmail } = await import("./_core/email");
               sendJobStatusEmail(
                 customer.email,
-                customer.name || "Customer",
                 job.id,
-                job.serviceType,
-                job.status,
-                input.status
+                input.status,
+                customer.name || "Customer",
+                job.siteAddress
               ).catch((error) => {
                 console.error("Failed to send job status email:", error);
               });
@@ -2418,13 +2409,16 @@ export const appRouter = router({
               'right_to_work_signed': 'rightToWork',
             };
             
-            const pdfBlob = await generateLegalPDF({
-              documentType: docTypeMap[input.documentType] as any,
-              supplierName: supplier.companyName,
-              contactName: input.signedBy || ctx.user.email,
-              signatureData: input.signatureData,
-              title: input.signedBy || '',
-            });
+            const pdfBlob = await generateLegalPDF(
+              docTypeMap[input.documentType] as any,
+              {
+                supplierName: supplier.companyName,
+                contactName: input.signedBy || ctx.user.email,
+                signatureData: input.signatureData,
+                title: input.signedBy || '',
+                signedAt: new Date().toISOString(),
+              }
+            );
             
             const pdfBuffer = Buffer.from(await pdfBlob.arrayBuffer());
             const { sendSignedDocumentEmail } = await import("./_core/email");
@@ -2484,7 +2478,7 @@ export const appRouter = router({
       ];
 
       const uploadedTypes = documents.map(d => d.documentType);
-      const missingDocs = requiredDocs.filter(type => !uploadedTypes.includes(type));
+      const missingDocs = requiredDocs.filter(type => !uploadedTypes.includes(type as any));
 
       if (missingDocs.length > 0) {
         throw new TRPCError({

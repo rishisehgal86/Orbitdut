@@ -325,8 +325,8 @@ export default function SuperadminVerifications() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="all">All Statuses</SelectItem>
-                            {filterOptions.statuses.map(status => (
-                              <SelectItem key={status} value={status}>{getStatusLabel(status)}</SelectItem>
+                            {filterOptions.statuses.filter(Boolean).map(status => (
+                              <SelectItem key={status!} value={status!}>{getStatusLabel(status!)}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>

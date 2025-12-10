@@ -6,12 +6,12 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 
 export default function SuperadminLayout({ children }: { children: React.ReactNode }) {
-  const { user, isLoading } = useAuth();
+  const { user, loading } = useAuth();
   const [location] = useLocation();
   const logoutMutation = trpc.auth.logout.useMutation();
 
   // Redirect if not superadmin
-  if (!isLoading && (!user || user.role !== "superadmin")) {
+  if (!loading && (!user || user.role !== "superadmin")) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">

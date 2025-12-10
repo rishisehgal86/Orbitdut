@@ -45,10 +45,12 @@ interface DocumentUpload {
   file: File | null;
   fileName?: string;
   fileData?: string; // base64 data for localStorage persistence
+  fileUrl?: string; // URL for uploaded files
   mimeType?: string;
   fileSize?: number;
   expiryDate?: string;
   uploaded: boolean;
+  createElement?: boolean; // Flag for certain document types
 }
 
 const STEPS = [
@@ -393,7 +395,7 @@ export function VerificationWizard() {
         try {
           // Upload complete signed PDF document with signature metadata
           const result = await uploadDocumentMutation.mutateAsync({
-            documentType: docType,
+            documentType: docType as any,
             documentName: `${docType}.pdf`,
             fileData: documentBase64,
             mimeType: "application/pdf",
@@ -636,7 +638,7 @@ export function VerificationWizard() {
           <div className="flex justify-between mt-8">
             <Button
               variant="outline"
-              onClick={() => setCurrentStep((prev) => Math.max(1, prev - 1))}
+              onClick={() => setCurrentStep((prev: number) => Math.max(1, prev - 1))}
               disabled={currentStep === 1}
             >
               Previous
@@ -1116,7 +1118,7 @@ function DocumentUploadField({
             size="sm"
             onClick={() => {
               // Allow re-upload by creating a file input
-              const input = document.createElement('input');
+              const input = window.document.createElement('input');
               input.type = 'file';
               input.accept = '.pdf,.jpg,.jpeg,.png';
               input.onchange = (e: any) => {

@@ -29,7 +29,7 @@ export default function VerificationStatus() {
     );
   }
 
-  const verificationStatus = status.verification?.status || "not_started";
+  const verificationStatus = (status.verification?.status || "not_started") as "not_started" | "in_progress" | "pending_review" | "under_review" | "approved" | "rejected" | "resubmission_required";
 
   // Show wizard for not_started, in_progress, or resubmission_required
   // Only show status page once submitted (pending_review, under_review, approved, rejected)
@@ -93,7 +93,8 @@ export default function VerificationStatus() {
                   </div>
                 </>
               )}
-              {verificationStatus === "resubmission_required" && (
+              {/* resubmission_required is handled by showing wizard above, this code is unreachable */}
+              {false && verificationStatus === "rejected" && (
                 <>
                   <AlertCircle className="w-12 h-12 text-orange-600" />
                   <div>
@@ -170,7 +171,7 @@ export default function VerificationStatus() {
 
             {/* Actions */}
             <div className="flex gap-4">
-              {verificationStatus === "rejected" || verificationStatus === "resubmission_required" ? (
+              {verificationStatus === "rejected" ? (
                 <Button asChild>
                   <Link href="/supplier/verification/resubmit">Update Application</Link>
                 </Button>

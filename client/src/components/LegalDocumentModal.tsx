@@ -58,7 +58,7 @@ export function LegalDocumentModal({
   };
 
   const handleSign = () => {
-    if (!signatureRef.current?.isEmpty() && title.trim()) {
+    if (!signatureRef.current?.isEmpty() && title.trim() && signatureRef.current) {
       const signatureData = signatureRef.current.toDataURL();
       onSign(signatureData, title);
       onClose();
@@ -67,12 +67,12 @@ export function LegalDocumentModal({
 
   const handlePreviewPdf = async () => {
     try {
-      const pdfBlob = await generateLegalPDF({
-        documentType,
+      const pdfBlob = await generateLegalPDF(documentType, {
         supplierName,
         contactName,
-        signatureData: null,
+        signatureData: "",
         title: "",
+        signedAt: new Date().toISOString(),
       });
       const url = URL.createObjectURL(pdfBlob);
       setPdfUrl(url);
@@ -84,12 +84,12 @@ export function LegalDocumentModal({
 
   const handleDownloadPdf = async () => {
     try {
-      const pdfBlob = await generateLegalPDF({
-        documentType,
+      const pdfBlob = await generateLegalPDF(documentType, {
         supplierName,
         contactName,
-        signatureData: signatureRef.current?.toDataURL() || null,
-        title: title || "",
+        signatureData: signatureRef.current?.toDataURL() || "",
+        title,
+        signedAt: new Date().toISOString(),
       });
       const url = URL.createObjectURL(pdfBlob);
       const link = document.createElement('a');

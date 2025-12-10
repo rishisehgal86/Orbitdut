@@ -32,9 +32,9 @@ export default function SupplierDashboard() {
     myJobs: myJobs?.length || 0,
     totalActiveJobs: (availableJobs?.length || 0) + (myJobs?.length || 0), // Sum of available + my jobs
     completedJobs: myJobs?.filter(j => j.status === 'completed').length || 0,
-    totalEarnings: myJobs
+    totalEarnings: (myJobs
       ?.filter(j => j.status === 'completed')
-      .reduce((sum, j) => sum + (j.calculatedPrice || 0), 0) / 100 || 0, // Convert cents to dollars
+      .reduce((sum, j) => sum + (j.calculatedPrice || 0), 0) || 0) / 100, // Convert cents to dollars
   };
 
   return (

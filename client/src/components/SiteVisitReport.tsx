@@ -8,18 +8,24 @@ interface SiteVisitReportData {
   timeOnsite?: string | null;
   timeLeftSite?: string | null;
   issueFault?: string | null;
-  actionsPerformed: string;
+  actionsPerformed: string | null;
   recommendations?: string | null;
-  issueResolved: boolean;
-  contactAgreed: boolean;
+  issueResolved: boolean | null;
+  contactAgreed: boolean | null;
   clientSignatory?: string | null;
   clientSignatureData?: string | null;
   signedAt?: Date | null;
   photos?: Array<{
     id: number;
+    svrId: number;
+    fileKey: string;
     fileUrl: string;
     fileName: string;
-  }>;
+    fileType: "image" | "video";
+    mimeType: string;
+    fileSize: number;
+    createdAt: Date;
+  } | null>;
 }
 
 interface SiteVisitReportProps {
@@ -148,7 +154,7 @@ export function SiteVisitReport({ report }: SiteVisitReportProps) {
           <div>
             <p className="text-sm font-medium text-muted-foreground mb-2">Photos</p>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {report.photos.map((photo) => (
+              {report.photos.filter((photo): photo is NonNullable<typeof photo> => photo !== null).map((photo) => (
                 <a key={photo.id} href={photo.fileUrl} target="_blank" rel="noopener noreferrer" className="block group">
                   <div className="aspect-square bg-muted rounded-md overflow-hidden flex items-center justify-center">
                     <img src={photo.fileUrl} alt={photo.fileName} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
