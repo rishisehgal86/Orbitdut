@@ -2,17 +2,17 @@
  * Rate validation utilities for detecting illogical pricing patterns
  */
 
-import { RESPONSE_TIME_HOURS } from "./rates";
+import { RATE_SERVICE_LEVELS } from "./rates";
 
 export interface RateWarning {
   type: "inverted_pricing" | "large_gap" | "missing_rate";
   message: string;
   severity: "warning" | "info";
-  affectedResponseTimes: number[];
+  affectedServiceLevels: string[];
 }
 
 export interface RateSet {
-  [responseTimeHours: number]: number | null | undefined;
+  [serviceLevel: string]: number | null | undefined;
 }
 
 /**
@@ -22,33 +22,34 @@ export interface RateSet {
 export function validateRates(rates: RateSet): RateWarning[] {
   const warnings: RateWarning[] = [];
   
-  // Convert rates object to sorted array by response time
-  const sortedRates = RESPONSE_TIME_HOURS.map((rt: number) => ({
-    responseTime: rt,
-    rate: rates[rt],
+  // Convert rates object to array with service levels
+  const sortedRates = RATE_SERVICE_LEVELS.map((sl) => ({
+    serviceLevel: sl.value,
+    label: sl.label,
+    rate: rates[sl.value],
   })).filter(r => r.rate !== null && r.rate !== undefined && r.rate > 0);
   
   if (sortedRates.length === 0) {
     return warnings;
   }
   
-  // Check for inverted pricing (faster response time more expensive than slower)
+  // Check for inverted pricing (higher priority should cost more)
   for (let i = 0; i < sortedRates.length - 1; i++) {
     const current = sortedRates[i]!;
     const next = sortedRates[i + 1]!;
     
-    // Faster response time (smaller number) should cost more (or equal)
+    // Higher priority (earlier in list) should cost more (or equal)
     if (current.rate! < next.rate!) {
       warnings.push({
         type: "inverted_pricing",
-        message: `${current.responseTime}h rate ($${(current.rate! / 100).toFixed(2)}) is lower than ${next.responseTime}h rate ($${(next.rate! / 100).toFixed(2)}). Faster response times should typically cost more.`,
+        message: `${current.label} rate ($${(current.rate! / 100).toFixed(2)}) is lower than ${next.label} rate ($${(next.rate! / 100).toFixed(2)}). Higher priority service levels should typically cost more.`,
         severity: "warning",
-        affectedResponseTimes: [current.responseTime, next.responseTime],
+        affectedServiceLevels: [current.serviceLevel, next.serviceLevel],
       });
     }
   }
   
-  // Check for large gaps between adjacent tiers (>50% increase)
+  // Check for large gaps between adjacent tiers (>50% decrease)
   for (let i = 0; i < sortedRates.length - 1; i++) {
     const current = sortedRates[i]!;
     const next = sortedRates[i + 1]!;
@@ -58,9 +59,9 @@ export function validateRates(rates: RateSet): RateWarning[] {
     if (percentDecrease > 50) {
       warnings.push({
         type: "large_gap",
-        message: `Large price drop (${percentDecrease.toFixed(0)}%) from ${current.responseTime}h to ${next.responseTime}h. Consider more gradual pricing tiers.`,
+        message: `Large price drop (${percentDecrease.toFixed(0)}%) from ${current.label} to ${next.label}. Consider more gradual pricing tiers.`,
         severity: "info",
-        affectedResponseTimes: [current.responseTime, next.responseTime],
+        affectedServiceLevels: [current.serviceLevel, next.serviceLevel],
       });
     }
   }
@@ -71,15 +72,15 @@ export function validateRates(rates: RateSet): RateWarning[] {
 /**
  * Validate rates in Quick Setup base rate inputs
  */
-export function validateBaseRates(baseRates: { [key: number]: string }): RateWarning[] {
+export function validateBaseRates(baseRates: { [key: string]: string }): RateWarning[] {
   const rateSet: RateSet = {};
   
-  RESPONSE_TIME_HOURS.forEach((rt: number) => {
-    const value = baseRates[rt];
+  RATE_SERVICE_LEVELS.forEach((sl) => {
+    const value = baseRates[sl.value];
     if (value && value.trim() !== "") {
       const numValue = parseFloat(value);
       if (!isNaN(numValue) && numValue > 0) {
-        rateSet[rt] = Math.round(numValue * 100); // Convert to cents
+        rateSet[sl.value] = Math.round(numValue * 100); // Convert to cents
       }
     }
   });

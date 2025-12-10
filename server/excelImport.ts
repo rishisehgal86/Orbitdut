@@ -1,8 +1,8 @@
-import * as XLSX from "xlsx";
-import { RATE_SERVICE_TYPES, RESPONSE_TIME_HOURS } from "../shared/rates";
+import * as XLSX from 'xlsx';
+import { RATE_SERVICE_TYPES, RATE_SERVICE_LEVELS } from "../shared/rates";
 
 const SERVICE_TYPES = RATE_SERVICE_TYPES;
-const RESPONSE_TIMES = RESPONSE_TIME_HOURS;
+const SERVICE_LEVELS = RATE_SERVICE_LEVELS;
 
 export interface ParsedRate {
   serviceType: string;
@@ -10,7 +10,7 @@ export interface ParsedRate {
   countryCode?: string;
   cityId?: number;
   cityName?: string;
-  responseTimeHours: number;
+  serviceLevel: string;
   rateUsd: number;
   rowNumber: number;
 }
@@ -106,16 +106,16 @@ export async function parseExcelFile(base64Data: string): Promise<ParseResult> {
             throw new Error("Country Code is required");
           }
 
-          // Extract rates for each response time
+          // Extract rates for each service level
           if (rowNumber === 2) { // Only log first data row to avoid spam
             console.log(`[Row ${rowNumber}] Country: ${row[1]}, Code: ${row[2]}`);
             console.log(`[Row ${rowNumber}] Full row:`, row);
             console.log(`[Row ${rowNumber}] Rate column indices:`, rateColumnIndices);
           }
-          for (const [responseTime, colIndex] of Object.entries(rateColumnIndices)) {
+          for (const [serviceLevel, colIndex] of Object.entries(rateColumnIndices)) {
             const rateValue = row[colIndex];
             if (rowNumber === 2) {
-              console.log(`[Row ${rowNumber}] ${responseTime}h rate at col ${colIndex}: ${rateValue}`);
+              console.log(`[Row ${rowNumber}] ${serviceLevel} rate at col ${colIndex}: ${rateValue}`);
             }
             
             if (rateValue === null || rateValue === undefined || rateValue === "") {
@@ -139,7 +139,7 @@ export async function parseExcelFile(base64Data: string): Promise<ParseResult> {
               serviceType,
               locationType: "country",
               countryCode,
-              responseTimeHours: parseInt(responseTime),
+              serviceLevel,
               rateUsd,
               rowNumber,
             });
@@ -155,8 +155,8 @@ export async function parseExcelFile(base64Data: string): Promise<ParseResult> {
             throw new Error("City and Country Code are required");
           }
 
-          // Extract rates for each response time
-          for (const [responseTime, colIndex] of Object.entries(rateColumnIndices)) {
+          // Extract rates for each service level
+          for (const [serviceLevel, colIndex] of Object.entries(rateColumnIndices)) {
             const rateValue = row[colIndex];
             
             if (rateValue === null || rateValue === undefined || rateValue === "") {
@@ -181,7 +181,7 @@ export async function parseExcelFile(base64Data: string): Promise<ParseResult> {
               locationType: "city",
               cityName,
               countryCode,
-              responseTimeHours: parseInt(responseTime),
+              serviceLevel,
               rateUsd,
               rowNumber,
             });
@@ -246,7 +246,7 @@ function parseSheetName(sheetName: string): {
 }
 
 /**
- * Find column indices for rate columns
+ * Find column indices for rate columns (service levels)
  */
 function findRateColumns(headers: any[]): Record<string, number> {
   const rateColumns: Record<string, number> = {};
@@ -256,12 +256,12 @@ function findRateColumns(headers: any[]): Record<string, number> {
   for (let i = 0; i < headers.length; i++) {
     const header = headers[i]?.toString().toLowerCase() || "";
     
-    for (const responseTime of RESPONSE_TIMES) {
-      // Use word boundary to match exact response time (e.g., "4h" should not match "24h")
-      const pattern = new RegExp(`\\b${responseTime}h\\s+rate`, 'i');
-      if (pattern.test(header)) {
-        rateColumns[responseTime.toString()] = i;
-        console.log(`[findRateColumns] Matched "${responseTime}h rate" at column ${i}`);
+    for (const serviceLevel of SERVICE_LEVELS) {
+      // Match service level rate columns (e.g., "Same Business Day Rate", "Next Business Day Rate", "Scheduled Rate")
+      const labelLower = serviceLevel.label.toLowerCase();
+      if (header.includes(labelLower) && header.includes('rate')) {
+        rateColumns[serviceLevel.value] = i;
+        console.log(`[findRateColumns] Matched "${serviceLevel.label} Rate" at column ${i}`);
         break;
       }
     }

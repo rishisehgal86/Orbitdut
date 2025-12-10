@@ -10,7 +10,7 @@ interface RateInput {
   countryCode?: string | null;
   cityId?: number | null;
   serviceType: string;
-  responseTimeHours: number;
+  serviceLevel: string;
   rateUsdCents: number | null;
 }
 
@@ -22,7 +22,7 @@ export async function upsertRate(rate: RateInput): Promise<void> {
   const conditions = [
     eq(supplierRates.supplierId, rate.supplierId),
     eq(supplierRates.serviceType, rate.serviceType),
-    eq(supplierRates.responseTimeHours, rate.responseTimeHours),
+    eq(supplierRates.serviceLevel, rate.serviceLevel as any),
   ];
 
   // Add location condition (country OR city)
@@ -49,14 +49,13 @@ export async function upsertRate(rate: RateInput): Promise<void> {
       .update(supplierRates)
       .set({
         rateUsdCents: rate.rateUsdCents,
+        isServiceable: rate.rateUsdCents === null ? 0 : 1,
         updatedAt: new Date(),
       })
-      .where(
-        and(
-          eq(supplierRates.id, existing.id),
-          eq(supplierRates.supplierId, rate.supplierId) // Defense-in-depth: ensure tenant isolation
-        )
-      );
+      .where(and(
+        eq(supplierRates.id, existing.id),
+        eq(supplierRates.supplierId, rate.supplierId)
+      ));
   } else {
     // Insert new
     await db.insert(supplierRates).values({
@@ -64,8 +63,9 @@ export async function upsertRate(rate: RateInput): Promise<void> {
       countryCode: rate.countryCode || null,
       cityId: rate.cityId || null,
       serviceType: rate.serviceType,
-      responseTimeHours: rate.responseTimeHours,
+      serviceLevel: rate.serviceLevel as any,
       rateUsdCents: rate.rateUsdCents,
+      isServiceable: rate.rateUsdCents === null ? 0 : 1,
     });
   }
 }
@@ -136,8 +136,8 @@ export async function getSupplierRates(supplierId: number) {
         (excl.countryCode && excl.countryCode === rate.countryCode) ||
         (excl.cityId && excl.cityId === rate.cityId);
       const serviceMatch = excl.serviceType === rate.serviceType;
-      const responseTimeMatch = excl.responseTimeHours === rate.responseTimeHours;
-      return locationMatch && serviceMatch && responseTimeMatch;
+      const serviceLevelMatch = excl.serviceLevel === rate.serviceLevel;
+      return locationMatch && serviceMatch && serviceLevelMatch;
     });
     
     return !isExcluded;
@@ -192,30 +192,30 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
   
   // 4. Build virtual table: all possible rate slots with their data
   const SERVICE_TYPES = ['L1 End User Computing', 'L1 Network Support', 'Smart Hands'];
-  const RESPONSE_TIMES = [4, 24, 48, 72, 96];
+  const SERVICE_LEVELS = ['same_business_day', 'next_business_day', 'scheduled'];
   
   const virtualTable: Array<{
     location: { type: 'country', code: string } | { type: 'city', id: number };
     serviceType: string;
-    responseTimeHours: number;
+    serviceLevel: string;
     rate: typeof allRates[0] | undefined;
   }> = [];
   
   // Add country slots
   for (const country of coverageCountries) {
     for (const serviceType of SERVICE_TYPES) {
-      for (const responseTimeHours of RESPONSE_TIMES) {
+      for (const serviceLevel of SERVICE_LEVELS) {
         // Find matching rate from database
         const rate = allRates.find(r => 
           r.countryCode === country.countryCode && 
           r.serviceType === serviceType && 
-          r.responseTimeHours === responseTimeHours
+          r.serviceLevel === serviceLevel
         );
         
         virtualTable.push({
           location: { type: 'country', code: country.countryCode },
           serviceType,
-          responseTimeHours,
+          serviceLevel,
           rate,
         });
       }
@@ -225,18 +225,18 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
   // Add city slots
   for (const city of coverageCities) {
     for (const serviceType of SERVICE_TYPES) {
-      for (const responseTimeHours of RESPONSE_TIMES) {
+      for (const serviceLevel of SERVICE_LEVELS) {
         // Find matching rate from database
         const rate = allRates.find(r => 
           r.cityId === city.id && 
           r.serviceType === serviceType && 
-          r.responseTimeHours === responseTimeHours
+          r.serviceLevel === serviceLevel
         );
         
         virtualTable.push({
           location: { type: 'city', id: city.id },
           serviceType,
-          responseTimeHours,
+          serviceLevel,
           rate,
         });
       }
@@ -266,14 +266,14 @@ export async function getRateCompletionStats(supplierId: number): Promise<{
       continue;
     }
     
-    // Check if response-time-level excluded
-    const responseTimeExcluded = responseTimeExclusions.some(excl => {
-      if (isCountry && excl.countryCode === locationId && excl.serviceType === slot.serviceType && excl.responseTimeHours === slot.responseTimeHours) return true;
-      if (!isCountry && excl.cityId === locationId && excl.serviceType === slot.serviceType && excl.responseTimeHours === slot.responseTimeHours) return true;
+    // Check if service-level excluded
+    const serviceLevelExcluded = responseTimeExclusions.some(excl => {
+      if (isCountry && excl.countryCode === locationId && excl.serviceType === slot.serviceType && excl.serviceLevel === slot.serviceLevel) return true;
+      if (!isCountry && excl.cityId === locationId && excl.serviceType === slot.serviceType && excl.serviceLevel === slot.serviceLevel) return true;
       return false;
     });
     
-    if (responseTimeExcluded) {
+    if (serviceLevelExcluded) {
       excluded++;
       continue;
     }

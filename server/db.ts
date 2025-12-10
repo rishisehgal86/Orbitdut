@@ -295,7 +295,7 @@ export async function upsertSupplierResponseTime(responseTime: InsertSupplierRes
   if (existing.length > 0) {
     // Update
     await db.update(supplierResponseTimes)
-      .set({ responseTimeHours: responseTime.responseTimeHours, updatedAt: new Date() })
+      .set({ serviceLevel: responseTime.serviceLevel as any, updatedAt: new Date() })
       .where(eq(supplierResponseTimes.id, existing[0]!.id));
   } else {
     // Insert
@@ -316,7 +316,7 @@ export async function deleteSupplierResponseTime(id: number, supplierId: number)
 
 /**
  * Bulk upsert supplier rates
- * Inserts new rates or updates existing ones based on supplierId, serviceType, responseTimeHours, and location
+ * Inserts new rates or updates existing ones based on supplierId, serviceType, serviceLevel, and location
  */
 export async function bulkUpsertRates(supplierId: number, rates: InsertSupplierRate[]) {
   const db = await getDb();
@@ -327,7 +327,7 @@ export async function bulkUpsertRates(supplierId: number, rates: InsertSupplierR
     const conditions = [
       eq(supplierRates.supplierId, supplierId),
       eq(supplierRates.serviceType, rate.serviceType),
-      eq(supplierRates.responseTimeHours, rate.responseTimeHours),
+      eq(supplierRates.serviceLevel, rate.serviceLevel as any),
     ];
 
     // Add location-specific conditions

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { RATE_SERVICE_TYPES, RESPONSE_TIME_HOURS } from "../../../shared/rates";
+import { RATE_SERVICE_TYPES, RATE_SERVICE_LEVELS } from "../../../shared/rates";
 
 interface RateConfigurationSummaryProps {
   countries: Array<{ countryCode: string }>;
@@ -9,7 +9,7 @@ interface RateConfigurationSummaryProps {
     countryCode?: string | null;
     cityId?: number | null;
     serviceType: string;
-    responseTimeHours: number;
+    serviceLevel: string;
     rateUsdCents?: number | null;
   }>;
   serviceExclusions: Array<{
@@ -21,7 +21,7 @@ interface RateConfigurationSummaryProps {
     countryCode?: string | null;
     cityId?: number | null;
     serviceType: string;
-    responseTimeHours: number;
+    serviceLevel: string;
   }>;
 }
 
@@ -38,7 +38,7 @@ export function RateConfigurationSummary({
     if (!rates) return map;
 
     rates.forEach((rate) => {
-      const key = `${rate.countryCode || ""}-${rate.cityId || ""}-${rate.serviceType}-${rate.responseTimeHours}`;
+      const key = `${rate.countryCode || ""}-${rate.cityId || ""}-${rate.serviceType}-${rate.serviceLevel}`;
       map.set(key, rate.rateUsdCents || 0);
     });
 
@@ -52,7 +52,7 @@ export function RateConfigurationSummary({
     }
 
     const SERVICE_TYPES = RATE_SERVICE_TYPES.map((s) => s.value);
-    const RESPONSE_TIMES = RESPONSE_TIME_HOURS;
+    const SERVICE_LEVELS = RATE_SERVICE_LEVELS.map((s) => s.value);
 
     let total = 0;
     let configured = 0;
@@ -67,19 +67,19 @@ export function RateConfigurationSummary({
         );
         if (serviceExcluded) return;
 
-        RESPONSE_TIMES.forEach((responseTime) => {
-          // Check if response time is excluded
-          const rtExcluded = responseTimeExclusions.some(
+        SERVICE_LEVELS.forEach((serviceLevel) => {
+          // Check if service level is excluded
+          const slExcluded = responseTimeExclusions.some(
             (exc) =>
               exc.countryCode === country.countryCode &&
               exc.serviceType === serviceType &&
-              exc.responseTimeHours === responseTime
+              exc.serviceLevel === serviceLevel
           );
-          if (rtExcluded) return;
+          if (slExcluded) return;
 
           // Count this rate slot
           total++;
-          const key = `${country.countryCode}--${serviceType}-${responseTime}`;
+          const key = `${country.countryCode}--${serviceType}-${serviceLevel}`;
           const rateValue = rateMap.get(key);
           if (rateValue && rateValue > 0) {
             configured++;
@@ -99,19 +99,19 @@ export function RateConfigurationSummary({
         );
         if (serviceExcluded) return;
 
-        RESPONSE_TIMES.forEach((responseTime) => {
-          // Check if response time is excluded
-          const rtExcluded = responseTimeExclusions.some(
+        SERVICE_LEVELS.forEach((serviceLevel) => {
+          // Check if service level is excluded
+          const slExcluded = responseTimeExclusions.some(
             (exc) =>
               exc.cityId === city.id &&
               exc.serviceType === serviceType &&
-              exc.responseTimeHours === responseTime
+              exc.serviceLevel === serviceLevel
           );
-          if (rtExcluded) return;
+          if (slExcluded) return;
 
           // Count this rate slot
           total++;
-          const key = `-${city.id}-${serviceType}-${responseTime}`;
+          const key = `-${city.id}-${serviceType}-${serviceLevel}`;
           const rateValue = rateMap.get(key);
           if (rateValue && rateValue > 0) {
             configured++;

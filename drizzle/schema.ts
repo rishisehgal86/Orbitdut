@@ -122,8 +122,8 @@ export const supplierRates = mysqlTable("supplierRates", {
   // Service Type: L1_EUC, L1_NETWORK, SMART_HANDS
   serviceType: varchar("serviceType", { length: 50 }).notNull(),
   
-  // Response Time: 4, 24, 48, 72, 96 (hours)
-  responseTimeHours: int("responseTimeHours").notNull(),
+  // Service Level: same_business_day, next_business_day, scheduled
+  serviceLevel: mysqlEnum("serviceLevel", ["same_business_day", "next_business_day", "scheduled"]).notNull(),
   
   // Rate in USD cents (nullable - allows opt-out)
   rateUsdCents: int("rateUsdCents"),
@@ -136,13 +136,13 @@ export const supplierRates = mysqlTable("supplierRates", {
 }, (table) => ({
   // Index for tenant isolation queries
   supplierIdIdx: index("supplierRates_supplierId_idx").on(table.supplierId),
-  // Composite unique constraint: prevent duplicate rates for same location/service/response time
+  // Composite unique constraint: prevent duplicate rates for same location/service/service level
   uniqueRate: index("supplierRates_unique").on(
     table.supplierId,
     table.countryCode,
     table.cityId,
     table.serviceType,
-    table.responseTimeHours
+    table.serviceLevel
   ),
 }));
 
@@ -189,20 +189,20 @@ export type SupplierPriorityCity = typeof supplierPriorityCities.$inferSelect;
 export type InsertSupplierPriorityCity = typeof supplierPriorityCities.$inferInsert;
 
 /**
- * Supplier response times - Tier 4: Response time zones by region
+ * Supplier service levels - Tier 4: Service level zones by region
  */
 export const supplierResponseTimes = mysqlTable("supplierResponseTimes", {
   id: int("id").autoincrement().primaryKey(),
   supplierId: int("supplierId").notNull().references(() => suppliers.id, { onDelete: "cascade" }),
   countryCode: varchar("countryCode", { length: 2 }), // NULL = global default
   cityName: varchar("cityName", { length: 255 }), // NULL = country-level or global
-  responseTimeHours: int("responseTimeHours").notNull(), // 4, 24, 48, 72, 96
+  serviceLevel: mysqlEnum("serviceLevel", ["same_business_day", "next_business_day", "scheduled"]).notNull(),
   isDefault: int("isDefault", { unsigned: true }).default(0).notNull(), // 1 = global default
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, (table) => ({
   supplierIdIdx: index("supplierResponseTimes_supplierId_idx").on(table.supplierId),
-  uniqueResponseTime: index("supplierResponseTimes_unique").on(table.supplierId, table.countryCode, table.cityName, table.responseTimeHours),
+  uniqueServiceLevel: index("supplierResponseTimes_unique").on(table.supplierId, table.countryCode, table.cityName, table.serviceLevel),
 }));
 
 export type SupplierResponseTime = typeof supplierResponseTimes.$inferSelect;
@@ -281,6 +281,9 @@ export const jobs = mysqlTable("jobs", {
   
   // Timezone - IANA timezone identifier (e.g., 'America/New_York', 'Asia/Dubai')
   timezone: varchar("timezone", { length: 100 }),
+  
+  // Service Level
+  serviceLevel: mysqlEnum("serviceLevel", ["same_business_day", "next_business_day", "scheduled"]),
   
   // Pricing (Marketplace)
   isOutOfHours: int("isOutOfHours", { unsigned: true }).default(0).notNull(),
@@ -410,9 +413,9 @@ export type SupplierServiceExclusion = typeof supplierServiceExclusions.$inferSe
 export type InsertSupplierServiceExclusion = typeof supplierServiceExclusions.$inferInsert;
 
 /**
- * Supplier response time exclusions - allows suppliers to mark specific response times as not offered
+ * Supplier service level exclusions - allows suppliers to mark specific service levels as not offered
  * for individual service/location combinations. More granular than service-level exclusions.
- * Example: "We offer L1 EUC in London, but only for 24h+ response times, not 4h"
+ * Example: "We offer L1 EUC in London, but only for Next Business Day+, not Same Business Day"
  */
 export const supplierResponseTimeExclusions = mysqlTable("supplierResponseTimeExclusions", {
   id: int("id").autoincrement().primaryKey(),
@@ -425,8 +428,8 @@ export const supplierResponseTimeExclusions = mysqlTable("supplierResponseTimeEx
   // Service Type: L1_EUC, L1_NETWORK, SMART_HANDS
   serviceType: varchar("serviceType", { length: 50 }).notNull(),
   
-  // Response Time Hours: 4, 24, 48, 72, 96
-  responseTimeHours: int("responseTimeHours").notNull(),
+  // Service Level: same_business_day, next_business_day, scheduled
+  serviceLevel: mysqlEnum("serviceLevel", ["same_business_day", "next_business_day", "scheduled"]).notNull(),
   
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => ({
@@ -449,7 +452,7 @@ export const supplierResponseTimeExclusions = mysqlTable("supplierResponseTimeEx
     table.countryCode,
     table.cityId,
     table.serviceType,
-    table.responseTimeHours
+    table.serviceLevel
   ),
 }));
 

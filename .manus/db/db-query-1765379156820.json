@@ -1,0 +1,94 @@
+{
+  "query": "SELECT id, supplierId, responseTimeHours, serviceLevel FROM supplierRates WHERE serviceLevel IS NULL AND responseTimeHours IS NOT NULL LIMIT 20",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT id, supplierId, responseTimeHours, serviceLevel FROM supplierRates WHERE serviceLevel IS NULL AND responseTimeHours IS NOT NULL LIMIT 20",
+  "rows": [
+    {
+      "id": "1",
+      "supplierId": "8",
+      "responseTimeHours": "0",
+      "serviceLevel": "NULL"
+    },
+    {
+      "id": "30001",
+      "supplierId": "30003",
+      "responseTimeHours": "0",
+      "serviceLevel": "NULL"
+    },
+    {
+      "id": "60001",
+      "supplierId": "60003",
+      "responseTimeHours": "0",
+      "serviceLevel": "NULL"
+    },
+    {
+      "id": "90001",
+      "supplierId": "90003",
+      "responseTimeHours": "0",
+      "serviceLevel": "NULL"
+    },
+    {
+      "id": "90002",
+      "supplierId": "90008",
+      "responseTimeHours": "0",
+      "serviceLevel": "NULL"
+    },
+    {
+      "id": "120001",
+      "supplierId": "120003",
+      "responseTimeHours": "0",
+      "serviceLevel": "NULL"
+    },
+    {
+      "id": "150001",
+      "supplierId": "150003",
+      "responseTimeHours": "0",
+      "serviceLevel": "NULL"
+    },
+    {
+      "id": "150002",
+      "supplierId": "150008",
+      "responseTimeHours": "0",
+      "serviceLevel": "NULL"
+    },
+    {
+      "id": "150003",
+      "supplierId": "150013",
+      "responseTimeHours": "0",
+      "serviceLevel": "NULL"
+    },
+    {
+      "id": "150004",
+      "supplierId": "150018",
+      "responseTimeHours": "0",
+      "serviceLevel": "NULL"
+    },
+    {
+      "id": "150005",
+      "supplierId": "150023",
+      "responseTimeHours": "0",
+      "serviceLevel": "NULL"
+    },
+    {
+      "id": "150006",
+      "supplierId": "150028",
+      "responseTimeHours": "0",
+      "serviceLevel": "NULL"
+    },
+    {
+      "id": "180001",
+      "supplierId": "180003",
+      "responseTimeHours": "0",
+      "serviceLevel": "NULL"
+    },
+    {
+      "id": "180002",
+      "supplierId": "180007",
+      "responseTimeHours": "0",
+      "serviceLevel": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tsupplierId\tresponseTimeHours\tserviceLevel\n1\t8\t0\tNULL\n30001\t30003\t0\tNULL\n60001\t60003\t0\tNULL\n90001\t90003\t0\tNULL\n90002\t90008\t0\tNULL\n120001\t120003\t0\tNULL\n150001\t150003\t0\tNULL\n150002\t150008\t0\tNULL\n150003\t150013\t0\tNULL\n150004\t150018\t0\tNULL\n150005\t150023\t0\tNULL\n150006\t150028\t0\tNULL\n180001\t180003\t0\tNULL\n180002\t180007\t0\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}

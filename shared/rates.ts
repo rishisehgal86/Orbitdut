@@ -24,26 +24,50 @@ export const RATE_SERVICE_TYPES = [
   { value: SERVICE_TYPES.SMART_HANDS, label: "Smart Hands" },
 ];
 
-// Response Times (in hours)
-export const RESPONSE_TIME_HOURS = [4, 24, 48, 72, 96] as const;
+// Service Levels
+export const SERVICE_LEVELS = {
+  SAME_BUSINESS_DAY: "same_business_day",
+  NEXT_BUSINESS_DAY: "next_business_day",
+  SCHEDULED: "scheduled",
+} as const;
 
-export type RateResponseTime = typeof RESPONSE_TIME_HOURS[number];
+export type ServiceLevel = typeof SERVICE_LEVELS[keyof typeof SERVICE_LEVELS];
 
-export const RESPONSE_TIME_LABELS: Record<RateResponseTime, string> = {
-  4: "4h",
-  24: "24h",
-  48: "48h",
-  72: "72h",
-  96: "96h",
+export const SERVICE_LEVEL_LABELS: Record<ServiceLevel, string> = {
+  [SERVICE_LEVELS.SAME_BUSINESS_DAY]: "Same Business Day",
+  [SERVICE_LEVELS.NEXT_BUSINESS_DAY]: "Next Business Day",
+  [SERVICE_LEVELS.SCHEDULED]: "Scheduled",
 };
 
-// For UI components - array of objects with hours and label
-export const RATE_RESPONSE_TIMES = [
-  { hours: 4, label: "4h" },
-  { hours: 24, label: "24h" },
-  { hours: 48, label: "48h" },
-  { hours: 72, label: "72h" },
-  { hours: 96, label: "96h" },
+export const SERVICE_LEVEL_DESCRIPTIONS: Record<ServiceLevel, string> = {
+  [SERVICE_LEVELS.SAME_BUSINESS_DAY]: "Service completed within today's business hours. Best for urgent issues and critical downtime.",
+  [SERVICE_LEVELS.NEXT_BUSINESS_DAY]: "Service scheduled for next business day. Best for important but not critical issues.",
+  [SERVICE_LEVELS.SCHEDULED]: "Service scheduled 2+ business days out. Best for planned maintenance and non-urgent work.",
+};
+
+// For UI components - array of objects with value and label
+export const RATE_SERVICE_LEVELS = [
+  { 
+    value: SERVICE_LEVELS.SAME_BUSINESS_DAY, 
+    label: "Same Business Day",
+    description: "Service completed within today's business hours",
+    icon: "🔴",
+    color: "red"
+  },
+  { 
+    value: SERVICE_LEVELS.NEXT_BUSINESS_DAY, 
+    label: "Next Business Day",
+    description: "Service scheduled for next business day",
+    icon: "🟡",
+    color: "yellow"
+  },
+  { 
+    value: SERVICE_LEVELS.SCHEDULED, 
+    label: "Scheduled",
+    description: "Service scheduled 2+ business days out",
+    icon: "🟢",
+    color: "green"
+  },
 ];
 
 // Currency utilities
