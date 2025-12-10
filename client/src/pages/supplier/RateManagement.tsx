@@ -81,7 +81,15 @@ export default function RateManagement() {
         </Alert>
 
         {/* Rate Configuration Summary */}
-        <RateConfigurationSummary supplierId={supplierId} />
+        {supplierId && countries && cities && rates && serviceExclusions && responseTimeExclusions && (
+          <RateConfigurationSummary
+            rates={rates}
+            countries={countries}
+            cities={cities}
+            serviceExclusions={serviceExclusions}
+            responseTimeExclusions={responseTimeExclusions}
+          />
+        )}
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
