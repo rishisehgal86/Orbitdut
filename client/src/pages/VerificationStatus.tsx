@@ -31,9 +31,9 @@ export default function VerificationStatus() {
 
   const verificationStatus = status.verification?.status || "not_started";
 
-  // Only show wizard if not started or resubmission required
-  // Once submitted (pending_review, under_review, approved, rejected), show status page instead
-  if (verificationStatus === "not_started" || verificationStatus === "resubmission_required") {
+  // Show wizard for not_started, in_progress, or resubmission_required
+  // Only show status page once submitted (pending_review, under_review, approved, rejected)
+  if (verificationStatus === "not_started" || verificationStatus === "in_progress" || verificationStatus === "resubmission_required") {
     return <VerificationWizard />;
   }
 

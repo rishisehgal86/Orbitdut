@@ -987,3 +987,10 @@
 - [x] Backend already supports PDF uploads (verified)
 - [ ] Test PDF generation for all 5 legal documents (requires supplier login)
 - [ ] Verify PDFs are viewable and downloadable from superadmin panel
+
+## Bug: Verification Wizard Not Appearing
+- [x] Investigate why verification page shows "No documents uploaded yet" instead of wizard
+- [x] Check VerificationStatus component rendering logic
+- [x] Root cause: VerificationStatus only showed wizard for not_started/resubmission_required, not in_progress
+- [x] Fix: Added in_progress to wizard condition in VerificationStatus.tsx
+- [ ] Test complete verification flow end-to-end (requires supplier login)
