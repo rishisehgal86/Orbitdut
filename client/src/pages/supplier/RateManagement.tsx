@@ -301,7 +301,19 @@ function QuickSetupTab({ supplierId, onSuccess }: { supplierId: number; onSucces
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {RATE_RESPONSE_TIMES.map((responseTime) => (
                   <div key={responseTime.hours} className="space-y-2">
-                    <label className="text-sm text-muted-foreground">{responseTime.label}</label>
+                    <div className="flex items-center gap-1.5">
+                      <label className="text-sm text-muted-foreground">{responseTime.label}</label>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p className="text-sm">{responseTime.tooltip}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                         $
@@ -926,9 +938,21 @@ function LocationRatesTable({
                           
                           return (
                             <div key={rt.hours} className="space-y-2">
-                              <label className="text-sm font-medium text-muted-foreground">
-                                {rt.label}
-                              </label>
+                              <div className="flex items-center gap-1.5">
+                                <label className="text-sm font-medium text-muted-foreground">
+                                  {rt.label}
+                                </label>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-xs">
+                                      <p className="text-sm">{rt.tooltip}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
                               <div className="relative">
                                 <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-sm ${
                                   isResponseTimeDisabled ? "text-muted-foreground/50" : "text-muted-foreground"

@@ -6,9 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Search, Download, ChevronDown, ChevronRight } from "lucide-react";
+import { Search, Download, ChevronDown, ChevronRight, Info } from "lucide-react";
 import SupplierLayout from "@/components/SupplierLayout";
-import { RATE_SERVICE_TYPES, RESPONSE_TIME_HOURS, RESPONSE_TIME_LABELS, formatCurrency } from "@shared/rates";
+import { RATE_SERVICE_TYPES, RESPONSE_TIME_HOURS, RESPONSE_TIME_LABELS, formatCurrency, ALL_RATE_RESPONSE_TIMES } from "@shared/rates";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { RateConfigurationSummary } from "@/components/RateConfigurationSummary";
 
 type ServiceType = typeof RATE_SERVICE_TYPES[number]["value"];
@@ -458,10 +459,26 @@ export default function CurrentRates() {
                             </tr>
 
                             {/* Expanded response time rows */}
-                            {isExpanded && filters.responseTimes.map((rt) => (
+                            {isExpanded && filters.responseTimes.map((rt) => {
+                              const rtOption = ALL_RATE_RESPONSE_TIMES.find(opt => opt.hours === rt);
+                              return (
                               <tr key={`${locationKey}-${rt}`} className="bg-muted/30">
                                 <td className="py-1.5 px-3 pl-12 text-sm text-muted-foreground">
-                                  {RESPONSE_TIME_LABELS[rt]}
+                                  <div className="flex items-center gap-1.5">
+                                    {RESPONSE_TIME_LABELS[rt]}
+                                    {rtOption?.tooltip && (
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Info className="h-3 w-3 text-muted-foreground cursor-help" />
+                                          </TooltipTrigger>
+                                          <TooltipContent className="max-w-xs">
+                                            <p className="text-sm">{rtOption.tooltip}</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    )}
+                                  </div>
                                 </td>
                                 {filters.serviceTypes.map((serviceType) => {
                                   const serviceExcluded = isServiceExcluded(location, serviceType);
@@ -484,7 +501,8 @@ export default function CurrentRates() {
                                   );
                                 })}
                               </tr>
-                            ))}
+                            );
+                            })}
                           </>
                         );
                       })

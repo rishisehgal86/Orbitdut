@@ -47,18 +47,50 @@ export const RESPONSE_TIME_LABELS: Record<RateResponseTime, string> = {
 // For UI components - array of objects with hours and label
 // Only includes active 3 levels for new rate configuration
 export const RATE_RESPONSE_TIMES = [
-  { hours: 4, label: "Same Business Day" },
-  { hours: 24, label: "Next Business Day" },
-  { hours: 48, label: "Scheduled" },
+  { 
+    hours: 4, 
+    label: "Same Business Day",
+    tooltip: "Response within 4 hours during business hours (9 AM - 5 PM local time). Ideal for urgent issues requiring immediate attention."
+  },
+  { 
+    hours: 24, 
+    label: "Next Business Day",
+    tooltip: "Response within 24 hours (next business day). Standard service level for most requests."
+  },
+  { 
+    hours: 48, 
+    label: "Scheduled",
+    tooltip: "Response within 48 hours (2 business days). Suitable for planned maintenance and non-urgent work."
+  },
 ];
 
 // All response times including legacy (for viewing existing rates)
 export const ALL_RATE_RESPONSE_TIMES = [
-  { hours: 4, label: "Same Business Day" },
-  { hours: 24, label: "Next Business Day" },
-  { hours: 48, label: "Scheduled" },
-  { hours: 72, label: "72h (Legacy)" },
-  { hours: 96, label: "96h (Legacy)" },
+  { 
+    hours: 4, 
+    label: "Same Business Day",
+    tooltip: "Response within 4 hours during business hours (9 AM - 5 PM local time). Ideal for urgent issues requiring immediate attention."
+  },
+  { 
+    hours: 24, 
+    label: "Next Business Day",
+    tooltip: "Response within 24 hours (next business day). Standard service level for most requests."
+  },
+  { 
+    hours: 48, 
+    label: "Scheduled",
+    tooltip: "Response within 48 hours (2 business days). Suitable for planned maintenance and non-urgent work."
+  },
+  { 
+    hours: 72, 
+    label: "72h (Legacy)",
+    tooltip: "Legacy service level - no longer available for new configurations."
+  },
+  { 
+    hours: 96, 
+    label: "96h (Legacy)",
+    tooltip: "Legacy service level - no longer available for new configurations."
+  },
 ];
 
 // Currency utilities
