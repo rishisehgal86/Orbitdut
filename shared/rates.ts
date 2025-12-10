@@ -24,22 +24,26 @@ export const RATE_SERVICE_TYPES = [
   { value: SERVICE_TYPES.SMART_HANDS, label: "Smart Hands" },
 ];
 
-// Response Times (in hours) - Simplified to 3 service levels
-export const RESPONSE_TIME_HOURS = [4, 24, 48] as const;
+// Response Times (in hours)
+export const RESPONSE_TIME_HOURS = [4, 24, 48, 72, 96] as const;
 
 export type RateResponseTime = typeof RESPONSE_TIME_HOURS[number];
 
 export const RESPONSE_TIME_LABELS: Record<RateResponseTime, string> = {
-  4: "Same Business Day",
-  24: "Next Business Day",
-  48: "Scheduled",
+  4: "4h",
+  24: "24h",
+  48: "48h",
+  72: "72h",
+  96: "96h",
 };
 
 // For UI components - array of objects with hours and label
 export const RATE_RESPONSE_TIMES = [
-  { hours: 4, label: "Same Business Day" },
-  { hours: 24, label: "Next Business Day" },
-  { hours: 48, label: "Scheduled" },
+  { hours: 4, label: "4h" },
+  { hours: 24, label: "24h" },
+  { hours: 48, label: "48h" },
+  { hours: 72, label: "72h" },
+  { hours: 96, label: "96h" },
 ];
 
 // Currency utilities

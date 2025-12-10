@@ -1356,7 +1356,7 @@ function BulkImportExportTab({ supplierId, onSuccess }: { supplierId: number; on
                 <p className="font-medium text-foreground mb-2">Column Guide:</p>
                 <ul className="list-disc list-inside space-y-1 ml-2">
                   <li><strong className="text-amber-600">Fixed columns (Do Not Edit):</strong> Region, Location, Country Code</li>
-                  <li><strong className="text-green-600">Editable columns:</strong> Same Business Day Rate, Next Business Day Rate, Scheduled Rate</li>
+                  <li><strong className="text-green-600">Editable columns:</strong> 4h Rate, 24h Rate, 48h Rate, 72h Rate, 96h Rate</li>
                   <li><strong>Rate format:</strong> USD with 2 decimal places (e.g., 150.00, 89.50)</li>
                 </ul>
               </div>

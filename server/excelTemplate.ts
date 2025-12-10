@@ -10,7 +10,7 @@ const SERVICE_TYPES = [
   { value: "smart_hands", label: "Smart Hands" },
 ];
 
-const RESPONSE_TIMES = [4, 24, 48];
+const RESPONSE_TIMES = [4, 24, 48, 72, 96];
 
 const REGIONS = {
   africa: "Africa",
@@ -110,9 +110,11 @@ function generateCountriesSheet(
     "Region",
     "Country",
     "Country Code",
-    "Same Business Day Rate (USD)",
-    "Next Business Day Rate (USD)",
-    "Scheduled Rate (USD)",
+    "4h Rate (USD)",
+    "24h Rate (USD)",
+    "48h Rate (USD)",
+    "72h Rate (USD)",
+    "96h Rate (USD)",
   ];
 
   const rows: any[][] = [headers];
@@ -175,9 +177,11 @@ function generateCitiesSheet(
     "State/Province",
     "Country",
     "Country Code",
-    "Same Business Day Rate (USD)",
-    "Next Business Day Rate (USD)",
-    "Scheduled Rate (USD)",
+    "4h Rate (USD)",
+    "24h Rate (USD)",
+    "48h Rate (USD)",
+    "72h Rate (USD)",
+    "96h Rate (USD)",
   ];
 
   const rows: any[][] = [headers];
@@ -233,8 +237,8 @@ function styleFixedColumns(sheet: XLSX.WorkSheet, rowCount: number, fixedColCoun
   for (let i = 0; i < fixedColCount; i++) {
     colWidths.push({ wch: 20 }); // Fixed columns
   }
-  for (let i = 0; i < 3; i++) {
-    colWidths.push({ wch: 25 }); // Rate columns (wider for semantic names)
+  for (let i = 0; i < 5; i++) {
+    colWidths.push({ wch: 15 }); // Rate columns
   }
   
   sheet['!cols'] = colWidths;

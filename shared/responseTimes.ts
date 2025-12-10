@@ -1,12 +1,14 @@
 /**
  * Response Time Constants
- * Standardized response time options for suppliers - Simplified to 3 service levels
+ * Standardized response time options for suppliers
  */
 
 export const RESPONSE_TIME_OPTIONS = [
-  { value: 4, label: "Same Business Day", description: "4-hour response" },
-  { value: 24, label: "Next Business Day", description: "24-hour response" },
-  { value: 48, label: "Scheduled", description: "48-hour response" },
+  { value: 4, label: "Within 4 hours", description: "Premium/urgent service" },
+  { value: 24, label: "Next business day", description: "Standard fast response" },
+  { value: 48, label: "Next business day + 1", description: "Standard response" },
+  { value: 72, label: "2+ business days", description: "Extended response" },
+  { value: 96, label: "3+ business days", description: "Remote/specialized service" },
 ] as const;
 
 export type ResponseTimeValue = typeof RESPONSE_TIME_OPTIONS[number]["value"];
