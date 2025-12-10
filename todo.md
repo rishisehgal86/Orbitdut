@@ -899,3 +899,17 @@
 ## Phase 36: Fix Missing useAuth Import
 - [x] Add useAuth import back to CustomerDashboard.tsx
 - [x] Verify customer dashboard loads correctly
+
+## Phase 37: Comprehensive Superadmin Verification System
+- [x] Design verification dashboard with tabs/sections for different statuses
+- [x] Show "Not Started" suppliers (signed up but haven't begun verification)
+- [x] Show "In Progress" suppliers (partially completed verification wizard)
+- [x] Show "Pending Review" suppliers (submitted and awaiting approval)
+- [x] Display contact details for all suppliers (name, email, phone, company)
+- [x] Build backend procedure to fetch all suppliers grouped by verification status
+- [x] Create verification detail view page (/superadmin/verifications/:supplierId)
+- [x] Add document viewer for insurance, certifications, licenses
+- [x] Add coverage map visualization in detail view
+- [x] Implement approve/reject/request resubmission actions
+- [x] Test backend procedures with vitest
+- [x] Add filters and search functionality

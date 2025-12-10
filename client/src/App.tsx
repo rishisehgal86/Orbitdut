@@ -39,6 +39,7 @@ import AdminUsers from "./pages/admin/Users";
 import AdminTeam from "./pages/admin/Team";
 import SuperadminDashboard from "./pages/superadmin/Dashboard";
 import SuperadminVerifications from "./pages/superadmin/Verifications";
+import SuperadminVerificationDetail from "./pages/superadmin/VerificationDetail";
 import SuperadminSuppliers from "./pages/superadmin/Suppliers";
 import SuperadminUsers from "./pages/superadmin/Users";
 import SuperadminJobs from "./pages/superadmin/Jobs";
@@ -87,6 +88,7 @@ function Router() {
       <Route path="/admin/team" component={AdminTeam} />
       <Route path="/superadmin" component={SuperadminDashboard} />
       <Route path="/superadmin/verifications" component={SuperadminVerifications} />
+      <Route path="/superadmin/verifications/:supplierId" component={SuperadminVerificationDetail} />
       <Route path="/superadmin/suppliers" component={SuperadminSuppliers} />
       <Route path="/superadmin/users" component={SuperadminUsers} />
       <Route path="/superadmin/jobs" component={SuperadminJobs} />

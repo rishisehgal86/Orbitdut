@@ -2,63 +2,108 @@ import SuperadminLayout from "@/components/SuperadminLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { trpc } from "@/lib/trpc";
-import { CheckCircle, XCircle, AlertCircle, Clock, ExternalLink, Loader2 } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
+import { 
+  CheckCircle, 
+  XCircle, 
+  AlertCircle, 
+  Clock, 
+  FileText, 
+  Loader2, 
+  Search,
+  Eye,
+  Mail,
+  Phone,
+  Building2,
+  Calendar,
+  TrendingUp
+} from "lucide-react";
+import { useState, useMemo } from "react";
+import { Link } from "wouter";
+import { format } from "date-fns";
 
 export default function SuperadminVerifications() {
-  const { data: pending, isLoading, refetch } = trpc.admin.getPendingVerifications.useQuery();
-  const [selectedSupplier, setSelectedSupplier] = useState<number | null>(null);
-  const [actionType, setActionType] = useState<"approve" | "reject" | "resubmit" | null>(null);
-  const [feedback, setFeedback] = useState("");
-  const [adminNotes, setAdminNotes] = useState("");
+  const { data, isLoading } = trpc.admin.getAllSupplierVerifications.useQuery();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState("all");
 
-  const approveMutation = trpc.verification.approveVerification.useMutation();
-  const rejectMutation = trpc.verification.rejectVerification.useMutation();
-  const resubmitMutation = trpc.verification.requestResubmission.useMutation();
+  // Calculate totals
+  const totals = useMemo(() => {
+    if (!data) return { all: 0, notStarted: 0, inProgress: 0, pendingReview: 0, approved: 0 };
+    return {
+      all: Object.values(data).flat().length,
+      notStarted: data.notStarted.length,
+      inProgress: data.inProgress.length,
+      pendingReview: data.pendingReview.length + data.underReview.length,
+      approved: data.approved.length,
+      rejected: data.rejected.length,
+      resubmissionRequired: data.resubmissionRequired.length,
+    };
+  }, [data]);
 
-  const { data: details } = trpc.admin.getVerificationDetails.useQuery(
-    { supplierId: selectedSupplier! },
-    { enabled: !!selectedSupplier }
-  );
+  // Get filtered suppliers based on active tab
+  const filteredSuppliers = useMemo(() => {
+    if (!data) return [];
+    
+    let suppliers = [];
+    switch (activeTab) {
+      case "notStarted":
+        suppliers = data.notStarted;
+        break;
+      case "inProgress":
+        suppliers = data.inProgress;
+        break;
+      case "pendingReview":
+        suppliers = [...data.pendingReview, ...data.underReview];
+        break;
+      case "approved":
+        suppliers = data.approved;
+        break;
+      case "rejected":
+        suppliers = data.rejected;
+        break;
+      case "resubmissionRequired":
+        suppliers = data.resubmissionRequired;
+        break;
+      default:
+        suppliers = Object.values(data).flat();
+    }
 
-  const handleAction = async () => {
-    if (!selectedSupplier) return;
+    // Apply search filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      suppliers = suppliers.filter(s => 
+        s.companyName?.toLowerCase().includes(term) ||
+        s.contactName?.toLowerCase().includes(term) ||
+        s.contactPersonEmail?.toLowerCase().includes(term)
+      );
+    }
 
-    try {
-      if (actionType === "approve") {
-        await approveMutation.mutateAsync({ supplierId: selectedSupplier });
-        toast.success("Supplier approved successfully");
-      } else if (actionType === "reject") {
-        if (!feedback.trim()) {
-          toast.error("Please provide a rejection reason");
-          return;
-        }
-        await rejectMutation.mutateAsync({ supplierId: selectedSupplier, reason: feedback });
-        toast.success("Supplier rejected");
-      } else if (actionType === "resubmit") {
-        if (!feedback.trim()) {
-          toast.error("Please provide feedback");
-          return;
-        }
-        await resubmitMutation.mutateAsync({
-          supplierId: selectedSupplier,
-          feedback,
-          adminNotes: adminNotes || undefined,
-        });
-        toast.success("Resubmission requested");
-      }
+    return suppliers;
+  }, [data, activeTab, searchTerm]);
 
-      setSelectedSupplier(null);
-      setActionType(null);
-      setFeedback("");
-      setAdminNotes("");
-      refetch();
-    } catch (error: any) {
-      toast.error(error.message || "Action failed");
+  const getStatusBadge = (status: string | null) => {
+    if (!status || status === "not_started") {
+      return <Badge variant="secondary" className="gap-1"><Clock className="w-3 h-3" /> Not Started</Badge>;
+    }
+    switch (status) {
+      case "in_progress":
+        return <Badge variant="outline" className="gap-1 border-yellow-500 text-yellow-600"><TrendingUp className="w-3 h-3" /> In Progress</Badge>;
+      case "pending_review":
+        return <Badge variant="outline" className="gap-1 border-orange-500 text-orange-600"><AlertCircle className="w-3 h-3" /> Pending Review</Badge>;
+      case "under_review":
+        return <Badge variant="outline" className="gap-1 border-blue-500 text-blue-600"><FileText className="w-3 h-3" /> Under Review</Badge>;
+      case "approved":
+        return <Badge variant="outline" className="gap-1 border-green-500 text-green-600"><CheckCircle className="w-3 h-3" /> Approved</Badge>;
+      case "rejected":
+        return <Badge variant="destructive" className="gap-1"><XCircle className="w-3 h-3" /> Rejected</Badge>;
+      case "resubmission_required":
+        return <Badge variant="outline" className="gap-1 border-purple-500 text-purple-600"><AlertCircle className="w-3 h-3" /> Resubmission Required</Badge>;
+      default:
+        return <Badge variant="secondary">{status}</Badge>;
     }
   };
 
@@ -75,215 +120,184 @@ export default function SuperadminVerifications() {
   return (
     <SuperadminLayout>
       <div className="space-y-6">
+        {/* Header */}
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Supplier Verifications</h1>
-          <p className="text-muted-foreground">Review and approve supplier verification applications</p>
+          <p className="text-muted-foreground">Manage and review all supplier verification applications</p>
         </div>
 
-        {/* Pending verifications */}
-        <div className="grid gap-4">
-          {pending?.length === 0 && (
+        {/* Overview Cards */}
+        <div className="grid gap-4 md:grid-cols-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardDescription>Not Started</CardDescription>
+              <CardTitle className="text-3xl">{totals.notStarted}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-muted-foreground">Suppliers who haven't begun verification</p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-3">
+              <CardDescription>In Progress</CardDescription>
+              <CardTitle className="text-3xl">{totals.inProgress}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-muted-foreground">Partially completed applications</p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-3">
+              <CardDescription>Pending Review</CardDescription>
+              <CardTitle className="text-3xl text-orange-600">{totals.pendingReview}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-muted-foreground">Awaiting your approval</p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-3">
+              <CardDescription>Approved</CardDescription>
+              <CardTitle className="text-3xl text-green-600">{totals.approved}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-muted-foreground">Active verified suppliers</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Search and Filters */}
+        <div className="flex items-center gap-4">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by company, contact, or email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
+            <TabsTrigger value="all">All ({totals.all})</TabsTrigger>
+            <TabsTrigger value="notStarted">Not Started ({totals.notStarted})</TabsTrigger>
+            <TabsTrigger value="inProgress">In Progress ({totals.inProgress})</TabsTrigger>
+            <TabsTrigger value="pendingReview">Pending Review ({totals.pendingReview})</TabsTrigger>
+            <TabsTrigger value="approved">Approved ({totals.approved})</TabsTrigger>
+            <TabsTrigger value="rejected">Rejected ({totals.rejected})</TabsTrigger>
+            <TabsTrigger value="resubmissionRequired">Resubmission ({totals.resubmissionRequired})</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value={activeTab} className="mt-6">
             <Card>
-              <CardContent className="py-12 text-center">
-                <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
-                <p className="text-lg font-medium">All caught up!</p>
-                <p className="text-muted-foreground">No pending verifications to review</p>
-              </CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Company</TableHead>
+                    <TableHead>Contact Person</TableHead>
+                    <TableHead>Contact Details</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Progress</TableHead>
+                    <TableHead>Last Updated</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredSuppliers.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-12">
+                        <div className="flex flex-col items-center gap-2">
+                          <FileText className="w-12 h-12 text-muted-foreground" />
+                          <p className="text-lg font-medium">No suppliers found</p>
+                          <p className="text-sm text-muted-foreground">
+                            {searchTerm ? "Try adjusting your search" : "No suppliers in this category"}
+                          </p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredSuppliers.map((supplier) => (
+                      <TableRow key={supplier.supplierId}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Building2 className="w-4 h-4 text-muted-foreground" />
+                            <div>
+                              <p className="font-medium">{supplier.companyName || "Unnamed Company"}</p>
+                              <p className="text-xs text-muted-foreground">{supplier.country || "N/A"}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <p className="font-medium">{supplier.contactName}</p>
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1 text-sm">
+                            <div className="flex items-center gap-1 text-muted-foreground">
+                              <Mail className="w-3 h-3" />
+                              <span className="text-xs">{supplier.contactPersonEmail}</span>
+                            </div>
+                            {supplier.contactPersonPhone && supplier.contactPersonPhone !== 'N/A' && (
+                              <div className="flex items-center gap-1 text-muted-foreground">
+                                <Phone className="w-3 h-3" />
+                                <span className="text-xs">{supplier.contactPersonPhone}</span>
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {getStatusBadge(supplier.verificationStatus)}
+                        </TableCell>
+                        <TableCell>
+                          {supplier.verificationStatus === 'in_progress' ? (
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <div className="h-2 w-24 bg-secondary rounded-full overflow-hidden">
+                                  <div 
+                                    className="h-full bg-yellow-500 transition-all" 
+                                    style={{ width: `${supplier.completionPercentage}%` }}
+                                  />
+                                </div>
+                                <span className="text-xs text-muted-foreground">{supplier.completionPercentage}%</span>
+                              </div>
+                              <p className="text-xs text-muted-foreground">{supplier.documentsCount} docs</p>
+                            </div>
+                          ) : supplier.documentsCount > 0 ? (
+                            <p className="text-sm text-muted-foreground">{supplier.documentsCount} documents</p>
+                          ) : (
+                            <p className="text-sm text-muted-foreground">—</p>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                            <Calendar className="w-3 h-3" />
+                            {supplier.updatedAt ? format(new Date(supplier.updatedAt), "MMM d, yyyy") : "—"}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Link href={`/superadmin/verifications/${supplier.supplierId}`}>
+                            <Button size="sm" variant="outline" className="gap-1">
+                              <Eye className="w-3 h-3" />
+                              {supplier.verificationStatus === 'pending_review' || supplier.verificationStatus === 'under_review' 
+                                ? 'Review' 
+                                : 'View'}
+                            </Button>
+                          </Link>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
             </Card>
-          )}
-
-          {pending?.map((verification) => (
-            <Card key={verification.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle>{verification.companyName}</CardTitle>
-                    <CardDescription>{verification.contactEmail}</CardDescription>
-                  </div>
-                  <Badge variant={verification.status === "pending_review" ? "secondary" : "default"}>
-                    {verification.status === "pending_review" ? "Pending Review" : "Under Review"}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-muted-foreground">
-                    <Clock className="w-4 h-4 inline mr-1" />
-                    Submitted: {verification.submittedAt ? new Date(verification.submittedAt).toLocaleDateString() : "N/A"}
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setSelectedSupplier(verification.supplierId)}
-                    >
-                      <ExternalLink className="w-4 h-4 mr-1" />
-                      Review
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+          </TabsContent>
+        </Tabs>
       </div>
-
-      {/* Review Dialog */}
-      <Dialog open={!!selectedSupplier && !actionType} onOpenChange={(open) => !open && setSelectedSupplier(null)}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{details?.supplier.companyName}</DialogTitle>
-            <DialogDescription>{details?.supplier.contactEmail}</DialogDescription>
-          </DialogHeader>
-
-          {details && (
-            <div className="space-y-4">
-              {/* Company Profile */}
-              <div>
-                <h3 className="font-semibold mb-2">Company Profile</h3>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">Contact:</span> {details.profile?.primaryContactName || "N/A"}
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Phone:</span> {details.profile?.primaryContactPhone || "N/A"}
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Address:</span> {details.profile?.businessAddress || "N/A"}
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Tax ID:</span> {details.supplier.taxId || "N/A"}
-                  </div>
-                </div>
-              </div>
-
-              {/* Documents */}
-              <div>
-                <h3 className="font-semibold mb-2">Documents ({details.documents.length})</h3>
-                <div className="space-y-2">
-                  {details.documents.map((doc) => (
-                    <div key={doc.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                      <div className="text-sm">
-                        <p className="font-medium">{doc.documentType.replace(/_/g, " ").toUpperCase()}</p>
-                        <p className="text-xs text-muted-foreground">
-                          Uploaded: {new Date(doc.uploadedAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <Button size="sm" variant="outline" asChild>
-                        <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer">
-                          View
-                        </a>
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Admin Notes */}
-              {details.verification?.adminNotes && (
-                <div>
-                  <h3 className="font-semibold mb-2">Admin Notes</h3>
-                  <div className="text-sm bg-gray-50 p-3 rounded whitespace-pre-wrap">
-                    {details.verification.adminNotes}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setActionType("resubmit");
-              }}
-            >
-              <AlertCircle className="w-4 h-4 mr-1" />
-              Request Resubmission
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                setActionType("reject");
-              }}
-            >
-              <XCircle className="w-4 h-4 mr-1" />
-              Reject
-            </Button>
-            <Button
-              onClick={() => {
-                setActionType("approve");
-              }}
-            >
-              <CheckCircle className="w-4 h-4 mr-1" />
-              Approve
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Action Confirmation Dialog */}
-      <Dialog open={!!actionType} onOpenChange={(open) => !open && setActionType(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {actionType === "approve" && "Approve Supplier"}
-              {actionType === "reject" && "Reject Supplier"}
-              {actionType === "resubmit" && "Request Resubmission"}
-            </DialogTitle>
-            <DialogDescription>
-              {actionType === "approve" && "This will approve the supplier and send them a confirmation email."}
-              {actionType === "reject" && "This will reject the supplier and send them a notification email."}
-              {actionType === "resubmit" && "This will request additional information from the supplier."}
-            </DialogDescription>
-          </DialogHeader>
-
-          {(actionType === "reject" || actionType === "resubmit") && (
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium">
-                  {actionType === "reject" ? "Rejection Reason" : "Feedback"} *
-                </label>
-                <Textarea
-                  value={feedback}
-                  onChange={(e) => setFeedback(e.target.value)}
-                  placeholder={actionType === "reject" ? "Explain why this application is rejected..." : "What needs to be updated or added?"}
-                  rows={4}
-                  className="mt-1"
-                />
-              </div>
-              {actionType === "resubmit" && (
-                <div>
-                  <label className="text-sm font-medium">Additional Notes (Optional)</label>
-                  <Textarea
-                    value={adminNotes}
-                    onChange={(e) => setAdminNotes(e.target.value)}
-                    placeholder="Internal notes or additional guidance..."
-                    rows={3}
-                    className="mt-1"
-                  />
-                </div>
-              )}
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setActionType(null)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleAction}
-              variant={actionType === "approve" ? "default" : "destructive"}
-              disabled={approveMutation.isPending || rejectMutation.isPending || resubmitMutation.isPending}
-            >
-              {(approveMutation.isPending || rejectMutation.isPending || resubmitMutation.isPending) && (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              )}
-              Confirm
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </SuperadminLayout>
   );
 }

@@ -2464,7 +2464,8 @@ export const appRouter = router({
         const { supplierVerification, supplierCompanyProfile, verificationDocuments, suppliers } = await import("../drizzle/schema");
         const { eq } = await import("drizzle-orm");
 
-        // TODO: Add admin role check
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
 
         // Get supplier
         const supplier = await db.select().from(suppliers)
@@ -2689,6 +2690,95 @@ export const appRouter = router({
 
         return { success: true };
       }),
+
+    // Get all suppliers grouped by verification status
+    getAllSupplierVerifications: superadminProcedure.query(async () => {
+      const { suppliers, supplierVerification, supplierUsers, users, supplierCompanyProfile, verificationDocuments } = await import("../drizzle/schema");
+      const { eq, isNull, sql } = await import("drizzle-orm");
+
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // Get all suppliers with their verification status and contact info
+      const allSuppliers = await db.select({
+        supplierId: suppliers.id,
+        companyName: suppliers.companyName,
+        contactEmail: suppliers.contactEmail,
+        contactPhone: suppliers.contactPhone,
+        country: suppliers.country,
+        isVerified: suppliers.isVerified,
+        isActive: suppliers.isActive,
+        createdAt: suppliers.createdAt,
+        verificationId: supplierVerification.id,
+        verificationStatus: supplierVerification.status,
+        submittedAt: supplierVerification.submittedAt,
+        reviewedAt: supplierVerification.reviewedAt,
+        approvedAt: supplierVerification.approvedAt,
+        updatedAt: supplierVerification.updatedAt,
+      })
+        .from(suppliers)
+        .leftJoin(supplierVerification, eq(suppliers.id, supplierVerification.supplierId));
+
+      // Get contact person (admin user) for each supplier
+      const suppliersWithContact = await Promise.all(
+        allSuppliers.map(async (supplier) => {
+          const adminUser = await db.select({
+            userId: users.id,
+            userName: users.name,
+            userEmail: users.email,
+            userPhone: users.email, // Using email as phone fallback
+            lastSignedIn: users.lastSignedIn,
+          })
+            .from(supplierUsers)
+            .leftJoin(users, eq(supplierUsers.userId, users.id))
+            .where(eq(supplierUsers.supplierId, supplier.supplierId))
+            .limit(1)
+            .then(rows => rows[0] || null);
+
+          // Get document count
+          const docCount = await db.select({ count: sql<number>`count(*)` })
+            .from(verificationDocuments)
+            .where(eq(verificationDocuments.supplierId, supplier.supplierId))
+            .then(rows => rows[0]?.count || 0);
+
+          // Calculate completion percentage for in-progress verifications
+          let completionPercentage = 0;
+          if (supplier.verificationStatus === 'in_progress') {
+            const profile = await db.select()
+              .from(supplierCompanyProfile)
+              .where(eq(supplierCompanyProfile.supplierId, supplier.supplierId))
+              .limit(1)
+              .then(rows => rows[0] || null);
+            
+            // Simple completion calculation: profile exists (50%) + documents (50%)
+            completionPercentage = (profile ? 50 : 0) + (docCount > 0 ? 50 : 0);
+          }
+
+          return {
+            ...supplier,
+            contactName: adminUser?.userName || 'N/A',
+            contactPersonEmail: adminUser?.userEmail || supplier.contactEmail,
+            contactPersonPhone: supplier.contactPhone || 'N/A',
+            lastSignedIn: adminUser?.lastSignedIn,
+            documentsCount: docCount,
+            completionPercentage,
+          };
+        })
+      );
+
+      // Group by status
+      const grouped = {
+        notStarted: suppliersWithContact.filter(s => !s.verificationStatus || s.verificationStatus === 'not_started'),
+        inProgress: suppliersWithContact.filter(s => s.verificationStatus === 'in_progress'),
+        pendingReview: suppliersWithContact.filter(s => s.verificationStatus === 'pending_review'),
+        underReview: suppliersWithContact.filter(s => s.verificationStatus === 'under_review'),
+        approved: suppliersWithContact.filter(s => s.verificationStatus === 'approved'),
+        rejected: suppliersWithContact.filter(s => s.verificationStatus === 'rejected'),
+        resubmissionRequired: suppliersWithContact.filter(s => s.verificationStatus === 'resubmission_required'),
+      };
+
+      return grouped;
+    }),
 
     // Get all suppliers
     getAllSuppliers: superadminProcedure.query(async () => {
