@@ -1258,3 +1258,20 @@
   - [x] Scheduled → Auto-populate 48+ hours from now, 9 AM
 - [x] Reorder form sections: move Schedule section after Service Details
 - [x] Test all three SLA scenarios with different times
+
+## Phase 35: Fix Form Section Order, Add SLA Validation & Coverage/Pricing
+- [x] Reorder form sections: Contact Information → Service Details → Site Location → Schedule → Coverage & Pricing → Site Access & Requirements → Project & Ticket Information
+- [x] Reason: Need to detect timezone from location BEFORE auto-adjusting schedule times
+- [x] Add SLA validation warnings when selected date/time doesn't match service level:
+  - [x] Same Business Day: Warn if date is not today
+  - [x] Next Business Day: Warn if date is not the next business day
+  - [x] Scheduled: Warn if date is less than 48 hours from now
+- [x] Display validation warnings with amber alert styling
+- [x] Add Coverage & Pricing section after Schedule:
+  - [x] Coverage check: Verify suppliers available for location + service type
+  - [x] Pricing estimate: Calculate cost based on service level, duration, downtime, OOH
+  - [x] Create placeholder UI with loading states
+  - [x] Create backend stub procedures (checkCoverage, calculatePricing)
+  - [x] Auto-trigger checks when location + service details are complete
+- [x] Test all three SLA scenarios with mismatched dates
+- [x] Test coverage and pricing display

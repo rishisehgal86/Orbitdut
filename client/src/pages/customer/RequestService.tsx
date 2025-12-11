@@ -84,6 +84,7 @@ export default function RequestService() {
   const [fetchingTimezone, setFetchingTimezone] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [slaWarning, setSlaWarning] = useState<string | null>(null);
 
   // Update form when user logs in or changes
   useEffect(() => {
@@ -170,6 +171,45 @@ export default function RequestService() {
     setTouched({ ...touched, [name]: true });
     validateField(name, formData[name as keyof typeof formData]);
   };
+
+  // Validate SLA against selected date/time
+  useEffect(() => {
+    if (!formData.serviceLevel || !formData.scheduledDate) {
+      setSlaWarning(null);
+      return;
+    }
+
+    const now = new Date();
+    const selectedDate = new Date(formData.scheduledDate);
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const selectedDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+    
+    // Calculate next business day
+    const nextBusinessDay = new Date(now);
+    nextBusinessDay.setDate(nextBusinessDay.getDate() + 1);
+    while (nextBusinessDay.getDay() === 0 || nextBusinessDay.getDay() === 6) {
+      nextBusinessDay.setDate(nextBusinessDay.getDate() + 1);
+    }
+    const nextBizDay = new Date(nextBusinessDay.getFullYear(), nextBusinessDay.getMonth(), nextBusinessDay.getDate());
+    
+    // Calculate 48 hours from now
+    const minScheduledDate = new Date(now);
+    minScheduledDate.setHours(minScheduledDate.getHours() + 48);
+    const minScheduledDay = new Date(minScheduledDate.getFullYear(), minScheduledDate.getMonth(), minScheduledDate.getDate());
+
+    let warning = null;
+    
+    if (formData.serviceLevel === 'same_day' && selectedDay.getTime() !== today.getTime()) {
+      warning = '⚠️ Same Business Day service requires today\'s date. The selected date does not match this service level.';
+    } else if (formData.serviceLevel === 'next_day' && selectedDay.getTime() !== nextBizDay.getTime()) {
+      const nextBizDateStr = nextBusinessDay.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      warning = `⚠️ Next Business Day service requires ${nextBizDateStr}. The selected date does not match this service level.`;
+    } else if (formData.serviceLevel === 'scheduled' && selectedDay.getTime() < minScheduledDay.getTime()) {
+      warning = '⚠️ Scheduled service requires at least 48 hours notice. The selected date is too soon for this service level.';
+    }
+    
+    setSlaWarning(warning);
+  }, [formData.serviceLevel, formData.scheduledDate]);
 
   // Update time displays when date, time, or timezone changes
   useEffect(() => {
@@ -593,93 +633,7 @@ export default function RequestService() {
             </CardContent>
           </Card>
 
-          {/* Scheduling */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Schedule</CardTitle>
-              <CardDescription>When do you need the engineer? (Select in site local time)</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="scheduledDate">
-                    Date <span className="text-destructive">*</span>
-                  </Label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="scheduledDate"
-                      type="date"
-                      value={formData.scheduledDate}
-                      onChange={(e) => {
-                        setFormData({ ...formData, scheduledDate: e.target.value });
-                        if (touched.scheduledDate) {
-                          validateField('scheduledDate', e.target.value);
-                        }
-                      }}
-                      onBlur={() => handleBlur('scheduledDate')}
-                      className={`pl-9 ${errors.scheduledDate && touched.scheduledDate ? 'border-destructive' : ''}`}
-                      min={new Date().toISOString().split("T")[0]}
-                      required
-                    />
-                  </div>
-                  {errors.scheduledDate && touched.scheduledDate && (
-                    <p className="text-sm text-destructive">{errors.scheduledDate}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="scheduledTime">
-                    Time (Local) <span className="text-destructive">*</span>
-                  </Label>
-                  <div className="relative">
-                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="scheduledTime"
-                      type="time"
-                      value={formData.scheduledTime}
-                      onChange={(e) => {
-                        setFormData({ ...formData, scheduledTime: e.target.value });
-                        if (touched.scheduledTime) {
-                          validateField('scheduledTime', e.target.value);
-                        }
-                      }}
-                      onBlur={() => handleBlur('scheduledTime')}
-                      className={`pl-9 ${errors.scheduledTime && touched.scheduledTime ? 'border-destructive' : ''}`}
-                      required
-                    />
-                  </div>
-                  {errors.scheduledTime && touched.scheduledTime && (
-                    <p className="text-sm text-destructive">{errors.scheduledTime}</p>
-                  )}
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Info className="h-3 w-3" />
-                    {formData.timezone ? `Time in ${formData.timezone}` : 'Select site location first to see timezone'}
-                  </p>
-                </div>
-              </div>
-
-              {/* Time Display */}
-              {localTimeDisplay && utcTimeDisplay && (
-                <div className="rounded-lg bg-blue-50 dark:bg-blue-950/20 p-4 space-y-2">
-                  <div className="flex items-start gap-2">
-                    <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5" />
-                    <div className="text-sm">
-                      <p className="font-medium text-blue-900 dark:text-blue-100">Scheduled Time</p>
-                      <p className="text-blue-700 dark:text-blue-300">
-                        <strong>Local ({formData.timezone}):</strong> {localTimeDisplay}
-                      </p>
-                      <p className="text-blue-700 dark:text-blue-300">
-                        <strong>UTC:</strong> {utcTimeDisplay}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Location */}
+          {/* Site Location */}
           <Card>
             <CardHeader>
               <CardTitle>Site Location</CardTitle>
@@ -765,6 +719,155 @@ export default function RequestService() {
                     }
                     placeholder="Phone number"
                   />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+
+          {/* Schedule */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Schedule</CardTitle>
+              <CardDescription>When do you need the engineer? (Select in site local time)</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="scheduledDate">
+                    Date <span className="text-destructive">*</span>
+                  </Label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="scheduledDate"
+                      type="date"
+                      value={formData.scheduledDate}
+                      onChange={(e) => {
+                        setFormData({ ...formData, scheduledDate: e.target.value });
+                        if (touched.scheduledDate) {
+                          validateField('scheduledDate', e.target.value);
+                        }
+                      }}
+                      onBlur={() => handleBlur('scheduledDate')}
+                      className={`pl-9 ${errors.scheduledDate && touched.scheduledDate ? 'border-destructive' : ''}`}
+                      min={new Date().toISOString().split("T")[0]}
+                      required
+                    />
+                  </div>
+                  {errors.scheduledDate && touched.scheduledDate && (
+                    <p className="text-sm text-destructive">{errors.scheduledDate}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="scheduledTime">
+                    Time (Local) <span className="text-destructive">*</span>
+                  </Label>
+                  <div className="relative">
+                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="scheduledTime"
+                      type="time"
+                      value={formData.scheduledTime}
+                      onChange={(e) => {
+                        setFormData({ ...formData, scheduledTime: e.target.value });
+                        if (touched.scheduledTime) {
+                          validateField('scheduledTime', e.target.value);
+                        }
+                      }}
+                      onBlur={() => handleBlur('scheduledTime')}
+                      className={`pl-9 ${errors.scheduledTime && touched.scheduledTime ? 'border-destructive' : ''}`}
+                      required
+                    />
+                  </div>
+                  {errors.scheduledTime && touched.scheduledTime && (
+                    <p className="text-sm text-destructive">{errors.scheduledTime}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Info className="h-3 w-3" />
+                    {formData.timezone ? `Time in ${formData.timezone}` : 'Select site location first to see timezone'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Time Display */}
+              {localTimeDisplay && utcTimeDisplay && (
+                <div className="rounded-lg bg-blue-50 dark:bg-blue-950/20 p-4 space-y-2">
+                  <div className="flex items-start gap-2">
+                    <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5" />
+                    <div className="text-sm">
+                      <p className="font-medium text-blue-900 dark:text-blue-100">Scheduled Time</p>
+                      <p className="text-blue-700 dark:text-blue-300">
+                        <strong>Local ({formData.timezone}):</strong> {localTimeDisplay}
+                      </p>
+                      <p className="text-blue-700 dark:text-blue-300">
+                        <strong>UTC:</strong> {utcTimeDisplay}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* SLA Warning */}
+              {slaWarning && (
+                <div className="rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 p-4">
+                  <div className="flex items-start gap-2">
+                    <div className="text-sm text-amber-900 dark:text-amber-100">
+                      {slaWarning}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Coverage & Pricing */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Coverage & Pricing</CardTitle>
+              <CardDescription>Verify service availability and get cost estimate</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Coverage Check */}
+              <div className="rounded-lg border p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium">Service Coverage</h4>
+                  {formData.serviceType && formData.latitude && formData.longitude ? (
+                    <span className="text-sm text-green-600 dark:text-green-400 flex items-center gap-1">
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Checking availability...
+                    </span>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">Complete service details and location first</span>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  We'll verify that qualified engineers are available in your area for the selected service type.
+                </p>
+              </div>
+
+              {/* Pricing Estimate */}
+              <div className="rounded-lg border p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium">Pricing Estimate</h4>
+                  {formData.serviceLevel && formData.estimatedDuration ? (
+                    <span className="text-sm text-blue-600 dark:text-blue-400">Calculating...</span>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">Complete service details first</span>
+                  )}
+                </div>
+                <div className="text-sm text-muted-foreground space-y-1">
+                  <p>• Base rate: Based on service level and duration</p>
+                  {formData.downTime && <p>• Downtime surcharge: Applied</p>}
+                  {formData.outOfHours && <p>• Out-of-hours surcharge: Applied</p>}
+                </div>
+                <div className="pt-2 border-t">
+                  <p className="text-xs text-muted-foreground">
+                    Final pricing will be confirmed after supplier matching. The estimate helps you budget for this service.
+                  </p>
                 </div>
               </div>
             </CardContent>

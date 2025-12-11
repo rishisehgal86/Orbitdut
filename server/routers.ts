@@ -1096,7 +1096,70 @@ export const appRouter = router({
   }),
 
   jobs: router({
-    // Note: Old calculatePrice procedure removed - pricing logic needs to be reimplemented
+    // Check service coverage for location and service type
+    checkCoverage: publicProcedure
+      .input(
+        z.object({
+          serviceType: z.string(),
+          latitude: z.string(),
+          longitude: z.string(),
+          city: z.string().optional(),
+          country: z.string().optional(),
+        })
+      )
+      .query(async ({ input }) => {
+        // TODO: Implement actual coverage check logic
+        // - Query suppliers table for companies serving this location
+        // - Check if any suppliers offer the requested service type
+        // - Consider distance/radius from supplier service areas
+        // - Return availability status and estimated response time
+        
+        // Placeholder response
+        return {
+          available: true,
+          message: "Coverage check coming soon",
+          supplierCount: 0,
+          estimatedResponseTime: null,
+        };
+      }),
+
+    // Calculate pricing estimate
+    calculatePricing: publicProcedure
+      .input(
+        z.object({
+          serviceType: z.string(),
+          serviceLevel: z.enum(["same_day", "next_day", "scheduled"]),
+          estimatedDuration: z.number(),
+          downTime: z.boolean().optional(),
+          outOfHours: z.boolean().optional(),
+          latitude: z.string().optional(),
+          longitude: z.string().optional(),
+        })
+      )
+      .query(async ({ input }) => {
+        // TODO: Implement actual pricing calculation logic
+        // - Base rate by service level (same_day: 4hrs, next_day: 24hrs, scheduled: 48hrs+)
+        // - Duration multiplier
+        // - Downtime surcharge
+        // - Out-of-hours surcharge
+        // - Location-based pricing adjustments
+        // - Supplier rate variations
+        
+        // Placeholder response
+        return {
+          baseRate: 0,
+          durationCharge: 0,
+          downtimeSurcharge: 0,
+          outOfHoursSurcharge: 0,
+          totalEstimate: 0,
+          currency: "USD",
+          breakdown: [
+            { item: "Base rate", amount: 0 },
+            { item: "Duration", amount: 0 },
+          ],
+          message: "Pricing calculation coming soon",
+        };
+      }),
 
     // Create a new job request
     create: protectedProcedure
