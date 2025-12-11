@@ -1213,3 +1213,39 @@
 - [x] Add to Coverage submenu navigation (Geographic Coverage, Service Availability, Coverage Intelligence)
 - [x] Add route /supplier/coverage/intelligence to App.tsx
 - [x] Create backend placeholder for future market data aggregation
+
+## Customer Request Form - Service Level Alignment
+- [ ] Update RequestService.tsx to use new 3-tier service levels instead of 5-tier response times
+- [ ] Update response time selector to show: Same Business Day (4h), Next Business Day (24h), Scheduled (48h)
+- [ ] Add tooltips explaining business hours (9 AM - 5 PM local time)
+- [ ] Update pricing calculation to use service levels
+- [ ] Test form submission with new service levels
+- [ ] Verify data saves correctly to database
+
+## Customer Request Form - Service Level Alignment (Preparation for Job Matching)
+- [ ] Reorder form sections: Contact Details → Site Location → Service Details → Schedule → Other Details
+- [x] Remove bookingType selector (full_day, multi_day) - keep hourly only
+- [x] Add SLA/Service Level selector as primary choice: Same Business Day (4h), Next Business Day (24h), Scheduled (48h+)
+- [x] Move Duration selector to Service Details section (service type + SLA + duration)
+- [x] Reduce max duration to 8 hours per booking (hourly only)
+- [x] Add timezone display in scheduling section
+- [ ] Add tooltips explaining business hours (9 AM - 5 PM local time) and SLA meaning
+- [ ] Make scheduling window adjust based on selected SLA:
+  - Same Business Day: must be within current business day
+  - Next Business Day: must be next business day
+  - Scheduled: can be any future date/time
+- [ ] Ensure booking time is in site location's local timezone (not customer's timezone)
+- [ ] Display timezone clearly next to date/time picker
+- [ ] Validate scheduling window based on site location's business hours (9 AM - 5 PM local time)
+- [ ] Add smart validation: check if enough business hours remain for Same Business Day (4h SLA)
+- [ ] Auto-detect Out-Of-Hours (OOH) scenarios and flag OOH charges:
+  - Booking time outside 9 AM - 5 PM
+  - Same Business Day with <4 hours remaining in business day
+  - Work extending beyond 5 PM
+- [ ] Display OOH warning message when applicable
+- [ ] Add OOH flag to job data for pricing calculation
+- [ ] Update pricing calculation API to use service levels
+- [ ] Update RequestServicePricing.tsx to display service levels correctly
+- [ ] Test form submission with new service levels
+- [ ] Verify data saves correctly to jobs table with proper responseTimeHours values (4, 24, 48)
+- [ ] Ensure job matching engine can query by service level
