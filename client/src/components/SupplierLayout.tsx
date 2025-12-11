@@ -96,7 +96,7 @@ export default function SupplierLayout({ children }: SupplierLayoutProps) {
             const isActive = location === item.href || item.submenu?.some(sub => location === sub.href);
 
             const linkContent = (
-              <div className="space-y-1">
+              <div key={item.href} className="space-y-1">
                 <Link
                   href={item.href}
                   onClick={() => isMobile && setIsMobileOpen(false)}
@@ -153,7 +153,7 @@ export default function SupplierLayout({ children }: SupplierLayoutProps) {
               );
             }
 
-            return <div key={item.href}>{linkContent}</div>;
+            return linkContent;
           })}
         </nav>
       </ScrollArea>
@@ -251,8 +251,8 @@ export default function SupplierLayout({ children }: SupplierLayoutProps) {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto bg-muted/30">
-          <div className="container mx-auto p-6">{children}</div>
+        <main className="flex-1 overflow-y-auto bg-muted/10 p-6">
+          {children}
         </main>
       </div>
     </div>
