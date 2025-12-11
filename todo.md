@@ -1136,3 +1136,59 @@
 - [x] Compact the UI - smaller text, condensed layout
 - [x] Add collapsible details - show summary by default with expandable breakdown sections
 - [x] Test real-time updates when marking rates as excluded
+
+
+## Guided Rate Setup Experience (Reusing Existing UI)
+- [ ] Add progress checklist component showing completion status
+- [ ] Add contextual tooltips/popovers explaining each section
+- [ ] Add "Next Step" suggestions based on current progress
+- [ ] Add quick navigation links between Rate Management sections
+- [ ] Show onboarding overlay for first-time users
+- [ ] Add dismissible help hints throughout the interface
+- [ ] Test guided experience with new supplier account
+
+## Bulk Rate Adjustment Tool
+- [ ] Add "Bulk Adjust" button to Rate Management page
+- [ ] Design bulk adjustment modal with filter options
+- [ ] Implement percentage-based increase/decrease functionality
+- [ ] Add preview table showing before/after rates
+- [ ] Support filtering by service type, region, or location type
+- [ ] Add backend API for bulk rate updates (bulkAdjustRates procedure)
+- [ ] Add confirmation dialog with change summary
+- [ ] Test with various adjustment scenarios (increase 10%, decrease 5%, etc.)
+
+## Rate Comparison Analytics
+- [ ] Add "Analytics" tab to Rate Management page
+- [ ] Design analytics dashboard with charts and insights
+- [ ] Implement backend query to calculate market averages by service type and region
+- [ ] Create bar/line charts showing supplier rates vs market average
+- [ ] Add competitive positioning indicators (above/below/at market)
+- [ ] Show insights: "Your rates are 15% above market average for L1 EUC in Europe"
+- [ ] Add filters for service type and region
+- [ ] Add recommendations based on acceptance rates and market data
+- [ ] Test with multiple supplier data sets
+
+## Competitive Rate Analysis Feature
+- [ ] Design competitive rate analysis page layout and metrics
+- [ ] Create backend API to calculate market statistics:
+  - [ ] Average rates by service type and service level
+  - [ ] Rate distribution (min, max, median, percentiles)
+  - [ ] Supplier's position relative to market (above/below average)
+  - [ ] Regional rate comparisons
+- [ ] Build frontend CompetitiveAnalysis.tsx page with:
+  - [ ] Market overview cards (average rates, rate ranges)
+  - [ ] Supplier positioning indicators (percentile rank)
+  - [ ] Rate comparison tables by service type and location
+  - [ ] Visual charts (bar charts, distribution graphs)
+  - [ ] Regional comparison section
+- [ ] Add "Competitive Analysis" to Rate Management submenu in navigation
+- [ ] Add route /supplier/rates/competitive-analysis to App.tsx
+- [ ] Test with multiple suppliers to ensure accurate market data
+- [ ] Write vitest tests for market statistics calculations
+
+## Competitive Rate Analysis - Coming Soon Page
+- [x] Create CompetitiveAnalysis.tsx page with "Coming Soon" banner
+- [x] Add feature description and benefits
+- [x] Add "Notify Me" option for when feature launches
+- [x] Add to Rate Management submenu navigation
+- [x] Add route /supplier/rates/competitive-analysis to App.tsx

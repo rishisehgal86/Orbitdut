@@ -14,6 +14,7 @@ import SupplierDashboard from "./pages/supplier/Dashboard";
 import SupplierSettings from "./pages/supplier/Settings";
 import CurrentRates from "./pages/supplier/CurrentRates";
 import RateManagement from "./pages/supplier/RateManagement";
+import CompetitiveAnalysis from "./pages/supplier/CompetitiveAnalysis";
 import SupplierJobs from "./pages/supplier/Jobs";
 import SupplierJobDetail from "./pages/supplier/JobDetail";
 import SupplierCoverage from "./pages/supplier/Coverage";
@@ -73,6 +74,7 @@ function Router() {
       <Route path={"/supplier/settings"} component={SupplierSettings} />
       <Route path={"/supplier/rates/current"} component={CurrentRates} />
       <Route path={"/supplier/rates/manage"} component={RateManagement} />
+      <Route path={"/supplier/rates/competitive-analysis"} component={CompetitiveAnalysis} />
       <Route path={"/supplier/rates"} component={CurrentRates} />
       <Route path={"/supplier/jobs"} component={SupplierJobs} />
       <Route path={"/supplier/jobs/:id"} component={SupplierJobDetail} />

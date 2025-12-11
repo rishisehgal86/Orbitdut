@@ -45,6 +45,7 @@ const navItems: NavItem[] = [
     submenu: [
       { title: "Current Rates", href: "/supplier/rates/current" },
       { title: "Rate Management", href: "/supplier/rates/manage" },
+      { title: "Competitive Analysis", href: "/supplier/rates/competitive-analysis" },
     ]
   },
   { title: "Earnings", href: "/supplier/earnings", icon: Wallet },

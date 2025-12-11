@@ -14,10 +14,13 @@ import SupplierLayout from "@/components/SupplierLayout";
 import { RATE_SERVICE_TYPES, RATE_SERVICE_LEVELS, HOURS_TO_SERVICE_LEVEL, SERVICE_LEVEL_TO_HOURS } from "@shared/rates";
 import { validateBaseRates } from "@shared/rateValidation";
 import { RateConfigurationSummary } from "@/components/RateConfigurationSummary";
+import { BulkRateAdjustmentDialog } from "@/components/BulkRateAdjustmentDialog";
+import { Percent } from "lucide-react";
 
 export default function RateManagement() {
   // Using sonner toast
-  const [activeTab, setActiveTab] = useState("quick-setup");
+  const [activeTab, setActiveTab] = useState("by-location");
+  const [bulkAdjustDialogOpen, setBulkAdjustDialogOpen] = useState(false);
 
   // Get supplier profile to get supplierId
   const { data: profile } = trpc.supplier.getProfile.useQuery();
@@ -61,11 +64,21 @@ export default function RateManagement() {
     <SupplierLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold">Rate Management</h1>
-          <p className="text-muted-foreground mt-2">
-            Set your hourly rates in USD for each location, service type, and response time
-          </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Rate Management</h1>
+            <p className="text-muted-foreground mt-2">
+              Set your hourly rates in USD for each location, service type, and response time
+            </p>
+          </div>
+          <Button
+            onClick={() => setBulkAdjustDialogOpen(true)}
+            variant="outline"
+            className="gap-2"
+          >
+            <Percent className="h-4 w-4" />
+            Bulk Adjust Rates
+          </Button>
         </div>
 
         {/* Service Availability Notice */}
@@ -94,16 +107,11 @@ export default function RateManagement() {
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="quick-setup">Quick Setup</TabsTrigger>
             <TabsTrigger value="by-location">By Location</TabsTrigger>
             <TabsTrigger value="by-service">By Service</TabsTrigger>
+            <TabsTrigger value="bulk-setup">Bulk Setup</TabsTrigger>
             <TabsTrigger value="bulk">Bulk Import/Export</TabsTrigger>
           </TabsList>
-
-          {/* Quick Setup Tab */}
-          <TabsContent value="quick-setup" className="space-y-6">
-            <QuickSetupTab supplierId={supplierId} onSuccess={() => { refetchRates(); }} />
-          </TabsContent>
 
           {/* By Location Tab */}
           <TabsContent value="by-location" className="space-y-6">
@@ -115,11 +123,30 @@ export default function RateManagement() {
             <ByServiceTab supplierId={supplierId} onSuccess={() => { refetchRates(); }} />
           </TabsContent>
 
+          {/* Bulk Setup Tab */}
+          <TabsContent value="bulk-setup" className="space-y-6">
+            <QuickSetupTab supplierId={supplierId} onSuccess={() => { refetchRates(); }} />
+          </TabsContent>
+
           {/* Bulk Import/Export Tab */}
           <TabsContent value="bulk">
             <BulkImportExportTab supplierId={supplierId} onSuccess={() => { refetchRates(); }} />
           </TabsContent>
         </Tabs>
+
+        {/* Bulk Rate Adjustment Dialog */}
+        {countries && cities && (
+          <BulkRateAdjustmentDialog
+            open={bulkAdjustDialogOpen}
+            onOpenChange={setBulkAdjustDialogOpen}
+            supplierId={supplierId}
+            countries={countries}
+            cities={cities}
+            onSuccess={() => {
+              refetchRates();
+            }}
+          />
+        )}
       </div>
     </SupplierLayout>
   );

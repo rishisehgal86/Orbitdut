@@ -822,6 +822,77 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    // Preview bulk rate adjustment
+    previewBulkAdjustment: protectedProcedure
+      .input(
+        z.object({
+          supplierId: z.number(),
+          adjustmentPercent: z.number(),
+          serviceTypes: z.array(z.string()).optional(),
+          serviceLevels: z.array(z.enum(["same_business_day", "next_business_day", "scheduled"])).optional(),
+          countryCodes: z.array(z.string().length(2)).optional(),
+          cityIds: z.array(z.number()).optional(),
+        })
+      )
+      .query(async ({ input }) => {
+        const { previewBulkAdjustment } = await import("./bulkRateAdjustment");
+        return await previewBulkAdjustment(
+          {
+            supplierId: input.supplierId,
+            serviceTypes: input.serviceTypes as any,
+            serviceLevels: input.serviceLevels,
+            countryCodes: input.countryCodes,
+            cityIds: input.cityIds,
+          },
+          input.adjustmentPercent
+        );
+      }),
+
+    // Apply bulk rate adjustment
+    applyBulkAdjustment: protectedProcedure
+      .input(
+        z.object({
+          supplierId: z.number(),
+          adjustmentPercent: z.number(),
+          serviceTypes: z.array(z.string()).optional(),
+          serviceLevels: z.array(z.enum(["same_business_day", "next_business_day", "scheduled"])).optional(),
+          countryCodes: z.array(z.string().length(2)).optional(),
+          cityIds: z.array(z.number()).optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { applyBulkAdjustment } = await import("./bulkRateAdjustment");
+        return await applyBulkAdjustment(
+          {
+            supplierId: input.supplierId,
+            serviceTypes: input.serviceTypes as any,
+            serviceLevels: input.serviceLevels,
+            countryCodes: input.countryCodes,
+            cityIds: input.cityIds,
+          },
+          input.adjustmentPercent
+        );
+      }),
+
+    // Get rate analytics and market comparison
+    getRateAnalytics: protectedProcedure
+      .input(
+        z.object({
+          supplierId: z.number(),
+          serviceTypes: z.array(z.string()).optional(),
+          serviceLevels: z.array(z.enum(["same_business_day", "next_business_day", "scheduled"])).optional(),
+          countryCodes: z.array(z.string().length(2)).optional(),
+        })
+      )
+      .query(async ({ input }) => {
+        const { getSupplierRateAnalytics } = await import("./rateAnalytics");
+        return await getSupplierRateAnalytics(input.supplierId, {
+          serviceTypes: input.serviceTypes as any,
+          serviceLevels: input.serviceLevels,
+          countryCodes: input.countryCodes,
+        });
+      }),
+
     // Bulk remove service exclusions
     bulkRemoveServiceExclusions: protectedProcedure
       .input(
