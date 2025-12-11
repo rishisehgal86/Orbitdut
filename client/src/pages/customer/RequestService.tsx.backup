@@ -28,6 +28,7 @@ const SERVICE_TYPES = [
 export default function RequestService() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
+  const utils = trpc.useUtils();
   const [formData, setFormData] = useState({
     // Contact Information
     customerName: user?.name || "",
@@ -273,19 +274,11 @@ export default function RequestService() {
   const fetchTimezoneForLocation = async (lat: number, lng: number) => {
     setFetchingTimezone(true);
     try {
-      // Use fetch to call the tRPC endpoint directly
-      const response = await fetch(
-        `/api/trpc/jobs.getTimezone?input=${encodeURIComponent(
-          JSON.stringify({ latitude: lat, longitude: lng })
-        )}`
-      );
-      
-      if (!response.ok) {
-        throw new Error("Failed to fetch timezone");
-      }
-      
-      const data = await response.json();
-      const result = data.result.data;
+      // Use tRPC utils client for imperative queries
+      const result = await utils.client.jobs.getTimezone.query({
+        latitude: lat,
+        longitude: lng,
+      });
 
       setFormData((prev) => ({
         ...prev,
@@ -419,7 +412,7 @@ export default function RequestService() {
           <Card>
             <CardHeader>
               <CardTitle>Service Details</CardTitle>
-              <CardDescription>What type of engineer do you need?</CardDescription>
+              <CardDescription>What service do you need and for how long?</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -474,7 +467,47 @@ export default function RequestService() {
                 <Select
                   value={formData.serviceLevel}
                   onValueChange={(value: "same_day" | "next_day" | "scheduled") => {
-                    setFormData({ ...formData, serviceLevel: value });
+                    // Auto-adjust schedule based on SLA
+                    const now = new Date();
+                    let newDate = '';
+                    let newTime = '';
+
+                    if (value === 'same_day') {
+                      // Same day - set to today
+                      newDate = now.toISOString().split('T')[0];
+                      // Set time to next hour if within business hours, otherwise 9 AM
+                      const currentHour = now.getHours();
+                      if (currentHour < 9) {
+                        newTime = '09:00';
+                      } else if (currentHour < 17) {
+                        newTime = `${String(currentHour + 1).padStart(2, '0')}:00`;
+                      } else {
+                        newTime = '09:00';
+                      }
+                    } else if (value === 'next_day') {
+                      // Next business day
+                      const tomorrow = new Date(now);
+                      tomorrow.setDate(tomorrow.getDate() + 1);
+                      // Skip weekend
+                      while (tomorrow.getDay() === 0 || tomorrow.getDay() === 6) {
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+                      }
+                      newDate = tomorrow.toISOString().split('T')[0];
+                      newTime = '09:00';
+                    } else if (value === 'scheduled') {
+                      // Scheduled - 48+ hours from now
+                      const minDate = new Date(now);
+                      minDate.setHours(minDate.getHours() + 48);
+                      newDate = minDate.toISOString().split('T')[0];
+                      newTime = '09:00';
+                    }
+
+                    setFormData({ 
+                      ...formData, 
+                      serviceLevel: value,
+                      scheduledDate: newDate,
+                      scheduledTime: newTime
+                    });
                     validateField('serviceLevel', value);
                   }}
                   required
@@ -514,6 +547,33 @@ export default function RequestService() {
                   <Info className="h-3 w-3 mt-0.5 flex-shrink-0" />
                   <span>Business hours are 9 AM - 5 PM in the site location's timezone</span>
                 </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="estimatedDuration">
+                  Estimated Duration <span className="text-destructive">*</span>
+                </Label>
+                <Select
+                  value={formData.estimatedDuration}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, estimatedDuration: value })
+                  }
+                  required
+                >
+                  <SelectTrigger id="estimatedDuration">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="120">2 hours</SelectItem>
+                    <SelectItem value="180">3 hours</SelectItem>
+                    <SelectItem value="240">4 hours</SelectItem>
+                    <SelectItem value="300">5 hours</SelectItem>
+                    <SelectItem value="360">6 hours</SelectItem>
+                    <SelectItem value="420">7 hours</SelectItem>
+                    <SelectItem value="480">8 hours</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-muted-foreground">Minimum 2 hours, maximum 8 hours per booking</p>
               </div>
 
               <div className="flex items-center space-x-2 mt-4">
@@ -752,7 +812,7 @@ export default function RequestService() {
               <CardDescription>When do you need the engineer? (Select in site local time)</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="scheduledDate">
                     Date <span className="text-destructive">*</span>
@@ -804,38 +864,10 @@ export default function RequestService() {
                   {errors.scheduledTime && touched.scheduledTime && (
                     <p className="text-sm text-destructive">{errors.scheduledTime}</p>
                   )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="estimatedDuration">Estimated Duration</Label>
-                  <Select
-                    value={formData.estimatedDuration}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, estimatedDuration: value })
-                    }
-                  >
-                    <SelectTrigger id="estimatedDuration">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="120">2 hours</SelectItem>
-                      <SelectItem value="180">3 hours</SelectItem>
-                      <SelectItem value="240">4 hours</SelectItem>
-                      <SelectItem value="300">5 hours</SelectItem>
-                      <SelectItem value="360">6 hours</SelectItem>
-                      <SelectItem value="420">7 hours</SelectItem>
-                      <SelectItem value="480">8 hours</SelectItem>
-                      <SelectItem value="540">9 hours</SelectItem>
-                      <SelectItem value="600">10 hours</SelectItem>
-                      <SelectItem value="660">11 hours</SelectItem>
-                      <SelectItem value="720">12 hours</SelectItem>
-                      <SelectItem value="780">13 hours</SelectItem>
-                      <SelectItem value="840">14 hours</SelectItem>
-                      <SelectItem value="900">15 hours</SelectItem>
-                      <SelectItem value="960">16 hours</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-sm text-muted-foreground">Minimum 2 hours, maximum 16 hours</p>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Info className="h-3 w-3" />
+                    {formData.timezone ? `Time in ${formData.timezone}` : 'Select site location first to see timezone'}
+                  </p>
                 </div>
               </div>
 

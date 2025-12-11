@@ -1249,3 +1249,12 @@
 - [ ] Test form submission with new service levels
 - [ ] Verify data saves correctly to jobs table with proper responseTimeHours values (4, 24, 48)
 - [ ] Ensure job matching engine can query by service level
+
+## Phase 34: Improve Request Service Form UX
+- [x] Fix timezone detection to use proper tRPC client
+- [x] Add SLA-based schedule auto-adjustment:
+  - [x] Same Business Day → Auto-populate today's date, next hour within business hours
+  - [x] Next Business Day → Pre-populate with next business day date (skip weekends), 9 AM
+  - [x] Scheduled → Auto-populate 48+ hours from now, 9 AM
+- [x] Reorder form sections: move Schedule section after Service Details
+- [x] Test all three SLA scenarios with different times
