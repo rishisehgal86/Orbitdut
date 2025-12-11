@@ -540,6 +540,14 @@ export const appRouter = router({
         return await getSupplierRates(input.supplierId);
       }),
 
+    // Get rate configuration summary for dashboard
+    getRateConfigurationSummary: protectedProcedure
+      .input(z.object({ supplierId: z.number() }))
+      .query(async ({ input }) => {
+        const { getRateConfigurationSummary } = await import("./rateStats");
+        return await getRateConfigurationSummary(input.supplierId);
+      }),
+
     // Upsert a single rate
     upsertRate: protectedProcedure
       .input(

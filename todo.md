@@ -1192,3 +1192,11 @@
 - [x] Add "Notify Me" option for when feature launches
 - [x] Add to Rate Management submenu navigation
 - [x] Add route /supplier/rates/competitive-analysis to App.tsx
+
+## Dashboard Rate Configuration Summary
+- [x] Add rate configuration summary card to supplier dashboard
+- [x] Show total configured rates count
+- [x] Show configuration percentage (configured vs missing)
+- [x] Show breakdown by service type
+- [x] Add quick link to Rate Management page
+- [x] Create backend procedure to get rate statistics

@@ -2,7 +2,7 @@ import SupplierLayout from "@/components/SupplierLayout";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, Briefcase, CheckCircle, Clock, DollarSign, Loader2, Eye, AlertTriangle } from "lucide-react";
+import { AlertCircle, Briefcase, CheckCircle, Clock, DollarSign, Loader2, Eye, AlertTriangle, Settings, TrendingUp } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { VerificationProgress } from "@/components/VerificationProgress";
@@ -14,6 +14,7 @@ export default function SupplierDashboard() {
   const { data: myJobs, isLoading: loadingMy } = trpc.jobs.getSupplierJobs.useQuery();
   const { data: supplierRates } = trpc.supplier.getRates.useQuery({ supplierId: profile?.id || 0 }, { enabled: !!profile?.id });
   const { data: coverageCountries } = trpc.supplier.getCountries.useQuery({ supplierId: profile?.id || 0 }, { enabled: !!profile?.id });
+  const { data: rateConfigSummary } = trpc.supplier.getRateConfigurationSummary.useQuery({ supplierId: profile?.id || 0 }, { enabled: !!profile?.id });
 
   const isVerified = profile?.isVerified === 1;
   const verificationState = verificationStatus?.verification?.status || "not_started";
@@ -194,25 +195,67 @@ export default function SupplierDashboard() {
           </Card>
         </div>
 
-        {/* Earnings Card - Full width below */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            ) : (
-              <>
-                <div className="text-3xl font-bold">${stats.totalEarnings.toFixed(2)}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  From {stats.completedJobs} completed {stats.completedJobs === 1 ? 'job' : 'jobs'}
-                </p>
-              </>
-            )}
-          </CardContent>
-        </Card>
+        {/* Earnings and Rate Configuration - Side by side */}
+        <div className="grid gap-4 md:grid-cols-2">
+          {/* Earnings Card */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              ) : (
+                <>
+                  <div className="text-3xl font-bold">${stats.totalEarnings.toFixed(2)}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    From {stats.completedJobs} completed {stats.completedJobs === 1 ? 'job' : 'jobs'}
+                  </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Rate Configuration Summary */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Rate Configuration</CardTitle>
+              <Settings className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {!rateConfigSummary ? (
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              ) : (
+                <>
+                  <div className="flex items-baseline gap-2">
+                    <div className="text-3xl font-bold">{rateConfigSummary.configurationPercentage}%</div>
+                    <div className="text-sm text-muted-foreground">complete</div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {rateConfigSummary.totalConfigured} of {rateConfigSummary.totalPossible} rates configured
+                  </p>
+                  <div className="mt-3 space-y-1">
+                    {rateConfigSummary.byServiceType.map((service) => (
+                      <div key={service.serviceType} className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">{service.serviceType.replace(/_/g, ' ')}</span>
+                        <span className="font-medium">{service.percentage}%</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3">
+                    <Link href="/supplier/rates/manage">
+                      <Button variant="outline" size="sm" className="w-full">
+                        <Settings className="h-3 w-3 mr-1" />
+                        Manage Rates
+                      </Button>
+                    </Link>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Setup Checklist - Only show if not all steps completed */}
         {!allStepsCompleted && (
