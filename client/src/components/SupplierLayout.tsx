@@ -36,6 +36,7 @@ const navItems: NavItem[] = [
     submenu: [
       { title: "Geographic Coverage", href: "/supplier/coverage" },
       { title: "Service Availability", href: "/supplier/coverage/availability" },
+      { title: "Coverage Intelligence", href: "/supplier/coverage/intelligence" },
     ]
   },
   { 

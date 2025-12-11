@@ -1200,3 +1200,16 @@
 - [x] Show breakdown by service type
 - [x] Add quick link to Rate Management page
 - [x] Create backend procedure to get rate statistics
+
+## Coverage Intelligence (Premium Feature - Coming Soon)
+- [x] Create /supplier/coverage/intelligence page with coming soon banner
+- [x] Design feature preview cards showing planned capabilities:
+  * Demand Heatmap - Show where customer requests are concentrated
+  * Coverage Gap Analysis - Identify underserved regions with high demand
+  * Expansion Opportunities - Suggest profitable new markets to enter
+  * Competitor Coverage - See where other suppliers are operating
+  * Market Saturation - Understand competition density by region
+- [x] Add email notification signup for feature launch
+- [x] Add to Coverage submenu navigation (Geographic Coverage, Service Availability, Coverage Intelligence)
+- [x] Add route /supplier/coverage/intelligence to App.tsx
+- [x] Create backend placeholder for future market data aggregation
