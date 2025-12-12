@@ -151,42 +151,11 @@ export default function Ratings() {
             </CardTitle>
             <CardDescription>How the supplier rating system works</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="prose prose-sm max-w-none">
-              <h3 className="text-lg font-semibold">Rating Scale</h3>
-              <p>
-                Suppliers are rated on a scale of <strong>1.0 to 5.0</strong> (stored internally as hundredths: 100-500).
-                Ratings are used to rank suppliers when matching jobs to ensure the best-rated suppliers are prioritized.
-              </p>
-
-              <h3 className="text-lg font-semibold mt-4">Default Rating Policy</h3>
-              <p>
-                All new suppliers start with a <strong>default rating of 2.0/5.0</strong> (stored as 200). This neutral
-                starting point ensures:
-              </p>
-              <ul className="list-disc pl-6 space-y-1">
-                <li>New suppliers can receive job assignments without prior performance history</li>
-                <li>Established suppliers with good ratings maintain competitive advantage</li>
-                <li>Fair opportunity for all suppliers to prove their service quality</li>
-              </ul>
-
-              <h3 className="text-lg font-semibold mt-4">Rating Impact</h3>
-              <p>
-                In the job matching algorithm, supplier ratings play a critical role:
-              </p>
-              <ul className="list-disc pl-6 space-y-1">
-                <li><strong>Priority 1:</strong> City coverage (priority cities rank higher than country-only coverage)</li>
-                <li><strong>Priority 2:</strong> Higher rating wins (suppliers with better ratings are preferred)</li>
-                <li><strong>Priority 3:</strong> Lower price wins (among suppliers with equal ratings)</li>
-                <li><strong>Priority 4:</strong> Random tiebreaker (for identical rating and price)</li>
-              </ul>
-
-              <h3 className="text-lg font-semibold mt-4">Future Enhancements</h3>
-              <p className="text-muted-foreground">
-                Planned features include automatic rating adjustments based on customer feedback, job completion rates,
-                response times, and quality metrics. A rating history audit trail will track all changes for transparency.
-              </p>
-            </div>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Suppliers are rated on a scale of 1.0 to 5.0. New suppliers start with a default rating of 2.0.
+              Ratings are used in the job matching algorithm to prioritize higher-rated suppliers.
+            </p>
           </CardContent>
         </Card>
 
