@@ -530,6 +530,48 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    // Update out-of-hours availability
+    updateOutOfHoursAvailability: protectedProcedure
+      .input(
+        z.object({
+          supplierId: z.number(),
+          offersOutOfHours: z.boolean(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const { getDb } = await import("./db");
+        const { suppliers, supplierUsers } = await import("../drizzle/schema");
+        const { eq, and } = await import("drizzle-orm");
+
+        const db = await getDb();
+        if (!db) {
+          throw new Error("Database not available");
+        }
+
+        // Verify user owns this supplier
+        const supplierUser = await db
+          .select()
+          .from(supplierUsers)
+          .where(
+            and(
+              eq(supplierUsers.supplierId, input.supplierId),
+              eq(supplierUsers.userId, ctx.user.id)
+            )
+          )
+          .limit(1);
+
+        if (supplierUser.length === 0) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized to update this supplier" });
+        }
+
+        await db
+          .update(suppliers)
+          .set({ offersOutOfHours: input.offersOutOfHours ? 1 : 0 })
+          .where(eq(suppliers.id, input.supplierId));
+
+        return { success: true };
+      }),
+
     // ========== NEW RATE MANAGEMENT SYSTEM ==========
     
     // Get all rates for a supplier

@@ -82,6 +82,7 @@ export const suppliers = mysqlTable("suppliers", {
   isVerified: int("isVerified", { unsigned: true }).default(0).notNull(), // 0 = not verified, 1 = verified
   stripeAccountId: varchar("stripeAccountId", { length: 255 }),
   isActive: int("isActive", { unsigned: true }).default(1).notNull(), // 1 = active, 0 = inactive
+  offersOutOfHours: int("offersOutOfHours", { unsigned: true }).default(0).notNull(), // 0 = no, 1 = yes
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -284,6 +285,8 @@ export const jobs = mysqlTable("jobs", {
   
   // Pricing (Marketplace)
   isOutOfHours: int("isOutOfHours", { unsigned: true }).default(0).notNull(),
+  oohPremiumPercent: int("oohPremiumPercent"), // OOH premium: 50, 100, or 150
+  oohReason: text("oohReason"), // Why it's OOH: evening, weekend, holiday, etc.
   calculatedPrice: int("calculatedPrice"), // In cents
   currency: varchar("currency", { length: 3 }).default("USD"),
   
