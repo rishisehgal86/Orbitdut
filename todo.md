@@ -85,3 +85,4 @@
 
 - [x] Fix OOH warning not displaying in customer request service page - COMPLETED
 - [x] Remove irrelevant /request-service page (was working on wrong file) - COMPLETED
+- [x] Update OOH warning to generic message (no specific percentage) - COMPLETED

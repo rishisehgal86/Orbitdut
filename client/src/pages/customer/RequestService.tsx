@@ -855,7 +855,7 @@ export default function RequestService() {
                       Out-of-Hours Service Detected
                     </div>
                     <div className="text-sm">
-                      {oohDetection.reasons.join('. ')}. This booking will incur a +{oohDetection.premiumPercent}% OOH Surcharge.
+                      {oohDetection.reasons.join('. ')}. A surcharge may apply for out-of-hours work.
                     </div>
                   </AlertDescription>
                 </Alert>
