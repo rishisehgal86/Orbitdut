@@ -164,3 +164,6 @@
 - [x] Make rating system details collapsible with dropdown on Ratings page
 - [x] Make rating distribution collapsible with dropdown on Ratings page
 - [x] Replace separate filter controls with sortable column headers on Ratings page
+- [x] Coverage by Country should show suppliers count (not areas count)
+- [x] Coverage by Supplier should show countries count (not areas count)
+- [x] Add expandable/collapsible details to show full lists on Coverage page
