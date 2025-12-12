@@ -3136,6 +3136,7 @@ export const appRouter = router({
         verificationStatus: suppliers.verificationStatus,
         isVerified: suppliers.isVerified,
         isActive: suppliers.isActive,
+        rating: suppliers.rating,
         createdAt: suppliers.createdAt,
       }).from(suppliers);
 

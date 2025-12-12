@@ -151,6 +151,10 @@
 - [x] Build Supplier Rating Management table
 - [x] Add rating adjustment dialog for admins
 - [x] Add to superadmin navigation sidebar
+- [x] Fix Ratings page to use SuperadminLayout wrapper with purple sidebar navigation
+- [x] Add search bar to search by supplier name
+- [x] Add table column filters (country, rating range)
+- [x] Add supplier ranking column to Suppliers page
 
 ## Payment Processing (Future)
 - [ ] Integrate Stripe Connect for supplier payouts

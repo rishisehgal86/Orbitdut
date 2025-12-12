@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { trpc } from "@/lib/trpc";
-import { Loader2, Search, Building2 } from "lucide-react";
+import { Loader2, Search, Building2, Star } from "lucide-react";
 import { useState } from "react";
 
 export default function SuperadminSuppliers() {
@@ -63,6 +63,7 @@ export default function SuperadminSuppliers() {
                   <TableHead>Company</TableHead>
                   <TableHead>Contact</TableHead>
                   <TableHead>Admin User</TableHead>
+                  <TableHead>Rating</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Created</TableHead>
                   <TableHead>Last Login</TableHead>
@@ -94,6 +95,12 @@ export default function SuperadminSuppliers() {
                       ) : (
                         <span className="text-sm text-muted-foreground">No admin</span>
                       )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="font-mono">
+                        <Star className="h-3 w-3 mr-1 fill-yellow-400 text-yellow-400" />
+                        {((supplier.rating || 200) / 100).toFixed(1)}
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-1">
