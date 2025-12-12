@@ -20,7 +20,6 @@ import SupplierJobDetail from "./pages/supplier/JobDetail";
 import SupplierCoverage from "./pages/supplier/Coverage";
 import ServiceAvailability from "@/pages/supplier/ServiceAvailability";
 import CoverageIntelligence from "@/pages/supplier/CoverageIntelligence";
-import RequestService from "./pages/RequestService";
 // RequestServicePricing import removed - rebuilding
 import JobConfirmation from "./pages/JobConfirmation";
 import CustomerDashboard from "./pages/customer/Dashboard";
@@ -60,7 +59,7 @@ function Router() {
       {/* Legacy routes for backward compatibility */}
       <Route path="/signup" component={CustomerSignup} />
       <Route path="/supplier/signup" component={SupplierSignup} />
-      <Route path={"/request-service"} component={RequestService} />
+
       <Route path={"/404"} component={NotFound} />
       {/* <Route path={"/request-service/pricing"} component={RequestServicePricing} /> */}
       <Route path={"/job-confirmation/:id"} component={JobConfirmation} />

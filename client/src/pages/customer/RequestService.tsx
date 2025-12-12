@@ -14,10 +14,12 @@ import { MapView } from "@/components/Map";
 import CustomerLayout from "@/components/CustomerLayout";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-import { Calendar, Clock, Info, MapPin } from "lucide-react";
+import { AlertCircle, Calendar, Clock, Info, MapPin } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
+import { detectOOH, type OOHDetectionResult } from "@/../../shared/oohDetection";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const SERVICE_TYPES = [
   "Level 1 End User Compute Engineer",
@@ -85,6 +87,7 @@ export default function RequestService() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [slaWarning, setSlaWarning] = useState<string | null>(null);
+  const [oohDetection, setOohDetection] = useState<OOHDetectionResult | null>(null);
 
   // Update form when user logs in or changes
   useEffect(() => {
@@ -96,6 +99,29 @@ export default function RequestService() {
       }));
     }
   }, [user]);
+
+  // OOH Detection Effect
+  useEffect(() => {
+    if (formData.scheduledDate && formData.scheduledTime && formData.serviceLevel) {
+      const durationMinutes = parseInt(formData.estimatedDuration);
+      
+      const result = detectOOH(
+        formData.scheduledDate,
+        formData.scheduledTime,
+        durationMinutes,
+        formData.serviceLevel as 'same_business_day' | 'next_business_day' | 'scheduled'
+      );
+      
+      setOohDetection(result);
+      
+      // Store OOH info in sessionStorage for pricing page
+      if (result.isOOH) {
+        sessionStorage.setItem('oohDetection', JSON.stringify(result));
+      } else {
+        sessionStorage.removeItem('oohDetection');
+      }
+    }
+  }, [formData.scheduledDate, formData.scheduledTime, formData.estimatedDuration, formData.serviceLevel]);
 
   // Validate field
   const validateField = (name: string, value: any) => {
@@ -818,6 +844,21 @@ export default function RequestService() {
                     </div>
                   </div>
                 </div>
+              )}
+
+              {/* OOH Warning */}
+              {oohDetection?.isOOH && (
+                <Alert className="border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
+                  <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-500" />
+                  <AlertDescription className="text-amber-900 dark:text-amber-100">
+                    <div className="font-semibold mb-1">
+                      Out-of-Hours Service Detected
+                    </div>
+                    <div className="text-sm">
+                      {oohDetection.reasons.join('. ')}. This booking will incur a +{oohDetection.premiumPercent}% OOH Surcharge.
+                    </div>
+                  </AlertDescription>
+                </Alert>
               )}
             </CardContent>
           </Card>

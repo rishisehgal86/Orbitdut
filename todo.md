@@ -80,3 +80,8 @@
 - [ ] Calculate and display pricing with OOH surcharge
 - [ ] Show supplier availability count
 - [ ] Display estimated total with OOH breakdown
+
+## Bug Fixes
+
+- [x] Fix OOH warning not displaying in customer request service page - COMPLETED
+- [x] Remove irrelevant /request-service page (was working on wrong file) - COMPLETED
