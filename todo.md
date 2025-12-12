@@ -222,3 +222,15 @@
 - [x] Verify isVerified flag updates correctly
 - [x] Test manual verification badge display
 - [x] Write and run vitest tests (9 tests, all passing)
+
+## Bug Fix: Verification Record Not Found Error - COMPLETED ✅
+
+### Issue
+- [x] Manual verification status change fails with "Verification record not found" error
+- [x] Suppliers created without verification records cannot have status changed
+
+### Solution
+- [x] Update changeVerificationStatus to use upsert pattern
+- [x] Automatically create verification record if it doesn't exist
+- [x] Test with suppliers that have no verification record
+- [x] All 3 vitest tests passing (auto-create, status change, batch processing)

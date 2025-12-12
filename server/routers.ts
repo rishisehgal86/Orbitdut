@@ -3254,15 +3254,27 @@ export const appRouter = router({
         const db = await getDb();
         if (!db) throw new Error("Database not available");
 
-        // Get current verification record
-        const currentVerification = await db.select()
+        // Get current verification record, create if doesn't exist
+        let currentVerification = await db.select()
           .from(supplierVerification)
           .where(eq(supplierVerification.supplierId, input.supplierId))
           .limit(1)
           .then(rows => rows[0]);
 
+        // If no verification record exists, create one
         if (!currentVerification) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "Verification record not found" });
+          await db.insert(supplierVerification).values({
+            supplierId: input.supplierId,
+            status: "not_started",
+            isManuallyVerified: 0,
+          });
+          
+          // Fetch the newly created record
+          currentVerification = await db.select()
+            .from(supplierVerification)
+            .where(eq(supplierVerification.supplierId, input.supplierId))
+            .limit(1)
+            .then(rows => rows[0]);
         }
 
         // Determine if this is a manual verification
