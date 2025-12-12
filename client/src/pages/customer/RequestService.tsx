@@ -852,10 +852,10 @@ export default function RequestService() {
                   <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-500" />
                   <AlertDescription className="text-amber-900 dark:text-amber-100">
                     <div className="font-semibold mb-1">
-                      Out-of-Hours Service Detected
+                      Out-of-Hours Service Detected (+25% Premium)
                     </div>
                     <div className="text-sm">
-                      {oohDetection.reasons.join('. ')}. A surcharge may apply for out-of-hours work.
+                      {oohDetection.reasons.join('. ')}. A 25% surcharge applies for out-of-hours work.
                     </div>
                   </AlertDescription>
                 </Alert>

@@ -11,8 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { trpc } from "@/lib/trpc";
-import { Loader2, Moon } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -39,8 +38,7 @@ export default function SupplierSettings() {
     taxId: "",
   });
 
-  const [offersOutOfHours, setOffersOutOfHours] = useState(false);
-  const updateOOH = trpc.supplier.updateOutOfHoursAvailability.useMutation();
+
 
   useEffect(() => {
     if (profile?.supplier) {
@@ -53,7 +51,7 @@ export default function SupplierSettings() {
         country: profile.supplier.country || "US",
         taxId: profile.supplier.taxId || "",
       });
-      setOffersOutOfHours(profile.supplier.offersOutOfHours === 1);
+
     }
   }, [profile]);
 
@@ -221,67 +219,6 @@ export default function SupplierSettings() {
 
         {profile?.supplier && (
           <>
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Moon className="h-5 w-5" />
-                  Out-of-Hours Services
-                </CardTitle>
-                <CardDescription>
-                  Offer services outside standard business hours (9 AM - 5 PM, Monday-Friday)
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="ooh-toggle" className="text-base font-medium">
-                      Offer Out-of-Hours Services
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Accept bookings for evenings, weekends, and holidays with premium pricing
-                    </p>
-                  </div>
-                  <Switch
-                    id="ooh-toggle"
-                    checked={offersOutOfHours}
-                    onCheckedChange={async (checked) => {
-                      try {
-                        await updateOOH.mutateAsync({
-                          supplierId: profile.supplier.id,
-                          offersOutOfHours: checked,
-                        });
-                        setOffersOutOfHours(checked);
-                        toast.success(
-                          checked
-                            ? "Out-of-hours services enabled"
-                            : "Out-of-hours services disabled"
-                        );
-                        refetch();
-                      } catch (error) {
-                        toast.error("Failed to update OOH availability");
-                        console.error(error);
-                      }
-                    }}
-                    disabled={updateOOH.isPending}
-                  />
-                </div>
-
-                {offersOutOfHours && (
-                  <div className="rounded-lg bg-muted p-4 space-y-2">
-                    <p className="text-sm font-medium">Premium Rates:</p>
-                    <ul className="text-sm text-muted-foreground space-y-1">
-                      <li>• Scheduled (48+ hours): +50% surcharge</li>
-                      <li>• Next Business Day: +100% surcharge</li>
-                      <li>• Same Business Day: +150% surcharge</li>
-                    </ul>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Premiums are automatically applied to jobs outside 9 AM - 5 PM Monday-Friday
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
             <Card>
               <CardHeader>
                 <CardTitle>Verification Status</CardTitle>

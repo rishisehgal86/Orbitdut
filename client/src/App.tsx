@@ -19,6 +19,7 @@ import SupplierJobs from "./pages/supplier/Jobs";
 import SupplierJobDetail from "./pages/supplier/JobDetail";
 import SupplierCoverage from "./pages/supplier/Coverage";
 import ServiceAvailability from "@/pages/supplier/ServiceAvailability";
+import OutOfHours from "@/pages/supplier/OutOfHours";
 import CoverageIntelligence from "@/pages/supplier/CoverageIntelligence";
 // RequestServicePricing import removed - rebuilding
 import JobConfirmation from "./pages/JobConfirmation";
@@ -81,6 +82,7 @@ function Router() {
       <Route path={"/supplier/coverage"} component={SupplierCoverage} />      <Route path="/e/:shortCode" component={ShortLinkRedirect} />
       <Route path="/engineer/job/:token" component={EngineerJobPage} />
       <Route path="/supplier/coverage/availability" component={ServiceAvailability} />
+      <Route path="/supplier/coverage/out-of-hours" component={OutOfHours} />
       <Route path="/supplier/coverage/intelligence" component={CoverageIntelligence} />
       <Route path="/supplier/verification" component={VerificationStatus} />
       <Route path="/admin" component={AdminDashboard} />

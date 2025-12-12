@@ -7,7 +7,7 @@
 
 export interface OOHDetectionResult {
   isOOH: boolean;
-  premiumPercent: number | null; // 50, 100, or 150
+  premiumPercent: number | null; // 25% flat rate
   reasons: string[]; // Array of reasons why it's OOH
 }
 
@@ -18,13 +18,9 @@ const BUSINESS_HOURS_START = 9; // 9 AM
 const BUSINESS_HOURS_END = 17; // 5 PM (17:00)
 
 /**
- * Premium percentages by service level
+ * Premium percentage - flat 25% for all service levels
  */
-const OOH_PREMIUMS = {
-  scheduled: 50, // +50% for scheduled bookings
-  next_business_day: 100, // +100% for next business day
-  same_business_day: 150, // +150% for same business day
-};
+const OOH_PREMIUM = 25; // +25% flat rate for all OOH bookings
 
 /**
  * Check if a date is a weekend (Saturday or Sunday)
@@ -101,8 +97,8 @@ export function detectOOH(
     reasons.push(`Work extends beyond business hours (ends at ${formattedEndTime})`);
   }
 
-  // Calculate premium based on service level
-  const premiumPercent = isOOH ? OOH_PREMIUMS[serviceLevel] : null;
+  // Calculate premium - flat 25% for all OOH bookings
+  const premiumPercent = isOOH ? OOH_PREMIUM : null;
 
   return {
     isOOH,

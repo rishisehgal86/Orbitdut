@@ -82,7 +82,7 @@ export const suppliers = mysqlTable("suppliers", {
   isVerified: int("isVerified", { unsigned: true }).default(0).notNull(), // 0 = not verified, 1 = verified
   stripeAccountId: varchar("stripeAccountId", { length: 255 }),
   isActive: int("isActive", { unsigned: true }).default(1).notNull(), // 1 = active, 0 = inactive
-  offersOutOfHours: int("offersOutOfHours", { unsigned: true }).default(0).notNull(), // 0 = no, 1 = yes
+  offersOutOfHours: int("offersOutOfHours", { unsigned: true }).default(1).notNull(), // 0 = no, 1 = yes (default: enabled)
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
