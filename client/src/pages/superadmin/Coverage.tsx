@@ -1,13 +1,14 @@
-import { useState } from "react";
 import SuperadminLayout from "@/components/SuperadminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { trpc } from "@/lib/trpc";
+import { getCountryName } from "@shared/countries";
 import { Loader2, Map as MapIcon, Table as TableIcon, BarChart3, ChevronDown, ChevronRight } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 export default function SuperadminCoverage() {
   const { data: coverageData, isLoading } = trpc.admin.getCoverageStats.useQuery();
@@ -176,17 +177,25 @@ export default function SuperadminCoverage() {
               <CardContent>
                 {coverageMatrix && (
                   <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="sticky left-0 bg-background">Supplier</TableHead>
-                          {coverageMatrix.regions.map((countryCode, idx) => (
-                            <TableHead key={idx} className="text-center min-w-[100px]">
-                              {countryCode}
-                            </TableHead>
-                          ))}
-                        </TableRow>
-                      </TableHeader>
+                    <TooltipProvider>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="sticky left-0 bg-background">Supplier</TableHead>
+                            {coverageMatrix.regions.map((countryCode, idx) => (
+                              <TableHead key={idx} className="text-center min-w-[100px]">
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="cursor-help">{countryCode}</span>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{getCountryName(countryCode)}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TableHead>
+                            ))}
+                          </TableRow>
+                        </TableHeader>
                       <TableBody>
                         {coverageMatrix.matrix.map((row, idx) => (
                           <TableRow key={idx}>
@@ -206,6 +215,7 @@ export default function SuperadminCoverage() {
                         ))}
                       </TableBody>
                     </Table>
+                    </TooltipProvider>
                   </div>
                 )}
               </CardContent>

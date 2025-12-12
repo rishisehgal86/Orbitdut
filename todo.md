@@ -167,3 +167,4 @@
 - [x] Coverage by Country should show suppliers count (not areas count)
 - [x] Coverage by Supplier should show countries count (not areas count)
 - [x] Add expandable/collapsible details to show full lists on Coverage page
+- [x] Add hover tooltips to country abbreviations in Coverage Matrix tab showing full country names
