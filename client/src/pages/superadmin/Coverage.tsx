@@ -7,13 +7,20 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { trpc } from "@/lib/trpc";
 import { getCountryName } from "@shared/countries";
-import { Loader2, Map as MapIcon, Table as TableIcon, BarChart3, ChevronDown, ChevronRight } from "lucide-react";
+import { Loader2, Map as MapIcon, Table as TableIcon, BarChart3, ChevronDown, ChevronRight, ArrowUpDown } from "lucide-react";
 import { useMemo, useState } from "react";
+
+type SortField = "country" | "supplier" | "count";
+type SortOrder = "asc" | "desc";
 
 export default function SuperadminCoverage() {
   const { data: coverageData, isLoading } = trpc.admin.getCoverageStats.useQuery();
   const [expandedCountries, setExpandedCountries] = useState<Set<string>>(new Set());
   const [expandedSuppliers, setExpandedSuppliers] = useState<Set<string>>(new Set());
+  const [sortFieldCountry, setSortFieldCountry] = useState<SortField>("count");
+  const [sortOrderCountry, setSortOrderCountry] = useState<SortOrder>("desc");
+  const [sortFieldSupplier, setSortFieldSupplier] = useState<SortField>("count");
+  const [sortOrderSupplier, setSortOrderSupplier] = useState<SortOrder>("desc");
 
   // Analytics calculations
   const analytics = useMemo(() => {
@@ -59,6 +66,44 @@ export default function SuperadminCoverage() {
     };
   }, [coverageData]);
 
+  // Sorted country entries
+  const sortedCountries = useMemo(() => {
+    if (!analytics?.byCountry) return [];
+    
+    const entries = Object.entries(analytics.byCountry);
+    
+    return entries.sort(([countryA, dataA], [countryB, dataB]) => {
+      let aVal: any = sortFieldCountry === "country" ? countryA : dataA.supplierIds.size;
+      let bVal: any = sortFieldCountry === "country" ? countryB : dataB.supplierIds.size;
+      
+      if (typeof aVal === "string") aVal = aVal.toLowerCase();
+      if (typeof bVal === "string") bVal = bVal.toLowerCase();
+      
+      if (aVal < bVal) return sortOrderCountry === "asc" ? -1 : 1;
+      if (aVal > bVal) return sortOrderCountry === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [analytics?.byCountry, sortFieldCountry, sortOrderCountry]);
+
+  // Sorted supplier entries
+  const sortedSuppliers = useMemo(() => {
+    if (!analytics?.bySupplier) return [];
+    
+    const entries = Object.entries(analytics.bySupplier);
+    
+    return entries.sort(([supplierA, dataA], [supplierB, dataB]) => {
+      let aVal: any = sortFieldSupplier === "supplier" ? supplierA : dataA.countries.size;
+      let bVal: any = sortFieldSupplier === "supplier" ? supplierB : dataB.countries.size;
+      
+      if (typeof aVal === "string") aVal = aVal.toLowerCase();
+      if (typeof bVal === "string") bVal = bVal.toLowerCase();
+      
+      if (aVal < bVal) return sortOrderSupplier === "asc" ? -1 : 1;
+      if (aVal > bVal) return sortOrderSupplier === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [analytics?.bySupplier, sortFieldSupplier, sortOrderSupplier]);
+
   // Coverage matrix: suppliers x regions
   const coverageMatrix = useMemo(() => {
     if (!coverageData) return null;
@@ -101,6 +146,24 @@ export default function SuperadminCoverage() {
     });
   };
 
+  const handleSortCountry = (field: SortField) => {
+    if (sortFieldCountry === field) {
+      setSortOrderCountry(sortOrderCountry === "asc" ? "desc" : "asc");
+    } else {
+      setSortFieldCountry(field);
+      setSortOrderCountry("asc");
+    }
+  };
+
+  const handleSortSupplier = (field: SortField) => {
+    if (sortFieldSupplier === field) {
+      setSortOrderSupplier(sortOrderSupplier === "asc" ? "desc" : "asc");
+    } else {
+      setSortFieldSupplier(field);
+      setSortOrderSupplier("asc");
+    }
+  };
+
   if (isLoading) {
     return (
       <SuperadminLayout>
@@ -115,23 +178,15 @@ export default function SuperadminCoverage() {
     <SuperadminLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Coverage Visualization</h1>
-          <p className="text-muted-foreground">Analyze supplier coverage across all regions</p>
+          <h1 className="text-3xl font-bold tracking-tight">Coverage Analytics</h1>
+          <p className="text-muted-foreground">Monitor supplier coverage across regions and countries</p>
         </div>
 
-        {/* Overview Stats */}
+        {/* Overview Cards */}
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Coverage Areas</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">{analytics?.totalAreas || 0}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Countries</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Countries</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold">{Object.keys(analytics?.byCountry || {}).length}</p>
@@ -139,7 +194,15 @@ export default function SuperadminCoverage() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Regions</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Suppliers</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{Object.keys(analytics?.bySupplier || {}).length}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Regions</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold">{analytics?.totalRegions || 0}</p>
@@ -147,7 +210,7 @@ export default function SuperadminCoverage() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Cities</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Cities</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold">{analytics?.totalCities || 0}</p>
@@ -214,7 +277,7 @@ export default function SuperadminCoverage() {
                           </TableRow>
                         ))}
                       </TableBody>
-                    </Table>
+                      </Table>
                     </TooltipProvider>
                   </div>
                 )}
@@ -228,40 +291,54 @@ export default function SuperadminCoverage() {
               {/* By Country - Show Suppliers Count */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Coverage by Country</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>Coverage by Country</CardTitle>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleSortCountry("country")}
+                        className="text-xs flex items-center gap-1 px-2 py-1 rounded hover:bg-muted"
+                      >
+                        Name <ArrowUpDown className="h-3 w-3" />
+                      </button>
+                      <button
+                        onClick={() => handleSortCountry("count")}
+                        className="text-xs flex items-center gap-1 px-2 py-1 rounded hover:bg-muted"
+                      >
+                        Count <ArrowUpDown className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {Object.entries(analytics?.byCountry || {})
-                      .sort(([, a], [, b]) => b.supplierIds.size - a.supplierIds.size)
-                      .map(([country, data]) => (
-                        <Collapsible
-                          key={country}
-                          open={expandedCountries.has(country)}
-                          onOpenChange={() => toggleCountry(country)}
-                        >
-                          <CollapsibleTrigger className="w-full">
-                            <div className="flex items-center justify-between p-2 hover:bg-muted/50 rounded-md transition-colors">
-                              <div className="flex items-center gap-2">
-                                {expandedCountries.has(country) ? (
-                                  <ChevronDown className="h-4 w-4" />
-                                ) : (
-                                  <ChevronRight className="h-4 w-4" />
-                                )}
-                                <span className="font-medium">{country}</span>
-                              </div>
-                              <Badge>{data.supplierIds.size} suppliers</Badge>
+                    {sortedCountries.map(([country, data]) => (
+                      <Collapsible
+                        key={country}
+                        open={expandedCountries.has(country)}
+                        onOpenChange={() => toggleCountry(country)}
+                      >
+                        <CollapsibleTrigger className="w-full">
+                          <div className="flex items-center justify-between p-2 hover:bg-muted/50 rounded-md transition-colors">
+                            <div className="flex items-center gap-2">
+                              {expandedCountries.has(country) ? (
+                                <ChevronDown className="h-4 w-4" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4" />
+                              )}
+                              <span className="font-medium">{country}</span>
                             </div>
-                          </CollapsibleTrigger>
-                          <CollapsibleContent>
-                            <div className="ml-6 mt-2 space-y-1 text-sm text-muted-foreground">
-                              {Array.from(data.suppliers).map((supplier, idx) => (
-                                <div key={idx} className="py-1">• {supplier}</div>
-                              ))}
-                            </div>
-                          </CollapsibleContent>
-                        </Collapsible>
-                      ))}
+                            <Badge>{data.supplierIds.size} suppliers</Badge>
+                          </div>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="ml-6 mt-2 space-y-1 text-sm text-muted-foreground">
+                            {Array.from(data.suppliers).map((supplier, idx) => (
+                              <div key={idx} className="py-1">• {supplier}</div>
+                            ))}
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
@@ -269,40 +346,54 @@ export default function SuperadminCoverage() {
               {/* By Supplier - Show Countries Count */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Coverage by Supplier</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>Coverage by Supplier</CardTitle>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleSortSupplier("supplier")}
+                        className="text-xs flex items-center gap-1 px-2 py-1 rounded hover:bg-muted"
+                      >
+                        Name <ArrowUpDown className="h-3 w-3" />
+                      </button>
+                      <button
+                        onClick={() => handleSortSupplier("count")}
+                        className="text-xs flex items-center gap-1 px-2 py-1 rounded hover:bg-muted"
+                      >
+                        Count <ArrowUpDown className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {Object.entries(analytics?.bySupplier || {})
-                      .sort(([, a], [, b]) => b.countries.size - a.countries.size)
-                      .map(([supplier, data]) => (
-                        <Collapsible
-                          key={supplier}
-                          open={expandedSuppliers.has(supplier)}
-                          onOpenChange={() => toggleSupplier(supplier)}
-                        >
-                          <CollapsibleTrigger className="w-full">
-                            <div className="flex items-center justify-between p-2 hover:bg-muted/50 rounded-md transition-colors">
-                              <div className="flex items-center gap-2">
-                                {expandedSuppliers.has(supplier) ? (
-                                  <ChevronDown className="h-4 w-4" />
-                                ) : (
-                                  <ChevronRight className="h-4 w-4" />
-                                )}
-                                <span className="font-medium truncate max-w-[200px]">{supplier}</span>
-                              </div>
-                              <Badge>{data.countries.size} countries</Badge>
+                    {sortedSuppliers.map(([supplier, data]) => (
+                      <Collapsible
+                        key={supplier}
+                        open={expandedSuppliers.has(supplier)}
+                        onOpenChange={() => toggleSupplier(supplier)}
+                      >
+                        <CollapsibleTrigger className="w-full">
+                          <div className="flex items-center justify-between p-2 hover:bg-muted/50 rounded-md transition-colors">
+                            <div className="flex items-center gap-2">
+                              {expandedSuppliers.has(supplier) ? (
+                                <ChevronDown className="h-4 w-4" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4" />
+                              )}
+                              <span className="font-medium truncate max-w-[200px]">{supplier}</span>
                             </div>
-                          </CollapsibleTrigger>
-                          <CollapsibleContent>
-                            <div className="ml-6 mt-2 space-y-1 text-sm text-muted-foreground">
-                              {Array.from(data.countries).map((country, idx) => (
-                                <div key={idx} className="py-1">• {country}</div>
-                              ))}
-                            </div>
-                          </CollapsibleContent>
-                        </Collapsible>
-                      ))}
+                            <Badge>{data.countries.size} countries</Badge>
+                          </div>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="ml-6 mt-2 space-y-1 text-sm text-muted-foreground">
+                            {Array.from(data.countries).map((country, idx) => (
+                              <div key={idx} className="py-1">• {country}</div>
+                            ))}
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    ))}
                   </div>
                 </CardContent>
               </Card>

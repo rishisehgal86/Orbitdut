@@ -4,17 +4,69 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { trpc } from "@/lib/trpc";
-import { Loader2, Search, Briefcase } from "lucide-react";
-import { useState } from "react";
+import { Loader2, Search, Briefcase, ArrowUpDown } from "lucide-react";
+import { useState, useMemo } from "react";
+
+type SortField = "id" | "status" | "calculatedPrice" | "createdAt" | "scheduledDateTime";
+type SortOrder = "asc" | "desc";
 
 export default function SuperadminJobs() {
   const { data: jobs, isLoading } = trpc.admin.getAllJobs.useQuery();
   const [search, setSearch] = useState("");
+  const [sortField, setSortField] = useState<SortField>("createdAt");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
-  const filtered = jobs?.filter((j) =>
-    j.siteName?.toLowerCase().includes(search.toLowerCase()) ||
-    j.siteAddress?.toLowerCase().includes(search.toLowerCase()) ||
-    j.customer?.customerEmail?.toLowerCase().includes(search.toLowerCase())
+  const filteredAndSorted = useMemo(() => {
+    if (!jobs) return [];
+
+    // Filter
+    let filtered = jobs.filter((j) =>
+      j.siteName?.toLowerCase().includes(search.toLowerCase()) ||
+      j.siteAddress?.toLowerCase().includes(search.toLowerCase()) ||
+      j.customer?.customerEmail?.toLowerCase().includes(search.toLowerCase())
+    );
+
+    // Sort
+    filtered.sort((a, b) => {
+      let aVal: any = a[sortField];
+      let bVal: any = b[sortField];
+
+      // Handle null/undefined values
+      if (aVal === null || aVal === undefined) aVal = "";
+      if (bVal === null || bVal === undefined) bVal = "";
+
+      // Convert to lowercase for string comparison
+      if (typeof aVal === "string") aVal = aVal.toLowerCase();
+      if (typeof bVal === "string") bVal = bVal.toLowerCase();
+
+      // Compare
+      if (aVal < bVal) return sortOrder === "asc" ? -1 : 1;
+      if (aVal > bVal) return sortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
+
+    return filtered;
+  }, [jobs, search, sortField, sortOrder]);
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortOrder("asc");
+    }
+  };
+
+  const SortableHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
+    <TableHead 
+      className="cursor-pointer select-none hover:bg-muted/50"
+      onClick={() => handleSort(field)}
+    >
+      <div className="flex items-center gap-2">
+        {children}
+        <ArrowUpDown className="h-4 w-4" />
+      </div>
+    </TableHead>
   );
 
   const getStatusBadge = (status: string) => {
@@ -122,47 +174,61 @@ export default function SuperadminJobs() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Job ID</TableHead>
+                  <SortableHeader field="id">Job ID</SortableHeader>
                   <TableHead>Site</TableHead>
                   <TableHead>Customer</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead>Scheduled</TableHead>
+                  <SortableHeader field="status">Status</SortableHeader>
+                  <SortableHeader field="calculatedPrice">Price</SortableHeader>
+                  <SortableHeader field="createdAt">Created</SortableHeader>
+                  <SortableHeader field="scheduledDateTime">Scheduled</SortableHeader>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered?.map((job) => (
-                  <TableRow key={job.id}>
-                    <TableCell className="font-medium">#{job.id}</TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{job.siteName || "N/A"}</p>
-                        <p className="text-xs text-muted-foreground">{job.siteAddress || "N/A"}</p>
+                {filteredAndSorted.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-12">
+                      <div className="flex flex-col items-center gap-2">
+                        <Briefcase className="w-12 h-12 text-muted-foreground" />
+                        <p className="text-lg font-medium">No jobs found</p>
+                        <p className="text-sm text-muted-foreground">
+                          {search ? "Try adjusting your search" : "No jobs available"}
+                        </p>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      {job.customer ? (
-                        <div className="text-sm">
-                          <p>{job.customer.customerName || "N/A"}</p>
-                          <p className="text-xs text-muted-foreground">{job.customer.customerEmail}</p>
-                        </div>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">N/A</span>
-                      )}
-                    </TableCell>
-                    <TableCell>{getStatusBadge(job.status)}</TableCell>
-                    <TableCell className="font-medium">
-                      {job.calculatedPrice ? `$${(job.calculatedPrice / 100).toFixed(2)}` : "N/A"}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {new Date(job.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {job.scheduledDateTime ? new Date(job.scheduledDateTime).toLocaleDateString() : "N/A"}
-                    </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  filteredAndSorted.map((job) => (
+                    <TableRow key={job.id}>
+                      <TableCell className="font-medium">#{job.id}</TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{job.siteName || "N/A"}</p>
+                          <p className="text-xs text-muted-foreground">{job.siteAddress || "N/A"}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {job.customer ? (
+                          <div className="text-sm">
+                            <p>{job.customer.customerName || "N/A"}</p>
+                            <p className="text-xs text-muted-foreground">{job.customer.customerEmail}</p>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">N/A</span>
+                        )}
+                      </TableCell>
+                      <TableCell>{getStatusBadge(job.status)}</TableCell>
+                      <TableCell className="font-medium">
+                        {job.calculatedPrice ? `$${(job.calculatedPrice / 100).toFixed(2)}` : "N/A"}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {new Date(job.createdAt).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {job.scheduledDateTime ? new Date(job.scheduledDateTime).toLocaleDateString() : "N/A"}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </CardContent>

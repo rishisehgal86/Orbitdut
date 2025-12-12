@@ -168,3 +168,10 @@
 - [x] Coverage by Supplier should show countries count (not areas count)
 - [x] Add expandable/collapsible details to show full lists on Coverage page
 - [x] Add hover tooltips to country abbreviations in Coverage Matrix tab showing full country names
+
+## Superadmin Portal - Replace Inline Filters with Sortable Headers
+- [x] Remove inline filters and add sortable headers to Verifications table (company name, contact person, country, status, last updated)
+- [x] Remove inline filters and add sortable headers to Suppliers table (company name, country, verification status, rating, created date)
+- [x] Add sortable headers to Users table (name, email, role, account type, created date)
+- [x] Add sortable headers to Jobs table (job ID, customer, supplier, service type, status, price, date)
+- [x] Add sortable headers to Coverage Analytics tables (country, supplier count, coverage percentage)

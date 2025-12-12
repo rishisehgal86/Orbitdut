@@ -4,16 +4,68 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { trpc } from "@/lib/trpc";
-import { Loader2, Search, Users as UsersIcon } from "lucide-react";
-import { useState } from "react";
+import { Loader2, Search, Users as UsersIcon, ArrowUpDown } from "lucide-react";
+import { useState, useMemo } from "react";
+
+type SortField = "name" | "email" | "accountType" | "role" | "createdAt";
+type SortOrder = "asc" | "desc";
 
 export default function SuperadminUsers() {
   const { data: users, isLoading } = trpc.admin.getAllUsers.useQuery();
   const [search, setSearch] = useState("");
+  const [sortField, setSortField] = useState<SortField>("createdAt");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
-  const filtered = users?.filter((u) =>
-    u.name?.toLowerCase().includes(search.toLowerCase()) ||
-    u.email.toLowerCase().includes(search.toLowerCase())
+  const filteredAndSorted = useMemo(() => {
+    if (!users) return [];
+
+    // Filter
+    let filtered = users.filter((u) =>
+      u.name?.toLowerCase().includes(search.toLowerCase()) ||
+      u.email.toLowerCase().includes(search.toLowerCase())
+    );
+
+    // Sort
+    filtered.sort((a, b) => {
+      let aVal: any = a[sortField];
+      let bVal: any = b[sortField];
+
+      // Handle null/undefined values
+      if (aVal === null || aVal === undefined) aVal = "";
+      if (bVal === null || bVal === undefined) bVal = "";
+
+      // Convert to lowercase for string comparison
+      if (typeof aVal === "string") aVal = aVal.toLowerCase();
+      if (typeof bVal === "string") bVal = bVal.toLowerCase();
+
+      // Compare
+      if (aVal < bVal) return sortOrder === "asc" ? -1 : 1;
+      if (aVal > bVal) return sortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
+
+    return filtered;
+  }, [users, search, sortField, sortOrder]);
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortOrder("asc");
+    }
+  };
+
+  const SortableHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
+    <TableHead 
+      className="cursor-pointer select-none hover:bg-muted/50"
+      onClick={() => handleSort(field)}
+    >
+      <div className="flex items-center gap-2">
+        {children}
+        <ArrowUpDown className="h-4 w-4" />
+      </div>
+    </TableHead>
   );
 
   if (isLoading) {
@@ -96,43 +148,57 @@ export default function SuperadminUsers() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Account Type</TableHead>
-                  <TableHead>Role</TableHead>
+                  <SortableHeader field="name">Name</SortableHeader>
+                  <SortableHeader field="email">Email</SortableHeader>
+                  <SortableHeader field="accountType">Account Type</SortableHeader>
+                  <SortableHeader field="role">Role</SortableHeader>
                   <TableHead>Login Method</TableHead>
-                  <TableHead>Created</TableHead>
+                  <SortableHeader field="createdAt">Created</SortableHeader>
                   <TableHead>Last Login</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered?.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">{user.name || "N/A"}</TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>
-                      <Badge variant={user.accountType === "supplier" ? "default" : "secondary"}>
-                        {user.accountType}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={user.role === "superadmin" ? "destructive" : user.role === "admin" ? "default" : "outline"}
-                      >
-                        {user.role}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground capitalize">
-                      {user.loginMethod}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {new Date(user.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {new Date(user.lastSignedIn).toLocaleDateString()}
+                {filteredAndSorted.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-12">
+                      <div className="flex flex-col items-center gap-2">
+                        <UsersIcon className="w-12 h-12 text-muted-foreground" />
+                        <p className="text-lg font-medium">No users found</p>
+                        <p className="text-sm text-muted-foreground">
+                          {search ? "Try adjusting your search" : "No users available"}
+                        </p>
+                      </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  filteredAndSorted.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium">{user.name || "N/A"}</TableCell>
+                      <TableCell>{user.email}</TableCell>
+                      <TableCell>
+                        <Badge variant={user.accountType === "supplier" ? "default" : "secondary"}>
+                          {user.accountType}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={user.role === "superadmin" ? "destructive" : user.role === "admin" ? "default" : "outline"}
+                        >
+                          {user.role}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground capitalize">
+                        {user.loginMethod}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {new Date(user.createdAt).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {new Date(user.lastSignedIn).toLocaleDateString()}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </CardContent>
