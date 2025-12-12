@@ -81,6 +81,10 @@
 - [ ] Show supplier availability count
 - [ ] Display estimated total with OOH breakdown
 
+## Immediate Priority Tasks
+
+- [x] Update rate management interface to clearly show rates are hourly with 2-hour minimum job requirement
+
 ## Bug Fixes
 
 - [x] Fix OOH warning not displaying in customer request service page - COMPLETED

@@ -211,7 +211,7 @@ export default function CurrentRates() {
           <div>
             <h1 className="text-3xl font-bold">Current Rates</h1>
             <p className="text-muted-foreground mt-1">
-              View all your configured rates across locations and services
+              View all your configured <strong>hourly rates</strong> across locations and services. All rates are per hour with a <strong>2-hour minimum</strong> job duration.
             </p>
           </div>
           <Button onClick={handleExport} variant="outline">

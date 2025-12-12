@@ -68,7 +68,7 @@ export default function RateManagement() {
           <div>
             <h1 className="text-3xl font-bold">Rate Management</h1>
             <p className="text-muted-foreground mt-2">
-              Set your hourly rates in USD for each location, service type, and response time
+              Set your <strong>hourly rates</strong> in USD for each location, service type, and response time. <strong>Minimum job duration: 2 hours.</strong>
             </p>
           </div>
           <Button
@@ -288,7 +288,7 @@ function QuickSetupTab({ supplierId, onSuccess }: { supplierId: number; onSucces
       <CardHeader>
         <CardTitle>Quick Setup</CardTitle>
         <CardDescription>
-          Set base rates for a service type and region, then apply them to all locations in that region
+          Set hourly base rates for a service type and region, then apply them to all locations in that region. All rates are per hour with a 2-hour minimum job duration.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -324,7 +324,7 @@ function QuickSetupTab({ supplierId, onSuccess }: { supplierId: number; onSucces
 
             {/* Base Rates Grid (same for all tabs) */}
             <div className="mt-6 space-y-4">
-              <label className="text-sm font-medium">Base Rates (USD per hour)</label>
+              <label className="text-sm font-medium">Hourly Rates (USD/hour) — Minimum 2-hour job</label>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {RATE_SERVICE_LEVELS.map((responseTime) => (
                   <div key={responseTime.hours} className="space-y-2">
@@ -482,7 +482,7 @@ function ByLocationTab({ supplierId, onSuccess }: { supplierId: number; onSucces
       <CardHeader>
         <CardTitle>Rates by Location</CardTitle>
         <CardDescription>
-          View and edit rates for all service types at each location.
+          View and edit hourly rates for all service types at each location. All rates are per hour with a 2-hour minimum job duration.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -1160,7 +1160,7 @@ function ByServiceTab({ supplierId, onSuccess }: { supplierId: number; onSuccess
       <CardHeader>
         <CardTitle>Rates by Service</CardTitle>
         <CardDescription>
-          View and edit rates organized by service type. All locations shown for each service.
+          View and edit hourly rates organized by service type. All rates are per hour with a 2-hour minimum job duration.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -1415,7 +1415,7 @@ function BulkImportExportTab({ supplierId, onSuccess }: { supplierId: number; on
                 <ul className="list-disc list-inside space-y-1 ml-2">
                   <li><strong className="text-amber-600">Fixed columns (Do Not Edit):</strong> Region, Location, Country Code</li>
                   <li><strong className="text-green-600">Editable columns:</strong> 4h Rate, 24h Rate, 48h Rate, 72h Rate, 96h Rate</li>
-                  <li><strong>Rate format:</strong> USD with 2 decimal places (e.g., 150.00, 89.50)</li>
+                  <li><strong>Rate format:</strong> Hourly rates in USD with 2 decimal places (e.g., 150.00, 89.50). All jobs have a 2-hour minimum.</li>
                 </ul>
               </div>
             </div>
@@ -1442,7 +1442,7 @@ function BulkImportExportTab({ supplierId, onSuccess }: { supplierId: number; on
               <p className="font-medium text-foreground">Validation Rules:</p>
               <ul className="list-disc list-inside space-y-1 ml-2">
                 <li><strong>Do not modify</strong> Region, Location, or Country Code columns</li>
-                <li><strong>Rates must be in USD</strong> with exactly 2 decimal places (e.g., 150.00)</li>
+                <li><strong>Rates must be hourly rates in USD</strong> with exactly 2 decimal places (e.g., 150.00). All jobs have a 2-hour minimum.</li>
                 <li><strong>Locations must match</strong> your Coverage settings</li>
                 <li><strong>Empty rates</strong> will be skipped (not deleted)</li>
                 <li><strong>Invalid rows</strong> will be highlighted with specific error messages</li>

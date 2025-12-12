@@ -110,9 +110,9 @@ function generateCountriesSheet(
     "Region",
     "Country",
     "Country Code",
-    "4h Rate (USD)",
-    "24h Rate (USD)",
-    "48h Rate (USD)",
+    "4h Rate (USD/hour)",
+    "24h Rate (USD/hour)",
+    "48h Rate (USD/hour)",
   ];
 
   const rows: any[][] = [headers];
@@ -175,9 +175,9 @@ function generateCitiesSheet(
     "State/Province",
     "Country",
     "Country Code",
-    "4h Rate (USD)",
-    "24h Rate (USD)",
-    "48h Rate (USD)",
+    "4h Rate (USD/hour)",
+    "24h Rate (USD/hour)",
+    "48h Rate (USD/hour)",
   ];
 
   const rows: any[][] = [headers];
