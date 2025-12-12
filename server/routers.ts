@@ -3055,6 +3055,10 @@ export const appRouter = router({
         reviewedAt: supplierVerification.reviewedAt,
         approvedAt: supplierVerification.approvedAt,
         updatedAt: supplierVerification.updatedAt,
+        isManuallyVerified: supplierVerification.isManuallyVerified,
+        manualVerificationReason: supplierVerification.manualVerificationReason,
+        manuallyVerifiedBy: supplierVerification.manuallyVerifiedBy,
+        manuallyVerifiedAt: supplierVerification.manuallyVerifiedAt,
       })
         .from(suppliers)
         .leftJoin(supplierVerification, eq(suppliers.id, supplierVerification.supplierId));
@@ -3232,6 +3236,105 @@ export const appRouter = router({
 
       return jobsWithCustomer;
     }),
+
+    // Change verification status manually (superadmin only)
+    changeVerificationStatus: superadminProcedure
+      .input(
+        z.object({
+          supplierId: z.number(),
+          newStatus: z.enum(["not_started", "in_progress", "pending_review", "under_review", "approved", "rejected", "resubmission_required"]),
+          reason: z.string().min(1),
+          clearManualFlag: z.boolean().optional(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const { supplierVerification, suppliers } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
+        // Get current verification record
+        const currentVerification = await db.select()
+          .from(supplierVerification)
+          .where(eq(supplierVerification.supplierId, input.supplierId))
+          .limit(1)
+          .then(rows => rows[0]);
+
+        if (!currentVerification) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Verification record not found" });
+        }
+
+        // Determine if this is a manual verification
+        const isManualVerification = input.clearManualFlag ? 0 : 1;
+
+        // Update verification status
+        await db.update(supplierVerification)
+          .set({
+            status: input.newStatus,
+            reviewedBy: ctx.user.id,
+            reviewedAt: new Date(),
+            approvedAt: input.newStatus === "approved" ? new Date() : currentVerification.approvedAt,
+            rejectionReason: ["rejected", "resubmission_required"].includes(input.newStatus) ? input.reason : currentVerification.rejectionReason,
+            isManuallyVerified: isManualVerification,
+            manualVerificationReason: isManualVerification ? input.reason : null,
+            manuallyVerifiedBy: isManualVerification ? ctx.user.email : null,
+            manuallyVerifiedAt: isManualVerification ? new Date() : null,
+          })
+          .where(eq(supplierVerification.supplierId, input.supplierId));
+
+        // Update supplier isVerified flag
+        const isVerified = input.newStatus === "approved" ? 1 : 0;
+        // Map verification status to supplier enum (pending, verified, rejected)
+        let supplierStatus: "pending" | "verified" | "rejected" = "pending";
+        if (input.newStatus === "approved") {
+          supplierStatus = "verified";
+        } else if (input.newStatus === "rejected") {
+          supplierStatus = "rejected";
+        }
+        
+        await db.update(suppliers)
+          .set({
+            isVerified,
+            verificationStatus: supplierStatus,
+          })
+          .where(eq(suppliers.id, input.supplierId));
+
+        // Get supplier details for email
+        const supplier = await db.select()
+          .from(suppliers)
+          .where(eq(suppliers.id, input.supplierId))
+          .limit(1);
+
+        // Send email notification based on new status
+        if (supplier[0]) {
+          if (input.newStatus === "approved") {
+            const { sendVerificationApprovedEmail } = await import("./_core/email");
+            await sendVerificationApprovedEmail(
+              supplier[0].contactEmail,
+              supplier[0].companyName
+            ).catch(err => console.error("Failed to send approval email:", err));
+          } else if (input.newStatus === "rejected") {
+            const { sendVerificationRejectedEmail } = await import("./_core/email");
+            await sendVerificationRejectedEmail(
+              supplier[0].contactEmail,
+              supplier[0].companyName,
+              input.reason,
+              undefined
+            ).catch(err => console.error("Failed to send rejection email:", err));
+          } else if (input.newStatus === "resubmission_required") {
+            const { sendVerificationResubmissionEmail } = await import("./_core/email");
+            await sendVerificationResubmissionEmail(
+              supplier[0].contactEmail,
+              supplier[0].companyName,
+              input.reason,
+              undefined
+            ).catch(err => console.error("Failed to send resubmission email:", err));
+          }
+        }
+
+        return { success: true };
+      }),
 
     // Get coverage statistics
     getCoverageStats: superadminProcedure.query(async () => {

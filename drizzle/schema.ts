@@ -703,6 +703,12 @@ export const supplierVerification = mysqlTable("supplierVerification", {
   // Approval
   approvedAt: timestamp("approvedAt"),
   
+  // Manual Verification Override
+  isManuallyVerified: int("isManuallyVerified", { unsigned: true }).default(0).notNull(), // 1 = manually verified by admin, 0 = normal verification process
+  manualVerificationReason: text("manualVerificationReason"), // Why admin manually verified
+  manuallyVerifiedBy: varchar("manuallyVerifiedBy", { length: 320 }), // Admin email who manually verified
+  manuallyVerifiedAt: timestamp("manuallyVerifiedAt"), // When manually verified
+  
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, (table) => ({

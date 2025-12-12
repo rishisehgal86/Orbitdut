@@ -175,3 +175,50 @@
 - [x] Add sortable headers to Users table (name, email, role, account type, created date)
 - [x] Add sortable headers to Jobs table (job ID, customer, supplier, service type, status, price, date)
 - [x] Add sortable headers to Coverage Analytics tables (country, supplier count, coverage percentage)
+
+## Superadmin Verification Status Management (Flexible Status Changes)
+
+### Database Schema
+- [x] Add isManuallyVerified boolean field to supplierVerification table
+- [x] Add manualVerificationReason text field to supplierVerification table
+- [x] Add manuallyVerifiedBy text field (admin user email)
+- [x] Add manuallyVerifiedAt datetime field
+- [x] Run database migration
+
+### Backend
+- [x] Create changeVerificationStatus procedure in superadmin router (NOT admin)
+- [x] Accept supplierId, newStatus, reason (required), and clearManualFlag parameters
+- [x] Update supplierVerification table with new status
+- [x] Set isManuallyVerified=1 when changing to approved/rejected without full docs
+- [x] Allow clearing manual flag (set isManuallyVerified=0) to revert to normal process
+- [x] Store superadmin email and timestamp in manual verification fields
+- [x] Update suppliers.isVerified flag based on status (approved=true, others=false)
+- [x] Send email notification to supplier about status change
+- [x] Track all status changes in audit trail
+
+### Frontend - New Manual Verification Page (/superadmin/verifications/manual)
+- [x] Create new page under verifications section
+- [x] Add "Manual Verification" tab/link in verifications navigation
+- [x] Show list of all suppliers with their current verification status
+- [x] Add search/filter by company name, country, current status
+- [x] Each row has "Change Status" button
+- [x] Status change dialog with:
+  - [x] Dropdown for all verification statuses
+  - [x] Required reason text field
+  - [x] "Clear Manual Verification Flag" checkbox (if already manually verified)
+  - [x] Confirmation step
+- [x] Display "Manual Verification Status" badge in status column
+- [x] Show manual verification details on hover (by whom, when, reason)
+- [x] Refresh table after successful status change
+- [x] Show success/error toast notifications
+
+### Testing
+- [x] Test status change from not_started to approved (sets manual flag)
+- [x] Test status change from rejected to approved
+- [x] Test revoking manual verification (clear flag)
+- [x] Test changing approved back to in_progress
+- [x] Verify only superadmins can access this feature
+- [x] Verify email notifications are sent
+- [x] Verify isVerified flag updates correctly
+- [x] Test manual verification badge display
+- [x] Write and run vitest tests (9 tests, all passing)

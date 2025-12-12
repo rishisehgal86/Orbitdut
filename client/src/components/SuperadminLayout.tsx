@@ -1,7 +1,7 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Shield, Users, Building2, Briefcase, Map, LayoutDashboard, LogOut, Star } from "lucide-react";
+import { Shield, Users, Building2, Briefcase, Map, LayoutDashboard, LogOut, Star, ShieldCheck } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 
@@ -39,6 +39,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
   const navigation = [
     { name: "Dashboard", href: "/superadmin", icon: LayoutDashboard },
     { name: "Verifications", href: "/superadmin/verifications", icon: Shield },
+    { name: "Manual Verification", href: "/superadmin/verifications/manual", icon: ShieldCheck },
     { name: "Suppliers", href: "/superadmin/suppliers", icon: Building2 },
     { name: "Users", href: "/superadmin/users", icon: Users },
     { name: "Jobs", href: "/superadmin/jobs", icon: Briefcase },

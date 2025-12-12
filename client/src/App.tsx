@@ -47,6 +47,7 @@ import SuperadminUsers from "./pages/superadmin/Users";
 import SuperadminJobs from "./pages/superadmin/Jobs";
 import SuperadminCoverage from "./pages/superadmin/Coverage";
 import SuperadminRatings from "./pages/superadmin/Ratings";
+import { SuperadminManualVerification } from "./pages/SuperadminManualVerification";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -94,6 +95,7 @@ function Router() {
       <Route path="/admin/team" component={AdminTeam} />
       <Route path="/superadmin" component={SuperadminDashboard} />
       <Route path="/superadmin/verifications" component={SuperadminVerifications} />
+      <Route path="/superadmin/verifications/manual" component={SuperadminManualVerification} />
       <Route path="/superadmin/verifications/:supplierId" component={SuperadminVerificationDetail} />
       <Route path="/superadmin/suppliers" component={SuperadminSuppliers} />
       <Route path="/superadmin/users" component={SuperadminUsers} />
