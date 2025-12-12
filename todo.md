@@ -161,3 +161,6 @@
 - [ ] Implement payment flow (customer → platform → supplier)
 - [ ] Add 15% platform fee deduction
 - [ ] Create payment dashboard for suppliers
+- [x] Make rating system details collapsible with dropdown on Ratings page
+- [x] Make rating distribution collapsible with dropdown on Ratings page
+- [x] Replace separate filter controls with sortable column headers on Ratings page
