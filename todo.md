@@ -90,3 +90,70 @@
 - [x] Fix OOH warning not displaying in customer request service page - COMPLETED
 - [x] Remove irrelevant /request-service page (was working on wrong file) - COMPLETED
 - [x] Update OOH warning to generic message (no specific percentage) - COMPLETED
+
+
+## Job Matching & Automatic Allocation System (White-Label Model)
+
+### Phase 1: Pricing Calculator
+- [ ] Create server/pricingCalculator.ts utility
+- [ ] Implement calculateJobPricing() function with OOH detection
+- [ ] Add pricing fields to jobs table (baseCostCents, oohSurchargeCents, platformFeeCents, etc.)
+- [ ] Write vitest tests for all pricing scenarios
+
+### Phase 2: Supplier Matching & Ranking (UPDATED WITH SIMPLIFIED ALGORITHM)
+- [ ] Create server/supplierMatcher.ts utility
+- [ ] Implement findQualifiedSuppliers() function (filters: verified, active, coverage, service type, service level, OOH)
+- [ ] Implement rankSuppliers() simplified algorithm:
+  - [ ] Priority city coverage > country-only coverage
+  - [ ] Higher rating wins (default 2.0/5.0 for new suppliers)
+  - [ ] Lower price wins (among equal ratings)
+  - [ ] Random tiebreaker
+- [ ] Create jobSupplierRankings table
+- [ ] Add jobs.getPricingEstimate tRPC procedure
+  - [x] Add rating field to suppliers table (default: 200 = 2.0/5.0)
+
+### Phase 3: Automatic Assignment & Cascading
+- [ ] Update jobs.create procedure with auto-assignment to best-ranked supplier
+- [ ] Create cascadeToNextSupplier() function (for declines/timeouts)
+- [ ] Add timeout handling cron job (30-minute response deadline)
+- [ ] Implement supplier.acceptJob procedure
+- [ ] Implement supplier.declineJob procedure
+- [ ] Add supplierResponseDeadline field to jobs table
+
+### Phase 4: Frontend Integration
+- [ ] Update customer request service page with pricing estimate display
+- [ ] Create supplier pending jobs tab with countdown timer
+- [ ] Add accept/decline buttons for suppliers
+- [ ] Add email notifications for job assignments
+- [ ] Hide supplier names from customer view (white-label)
+
+### Phase 5: Analytics & Monitoring
+- [ ] Track supplier acceptance rates
+- [ ] Track cascade frequency (how often job goes to 2nd/3rd choice)
+- [ ] Create admin dashboard for distribution metrics
+- [ ] Monitor coverage gaps
+
+## Supplier Rating System
+- [x] Add rating field to suppliers table with default 2.0/5.0 (stored as 200 hundredths)
+- [x] Update existing suppliers to have 2.0 rating
+- [x] Add rating to new supplier signup flow
+- [x] Write comprehensive vitest tests for rating system
+- [ ] Implement rating update mechanism based on customer feedback (future)
+- [ ] Display supplier rating in admin/supplier dashboards
+- [ ] Create rating history/audit trail (future)
+
+### Superadmin Rating System Documentation Page
+- [x] Create getRatingStatistics backend procedure (distribution, averages, totals)
+- [x] Create getAllSuppliersWithRatings backend procedure (paginated list)
+- [x] Create updateSupplierRating backend procedure (admin manual adjustment)
+- [x] Create /superadmin/ratings page with documentation
+- [x] Build Rating Distribution statistics with charts
+- [x] Build Supplier Rating Management table
+- [x] Add rating adjustment dialog for admins
+- [x] Add to superadmin navigation sidebar
+
+## Payment Processing (Future)
+- [ ] Integrate Stripe Connect for supplier payouts
+- [ ] Implement payment flow (customer → platform → supplier)
+- [ ] Add 15% platform fee deduction
+- [ ] Create payment dashboard for suppliers

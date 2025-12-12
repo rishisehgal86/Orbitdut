@@ -83,6 +83,7 @@ export const suppliers = mysqlTable("suppliers", {
   stripeAccountId: varchar("stripeAccountId", { length: 255 }),
   isActive: int("isActive", { unsigned: true }).default(1).notNull(), // 1 = active, 0 = inactive
   offersOutOfHours: int("offersOutOfHours", { unsigned: true }).default(1).notNull(), // 0 = no, 1 = yes (default: enabled)
+  rating: int("rating").default(200).notNull(), // Rating in hundredths (200 = 2.00/5.00), range 100-500
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

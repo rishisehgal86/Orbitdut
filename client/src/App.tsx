@@ -46,6 +46,7 @@ import SuperadminSuppliers from "./pages/superadmin/Suppliers";
 import SuperadminUsers from "./pages/superadmin/Users";
 import SuperadminJobs from "./pages/superadmin/Jobs";
 import SuperadminCoverage from "./pages/superadmin/Coverage";
+import SuperadminRatings from "./pages/superadmin/Ratings";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -98,6 +99,7 @@ function Router() {
       <Route path="/superadmin/users" component={SuperadminUsers} />
       <Route path="/superadmin/jobs" component={SuperadminJobs} />
       <Route path="/superadmin/coverage" component={SuperadminCoverage} />
+      <Route path="/superadmin/ratings" component={SuperadminRatings} />
       <Route path="/404" component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

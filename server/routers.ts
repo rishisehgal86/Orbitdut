@@ -77,6 +77,7 @@ export const appRouter = router({
             country: input.country || "US",
             verificationStatus: "pending",
             isVerified: 0,
+            rating: 200, // Default 2.0/5.0 rating for new suppliers
           });
 
           // Get the inserted supplier ID
@@ -3236,12 +3237,11 @@ export const appRouter = router({
       const { supplierCoverageCountries, suppliers } = await import("../drizzle/schema");
       const { eq } = await import("drizzle-orm");
       const db = await getDb();
-      if (!db) throw new Error("Database connection failed");
+      if (!db) throw new Error("Database not available");
 
       const coverageAreas = await db.select({
-        id: supplierCoverageCountries.id,
-        supplierId: supplierCoverageCountries.supplierId,
         countryCode: supplierCoverageCountries.countryCode,
+        supplierId: supplierCoverageCountries.supplierId,
         companyName: suppliers.companyName,
       })
         .from(supplierCoverageCountries)
@@ -3249,6 +3249,141 @@ export const appRouter = router({
 
       return coverageAreas;
     }),
+
+    // ========== RATING SYSTEM MANAGEMENT ==========
+
+    // Get rating distribution statistics
+    getRatingStatistics: superadminProcedure.query(async () => {
+      const { suppliers } = await import("../drizzle/schema");
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const allSuppliers = await db.select({
+        rating: suppliers.rating,
+      }).from(suppliers);
+
+      const distribution = {
+        "1.0-1.9": 0,
+        "2.0-2.9": 0,
+        "3.0-3.9": 0,
+        "4.0-4.9": 0,
+        "5.0": 0,
+      };
+
+      let totalRating = 0;
+      let count = 0;
+
+      for (const supplier of allSuppliers) {
+        const rating = supplier.rating || 200; // Default 2.0
+        totalRating += rating;
+        count++;
+
+        const ratingValue = rating / 100;
+        if (ratingValue >= 5.0) distribution["5.0"]++;
+        else if (ratingValue >= 4.0) distribution["4.0-4.9"]++;
+        else if (ratingValue >= 3.0) distribution["3.0-3.9"]++;
+        else if (ratingValue >= 2.0) distribution["2.0-2.9"]++;
+        else distribution["1.0-1.9"]++;
+      }
+
+      const averageRating = count > 0 ? totalRating / count : 200;
+
+      return {
+        distribution,
+        totalSuppliers: count,
+        averageRating: averageRating / 100, // Convert to decimal
+        averageRatingRaw: averageRating, // Keep as hundredths
+      };
+    }),
+
+    // Get all suppliers with ratings (paginated)
+    getAllSuppliersWithRatings: superadminProcedure
+      .input(z.object({
+        page: z.number().default(1),
+        pageSize: z.number().default(50),
+        sortBy: z.enum(["rating", "companyName", "createdAt"]).default("rating"),
+        sortOrder: z.enum(["asc", "desc"]).default("desc"),
+      }))
+      .query(async ({ input }) => {
+        const { suppliers } = await import("../drizzle/schema");
+        const { asc, desc, sql } = await import("drizzle-orm");
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
+        const { page, pageSize, sortBy, sortOrder } = input;
+        const offset = (page - 1) * pageSize;
+
+        // Build order by clause
+        let orderByClause;
+        if (sortBy === "rating") {
+          orderByClause = sortOrder === "desc" ? desc(suppliers.rating) : asc(suppliers.rating);
+        } else if (sortBy === "companyName") {
+          orderByClause = sortOrder === "desc" ? desc(suppliers.companyName) : asc(suppliers.companyName);
+        } else {
+          orderByClause = sortOrder === "desc" ? desc(suppliers.createdAt) : asc(suppliers.createdAt);
+        }
+
+        const results = await db.select({
+          id: suppliers.id,
+          companyName: suppliers.companyName,
+          contactEmail: suppliers.contactEmail,
+          country: suppliers.country,
+          rating: suppliers.rating,
+          isVerified: suppliers.isVerified,
+          verificationStatus: suppliers.verificationStatus,
+          createdAt: suppliers.createdAt,
+        })
+          .from(suppliers)
+          .orderBy(orderByClause)
+          .limit(pageSize)
+          .offset(offset);
+
+        const [{ count }] = await db.select({ count: sql<number>`count(*)` })
+          .from(suppliers);
+
+        return {
+          suppliers: results,
+          totalCount: Number(count),
+          page,
+          pageSize,
+          totalPages: Math.ceil(Number(count) / pageSize),
+        };
+      }),
+
+    // Update supplier rating (admin manual adjustment)
+    updateSupplierRating: superadminProcedure
+      .input(z.object({
+        supplierId: z.number(),
+        rating: z.number().min(100).max(500), // 1.0 to 5.0 in hundredths
+        reason: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { suppliers } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
+        const { supplierId, rating, reason } = input;
+
+        // Update the supplier rating
+        await db.update(suppliers)
+          .set({ 
+            rating,
+            updatedAt: new Date(),
+          })
+          .where(eq(suppliers.id, supplierId));
+
+        // TODO: Log rating change to history table (future enhancement)
+        // await db.insert(ratingHistory).values({
+        //   supplierId,
+        //   oldRating: oldValue,
+        //   newRating: rating,
+        //   changedBy: ctx.user.id,
+        //   reason,
+        // });
+
+        return { success: true };
+      }),
   }),
 
   // Suppliers router

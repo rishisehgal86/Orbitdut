@@ -1,7 +1,7 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Shield, Users, Building2, Briefcase, Map, LayoutDashboard, LogOut } from "lucide-react";
+import { Shield, Users, Building2, Briefcase, Map, LayoutDashboard, LogOut, Star } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 
@@ -43,6 +43,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
     { name: "Users", href: "/superadmin/users", icon: Users },
     { name: "Jobs", href: "/superadmin/jobs", icon: Briefcase },
     { name: "Coverage", href: "/superadmin/coverage", icon: Map },
+    { name: "Ratings", href: "/superadmin/ratings", icon: Star },
   ];
 
   return (
