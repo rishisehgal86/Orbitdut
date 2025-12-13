@@ -256,3 +256,12 @@
 - [x] Replace country code abbreviations (AG, AR, BS, etc.) with full country names
 - [x] Update Coverage by Country table to show full names
 - [x] Ensure consistent country name display across the page
+
+## Coverage Analytics Page - Add Search Functionality
+
+- [x] Add search bar to filter coverage data
+- [x] Filter by supplier name in Coverage by Supplier section
+- [x] Filter by country name in Coverage by Country section
+- [x] Update both Analytics and Coverage Matrix views with search
+- [x] Show filtered results dynamically
+

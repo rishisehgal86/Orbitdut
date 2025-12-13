@@ -2,12 +2,13 @@ import SuperadminLayout from "@/components/SuperadminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { trpc } from "@/lib/trpc";
 import { getCountryName } from "@shared/countries";
-import { Loader2, Map as MapIcon, Table as TableIcon, BarChart3, ChevronDown, ChevronRight, ArrowUpDown } from "lucide-react";
+import { Loader2, Map as MapIcon, Table as TableIcon, BarChart3, ChevronDown, ChevronRight, ArrowUpDown, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
 type SortField = "country" | "supplier" | "count";
@@ -21,6 +22,7 @@ export default function SuperadminCoverage() {
   const [sortOrderCountry, setSortOrderCountry] = useState<SortOrder>("desc");
   const [sortFieldSupplier, setSortFieldSupplier] = useState<SortField>("count");
   const [sortOrderSupplier, setSortOrderSupplier] = useState<SortOrder>("desc");
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Analytics calculations
   const analytics = useMemo(() => {
@@ -70,7 +72,17 @@ export default function SuperadminCoverage() {
   const sortedCountries = useMemo(() => {
     if (!analytics?.byCountry) return [];
     
-    const entries = Object.entries(analytics.byCountry);
+    let entries = Object.entries(analytics.byCountry);
+    
+    // Apply search filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      entries = entries.filter(([country, data]) => {
+        const countryName = getCountryName(country).toLowerCase();
+        const supplierNames = Array.from(data.suppliers).join(' ').toLowerCase();
+        return countryName.includes(term) || supplierNames.includes(term);
+      });
+    }
     
     return entries.sort(([countryA, dataA], [countryB, dataB]) => {
       let aVal: any = sortFieldCountry === "country" ? countryA : dataA.supplierIds.size;
@@ -83,13 +95,23 @@ export default function SuperadminCoverage() {
       if (aVal > bVal) return sortOrderCountry === "asc" ? 1 : -1;
       return 0;
     });
-  }, [analytics?.byCountry, sortFieldCountry, sortOrderCountry]);
+  }, [analytics?.byCountry, sortFieldCountry, sortOrderCountry, searchTerm]);
 
   // Sorted supplier entries
   const sortedSuppliers = useMemo(() => {
     if (!analytics?.bySupplier) return [];
     
-    const entries = Object.entries(analytics.bySupplier);
+    let entries = Object.entries(analytics.bySupplier);
+    
+    // Apply search filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      entries = entries.filter(([supplier, data]) => {
+        const supplierName = supplier.toLowerCase();
+        const countryNames = Array.from(data.countries).map(c => getCountryName(c)).join(' ').toLowerCase();
+        return supplierName.includes(term) || countryNames.includes(term);
+      });
+    }
     
     return entries.sort(([supplierA, dataA], [supplierB, dataB]) => {
       let aVal: any = sortFieldSupplier === "supplier" ? supplierA : dataA.countries.size;
@@ -102,14 +124,21 @@ export default function SuperadminCoverage() {
       if (aVal > bVal) return sortOrderSupplier === "asc" ? 1 : -1;
       return 0;
     });
-  }, [analytics?.bySupplier, sortFieldSupplier, sortOrderSupplier]);
+  }, [analytics?.bySupplier, sortFieldSupplier, sortOrderSupplier, searchTerm]);
 
   // Coverage matrix: suppliers x regions
   const coverageMatrix = useMemo(() => {
     if (!coverageData) return null;
 
-    const suppliers = Array.from(new Set(coverageData.map(a => a.companyName).filter(Boolean)));
-    const regions = Array.from(new Set(coverageData.map(a => a.countryCode)));
+    let suppliers = Array.from(new Set(coverageData.map(a => a.companyName).filter(Boolean)));
+    let regions = Array.from(new Set(coverageData.map(a => a.countryCode)));
+
+    // Apply search filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      suppliers = suppliers.filter(s => s?.toLowerCase().includes(term));
+      regions = regions.filter(r => getCountryName(r).toLowerCase().includes(term));
+    }
 
     const matrix = suppliers.map(supplier => {
       const supplierAreas = coverageData.filter(a => a.companyName === supplier);
@@ -120,7 +149,7 @@ export default function SuperadminCoverage() {
     });
 
     return { matrix, regions };
-  }, [coverageData]);
+  }, [coverageData, searchTerm]);
 
   const toggleCountry = (country: string) => {
     setExpandedCountries(prev => {
@@ -216,6 +245,17 @@ export default function SuperadminCoverage() {
               <p className="text-2xl font-bold">{analytics?.totalCities || 0}</p>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by supplier name or country..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
         </div>
 
         {/* Tabs */}
