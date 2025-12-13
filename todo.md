@@ -273,3 +273,9 @@
 - [x] Generate Excel file with all coverage data (Supplier, Country, Coverage details)
 - [x] Use xlsx library for Excel generation
 - [x] Include columns: Supplier Name, Country Code, Country Name
+
+## Coverage Page - Move Export Button to Top
+
+- [x] Move Excel export button to top of page in slim frame
+- [x] Place between stats cards and search bar
+- [x] Make it compact and unobtrusive

@@ -280,6 +280,17 @@ export default function SuperadminCoverage() {
           </Card>
         </div>
 
+        {/* Export Button */}
+        <div className="flex items-center justify-end">
+          <button
+            onClick={handleExportToExcel}
+            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors text-sm"
+          >
+            <Download className="h-4 w-4" />
+            Export Coverage to Excel
+          </button>
+        </div>
+
         {/* Search Bar */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -471,37 +482,7 @@ export default function SuperadminCoverage() {
                 </CardContent>
               </Card>
 
-              {/* Export Coverage Data */}
-              <Card className="md:col-span-2">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>Coverage Data Export</CardTitle>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Download complete coverage data across all suppliers and countries
-                      </p>
-                    </div>
-                    <button
-                      onClick={handleExportToExcel}
-                      className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
-                    >
-                      <Download className="h-4 w-4" />
-                      Export to Excel
-                    </button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-sm text-muted-foreground">
-                    <p>The exported file will include:</p>
-                    <ul className="list-disc list-inside mt-2 space-y-1">
-                      <li>Supplier Name</li>
-                      <li>Country Code (ISO 3166-1 alpha-2)</li>
-                      <li>Country Name (Full)</li>
-                      <li>Total coverage areas: {coverageData?.length || 0}</li>
-                    </ul>
-                  </div>
-                </CardContent>
-              </Card>
+
             </div>
           </TabsContent>
         </Tabs>
