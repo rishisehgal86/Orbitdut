@@ -279,3 +279,15 @@
 - [x] Move Excel export button to top of page in slim frame
 - [x] Place between stats cards and search bar
 - [x] Make it compact and unobtrusive
+
+## Coverage Page - Inline Export Button with Search Bar
+
+- [ ] Combine export button, explanation text, and search bar on one line
+- [ ] Use flex layout to fit all elements horizontally
+- [ ] Add brief explanation text between export button and search bar
+
+## Coverage Page - Inline Export Button with Search Bar
+
+- [x] Combine export button and search bar on one line
+- [x] Use flex layout to fit both elements horizontally
+- [x] Add hover tooltip to export button with explanation
