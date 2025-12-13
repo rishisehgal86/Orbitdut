@@ -265,3 +265,11 @@
 - [x] Update both Analytics and Coverage Matrix views with search
 - [x] Show filtered results dynamically
 
+
+## Coverage Page - Replace All Coverage Areas with Excel Export
+
+- [x] Remove "All Coverage Areas" table section
+- [x] Add "Export to Excel" button in Analytics tab
+- [x] Generate Excel file with all coverage data (Supplier, Country, Coverage details)
+- [x] Use xlsx library for Excel generation
+- [x] Include columns: Supplier Name, Country Code, Country Name

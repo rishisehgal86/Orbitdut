@@ -8,8 +8,9 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { trpc } from "@/lib/trpc";
 import { getCountryName } from "@shared/countries";
-import { Loader2, Map as MapIcon, Table as TableIcon, BarChart3, ChevronDown, ChevronRight, ArrowUpDown, Search } from "lucide-react";
+import { Loader2, Map as MapIcon, Table as TableIcon, BarChart3, ChevronDown, ChevronRight, ArrowUpDown, Search, Download } from "lucide-react";
 import { useMemo, useState } from "react";
+import * as XLSX from "xlsx";
 
 type SortField = "country" | "supplier" | "count";
 type SortOrder = "asc" | "desc";
@@ -191,6 +192,38 @@ export default function SuperadminCoverage() {
       setSortFieldSupplier(field);
       setSortOrderSupplier("asc");
     }
+  };
+
+  const handleExportToExcel = () => {
+    if (!coverageData) return;
+
+    // Prepare data for Excel
+    const exportData = coverageData.map(area => ({
+      "Supplier Name": area.companyName || "N/A",
+      "Country Code": area.countryCode,
+      "Country Name": getCountryName(area.countryCode),
+    }));
+
+    // Create worksheet
+    const ws = XLSX.utils.json_to_sheet(exportData);
+
+    // Set column widths
+    ws['!cols'] = [
+      { wch: 30 }, // Supplier Name
+      { wch: 15 }, // Country Code
+      { wch: 25 }, // Country Name
+    ];
+
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Coverage Data");
+
+    // Generate filename with timestamp
+    const timestamp = new Date().toISOString().split('T')[0];
+    const filename = `orbidut-coverage-${timestamp}.xlsx`;
+
+    // Download file
+    XLSX.writeFile(wb, filename);
   };
 
   if (isLoading) {
@@ -438,28 +471,35 @@ export default function SuperadminCoverage() {
                 </CardContent>
               </Card>
 
-              {/* All Coverage Areas */}
+              {/* Export Coverage Data */}
               <Card className="md:col-span-2">
                 <CardHeader>
-                  <CardTitle>All Coverage Areas</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Coverage Data Export</CardTitle>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Download complete coverage data across all suppliers and countries
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleExportToExcel}
+                      className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+                    >
+                      <Download className="h-4 w-4" />
+                      Export to Excel
+                    </button>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Supplier</TableHead>
-                        <TableHead>Country Code</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {coverageData?.map((area, idx) => (
-                        <TableRow key={`${area.supplierId}-${area.countryCode}-${idx}`}>
-                          <TableCell className="font-medium">{area.companyName || "N/A"}</TableCell>
-                          <TableCell>{getCountryName(area.countryCode)}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                  <div className="text-sm text-muted-foreground">
+                    <p>The exported file will include:</p>
+                    <ul className="list-disc list-inside mt-2 space-y-1">
+                      <li>Supplier Name</li>
+                      <li>Country Code (ISO 3166-1 alpha-2)</li>
+                      <li>Country Name (Full)</li>
+                      <li>Total coverage areas: {coverageData?.length || 0}</li>
+                    </ul>
+                  </div>
                 </CardContent>
               </Card>
             </div>
