@@ -3126,7 +3126,7 @@ export const appRouter = router({
 
     // Get all suppliers
     getAllSuppliers: superadminProcedure.query(async () => {
-      const { suppliers, supplierUsers, users } = await import("../drizzle/schema");
+      const { suppliers, supplierUsers, users, supplierVerification } = await import("../drizzle/schema");
       const { eq } = await import("drizzle-orm");
       const db = await getDb();
       if (!db) throw new Error("Database connection failed");
@@ -3144,7 +3144,7 @@ export const appRouter = router({
         createdAt: suppliers.createdAt,
       }).from(suppliers);
 
-      // Get admin user info for each supplier
+      // Get admin user info and verification details for each supplier
       const suppliersWithAdmin = await Promise.all(
         allSuppliers.map(async (supplier) => {
           const adminUser = await db.select({
@@ -3159,9 +3159,25 @@ export const appRouter = router({
             .limit(1)
             .then(rows => rows[0] || null);
 
+          // Get verification details
+          const verification = await db.select({
+            isManuallyVerified: supplierVerification.isManuallyVerified,
+            manualVerificationReason: supplierVerification.manualVerificationReason,
+            manuallyVerifiedBy: supplierVerification.manuallyVerifiedBy,
+            manuallyVerifiedAt: supplierVerification.manuallyVerifiedAt,
+          })
+            .from(supplierVerification)
+            .where(eq(supplierVerification.supplierId, supplier.id))
+            .limit(1)
+            .then(rows => rows[0] || null);
+
           return {
             ...supplier,
             adminUser,
+            isManuallyVerified: verification?.isManuallyVerified || 0,
+            manualVerificationReason: verification?.manualVerificationReason || null,
+            manuallyVerifiedBy: verification?.manuallyVerifiedBy || null,
+            manuallyVerifiedAt: verification?.manuallyVerifiedAt || null,
           };
         })
       );

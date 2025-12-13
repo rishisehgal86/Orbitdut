@@ -4,7 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { trpc } from "@/lib/trpc";
-import { Loader2, Search, Building2, Star, ArrowUpDown } from "lucide-react";
+import { Loader2, Search, Building2, Star, ArrowUpDown, ShieldCheck } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useState, useMemo } from "react";
 
 type SortField = "companyName" | "country" | "isVerified" | "rating" | "createdAt";
@@ -169,12 +170,40 @@ export default function SuperadminSuppliers() {
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-1">
-                          <Badge
-                            variant={supplier.isVerified === 1 ? "default" : "secondary"}
-                            className={supplier.isVerified === 1 ? "bg-green-500" : ""}
-                          >
-                            {supplier.isVerified === 1 ? "Verified" : "Unverified"}
-                          </Badge>
+                          <div className="flex items-center gap-1">
+                            <Badge
+                              variant={supplier.isVerified === 1 ? "default" : "secondary"}
+                              className={supplier.isVerified === 1 ? "bg-green-500" : ""}
+                            >
+                              {supplier.isVerified === 1 ? "Verified" : supplier.verificationStatus || "Unverified"}
+                            </Badge>
+                            {supplier.isManuallyVerified === 1 && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger>
+                                    <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300">
+                                      <ShieldCheck className="h-3 w-3 mr-1" />
+                                      Manual
+                                    </Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="max-w-xs">
+                                    <div className="space-y-1 text-xs">
+                                      <p><strong>Manually Verified</strong></p>
+                                      {supplier.manualVerificationReason && (
+                                        <p>Reason: {supplier.manualVerificationReason}</p>
+                                      )}
+                                      {supplier.manuallyVerifiedBy && (
+                                        <p>By: {supplier.manuallyVerifiedBy}</p>
+                                      )}
+                                      {supplier.manuallyVerifiedAt && (
+                                        <p>Date: {new Date(supplier.manuallyVerifiedAt).toLocaleDateString()}</p>
+                                      )}
+                                    </div>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
+                          </div>
                           {supplier.isActive === 0 && (
                             <Badge variant="destructive">Inactive</Badge>
                           )}

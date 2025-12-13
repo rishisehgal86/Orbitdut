@@ -325,7 +325,7 @@ export default function SuperadminCoverage() {
                               ) : (
                                 <ChevronRight className="h-4 w-4" />
                               )}
-                              <span className="font-medium">{country}</span>
+                              <span className="font-medium">{getCountryName(country)}</span>
                             </div>
                             <Badge>{data.supplierIds.size} suppliers</Badge>
                           </div>
@@ -415,7 +415,7 @@ export default function SuperadminCoverage() {
                       {coverageData?.map((area, idx) => (
                         <TableRow key={`${area.supplierId}-${area.countryCode}-${idx}`}>
                           <TableCell className="font-medium">{area.companyName || "N/A"}</TableCell>
-                          <TableCell>{area.countryCode}</TableCell>
+                          <TableCell>{getCountryName(area.countryCode)}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>

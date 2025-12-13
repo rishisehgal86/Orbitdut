@@ -234,3 +234,25 @@
 - [x] Automatically create verification record if it doesn't exist
 - [x] Test with suppliers that have no verification record
 - [x] All 3 vitest tests passing (auto-create, status change, batch processing)
+
+## Show Manual Verification Status on Suppliers Page
+
+- [x] Update getAllSuppliers backend to include isManuallyVerified field
+- [x] Add "Verification Type" column or badge to Suppliers table
+- [x] Display "Manual" badge for manually verified suppliers
+- [x] Show verification status (approved/in_progress/rejected) in status column
+- [x] Add tooltip with manual verification details (reason, by whom, date)
+- [ ] Test with manually verified suppliers
+
+## Optimize Manual Verification Management Table Layout
+
+- [ ] Reduce column widths to fit content
+- [ ] Make Contact column more compact (show email on hover or truncate)
+- [ ] Optimize Company Name column width
+- [ ] Ensure table fits within viewport without horizontal scrolling
+
+## Coverage Page - Display Full Country Names
+
+- [x] Replace country code abbreviations (AG, AR, BS, etc.) with full country names
+- [x] Update Coverage by Country table to show full names
+- [x] Ensure consistent country name display across the page
