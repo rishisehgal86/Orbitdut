@@ -39,7 +39,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
   const navigation = [
     { name: "Dashboard", href: "/superadmin", icon: LayoutDashboard },
     { name: "Verifications", href: "/superadmin/verifications", icon: Shield },
-    { name: "Manual Verification", href: "/superadmin/verifications/manual", icon: ShieldCheck },
+    { name: "Manual Verification", href: "/superadmin/verifications/manual", icon: ShieldCheck, isSubItem: true },
     { name: "Suppliers", href: "/superadmin/suppliers", icon: Building2 },
     { name: "Users", href: "/superadmin/users", icon: Users },
     { name: "Jobs", href: "/superadmin/jobs", icon: Briefcase },
@@ -64,19 +64,21 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-2">
+          <nav className="flex-1 p-4 space-y-1">
             {navigation.map((item) => {
               const isActive = location === item.href || (item.href !== "/superadmin" && location.startsWith(item.href));
               return (
                 <Link key={item.href} href={item.href}>
                   <a
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                      item.isSubItem ? "ml-6 text-sm" : ""
+                    } ${
                       isActive
                         ? "bg-white/20 text-white font-medium"
                         : "text-purple-100 hover:bg-white/10"
                     }`}
                   >
-                    <item.icon className="w-5 h-5" />
+                    <item.icon className={item.isSubItem ? "w-4 h-4" : "w-5 h-5"} />
                     <span>{item.name}</span>
                   </a>
                 </Link>

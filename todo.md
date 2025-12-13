@@ -291,3 +291,10 @@
 - [x] Combine export button and search bar on one line
 - [x] Use flex layout to fit both elements horizontally
 - [x] Add hover tooltip to export button with explanation
+
+## Dashboard Menu ## Dashboard Menu - Make Manual Verification a Subsection
+
+- [x] Reorganize SuperadminLayout navigation
+- [x] Make Manual Verification appear as a subsection under Verifications
+- [x] Add visual indentation (ml-6) and smaller text/icon to show hierarchy
+- [x] Ensure both menu items navigate correctly
