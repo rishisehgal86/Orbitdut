@@ -950,20 +950,50 @@ export default function RequestService() {
               <div className="rounded-lg border p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <h4 className="font-medium">Service Coverage</h4>
-                  {formData.serviceType && formData.latitude && formData.longitude ? (
-                    <span className="text-sm text-green-600 dark:text-green-400 flex items-center gap-1">
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Checking availability...
-                    </span>
+                  {loadingPricing ? (
+                    <span className="text-sm text-blue-600 dark:text-blue-400">Checking availability...</span>
+                  ) : pricingEstimate ? (
+                    pricingEstimate.available ? (
+                      <span className="text-sm text-green-600 dark:text-green-400 flex items-center gap-1">
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        {pricingEstimate.supplierCount} qualified supplier{pricingEstimate.supplierCount > 1 ? 's' : ''} found
+                      </span>
+                    ) : (
+                      <span className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+                        <AlertCircle className="h-4 w-4" />
+                        No coverage available
+                      </span>
+                    )
                   ) : (
                     <span className="text-sm text-muted-foreground">Complete service details and location first</span>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  We'll verify that qualified engineers are available in your area for the selected service type.
-                </p>
+                
+                {pricingEstimate && pricingEstimate.available ? (
+                  <div className="text-sm space-y-2">
+                    <p className="text-green-700 dark:text-green-300">
+                      ✓ We found {pricingEstimate.supplierCount} qualified supplier{pricingEstimate.supplierCount > 1 ? 's' : ''} who can service this location for {formData.serviceType}.
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Suppliers have been matched based on geographic coverage, service type availability, and service level requirements.
+                    </p>
+                  </div>
+                ) : pricingEstimate && !pricingEstimate.available ? (
+                  <div className="text-sm space-y-2">
+                    <p className="text-amber-700 dark:text-amber-300">
+                      {pricingEstimate.message}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Try selecting a different service level or adjusting your schedule.
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    We'll verify that qualified engineers are available in your area for the selected service type.
+                  </p>
+                )}
               </div>
 
               {/* Pricing Estimate */}

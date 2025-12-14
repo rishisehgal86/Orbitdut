@@ -1346,10 +1346,24 @@ export const appRouter = router({
         const { calculatePriceRange } = await import("./pricingEngine");
         const hourlyRates = Array.from(supplierRatesMap.values());
         
+        // Extract start hour and minute from scheduledDateTime for proportional OOH calculation
+        let startHour: number | undefined;
+        let startMinute: number | undefined;
+        if (input.scheduledDateTime && isOOH) {
+          const [, timeStr] = input.scheduledDateTime.split('T');
+          if (timeStr) {
+            const [hourStr, minuteStr] = timeStr.split(':');
+            startHour = parseInt(hourStr, 10);
+            startMinute = parseInt(minuteStr, 10);
+          }
+        }
+        
         const priceRange = calculatePriceRange(
           hourlyRates,
           input.durationMinutes,
-          isOOH
+          isOOH,
+          startHour,
+          startMinute
         );
 
         return {

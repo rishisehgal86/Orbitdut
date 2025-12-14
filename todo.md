@@ -349,3 +349,14 @@
 - [x] Backend expects: "L1_NETWORK", "L1_EUC", "SMART_HANDS"
 - [x] Update getEstimatedPrice procedure to map service types before database query
 - [x] Test with Perth Australia NBD L1 Network request
+
+## Proportional OOH Calculation Fix - COMPLETED ✅
+
+- [x] Update pricing engine to apply OOH surcharge only to hours worked outside business hours (9 AM - 5 PM)
+- [x] Calculate exact OOH hours for jobs that span business and non-business hours
+- [x] Example: 4 PM - 7 PM job (3 hours) = 1 hour regular + 2 hours OOH
+- [x] Update calculatePrice function in server/pricingEngine.ts
+- [x] Update tests to verify proportional OOH charging (35 tests passing)
+- [x] Test edge cases: jobs starting before 9 AM, ending after 5 PM, spanning midnight
+- [x] Update backend getPricingEstimate to pass start time to pricing engine
+- [x] Verify pricing calculations work correctly in browser

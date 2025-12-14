@@ -5,6 +5,7 @@ import {
   getSupplierPayoutDisplay,
   getAdminPricingDisplay,
   calculatePriceRange,
+  calculateOOHHours,
   PRICING_RULES,
   formatPrice,
   isValidDuration,
@@ -227,7 +228,10 @@ describe("Pricing Engine - Admin Display", () => {
     expect(display.platformEarns).toBe(8000);
     
     // Should have full breakdown
-    expect(display.breakdown.supplierBaseCents).toBe(20000);
+    // Note: Legacy behavior (no startHour) = entire job is OOH
+    // supplierBaseCents = 0 (no regular hours)
+    // All work is in OOH hours
+    expect(display.breakdown.supplierBaseCents).toBe(0);
     expect(display.breakdown.supplierOOHPremiumCents).toBe(5000);
     expect(display.breakdown.platformFeeCents).toBe(3000);
     expect(display.breakdown.platformOOHMarginCents).toBe(5000);
@@ -350,5 +354,153 @@ describe("Pricing Engine - Constants Protection", () => {
     expect(PRICING_RULES.OOH_SUPPLIER_PREMIUM_PERCENT).toBe(25);
     expect(PRICING_RULES.MIN_DURATION_HOURS).toBe(2);
     expect(PRICING_RULES.MAX_DURATION_HOURS).toBe(16);
+  });
+});
+
+describe("Pricing Engine - Proportional OOH Calculation", () => {
+  it("should calculate OOH hours for job starting at 4 PM and ending at 7 PM (3 hours)", () => {
+    
+    // 4 PM - 7 PM = 1 hour regular (4-5 PM) + 2 hours OOH (5-7 PM)
+    const result = calculateOOHHours(16, 0, 180); // 16:00, 180 minutes
+    
+    expect(result.regularHours).toBe(1);
+    expect(result.oohHours).toBe(2);
+  });
+
+  it("should calculate OOH hours for job starting at 3 PM and ending at 6 PM (3 hours)", () => {
+    
+    // 3 PM - 6 PM = 2 hours regular (3-5 PM) + 1 hour OOH (5-6 PM)
+    const result = calculateOOHHours(15, 0, 180); // 15:00, 180 minutes
+    
+    expect(result.regularHours).toBe(2);
+    expect(result.oohHours).toBe(1);
+  });
+
+  it("should calculate OOH hours for job starting at 7 AM and ending at 11 AM (4 hours)", () => {
+    
+    // 7 AM - 11 AM = 2 hours OOH (7-9 AM) + 2 hours regular (9-11 AM)
+    const result = calculateOOHHours(7, 0, 240); // 07:00, 240 minutes
+    
+    expect(result.regularHours).toBe(2);
+    expect(result.oohHours).toBe(2);
+  });
+
+  it("should calculate OOH hours for job entirely within business hours", () => {
+    
+    // 10 AM - 2 PM = 4 hours regular, 0 hours OOH
+    const result = calculateOOHHours(10, 0, 240); // 10:00, 240 minutes
+    
+    expect(result.regularHours).toBe(4);
+    expect(result.oohHours).toBe(0);
+  });
+
+  it("should calculate OOH hours for job entirely outside business hours", () => {
+    
+    // 6 PM - 10 PM = 0 hours regular, 4 hours OOH
+    const result = calculateOOHHours(18, 0, 240); // 18:00, 240 minutes
+    
+    expect(result.regularHours).toBe(0);
+    expect(result.oohHours).toBe(4);
+  });
+
+  it("should apply proportional OOH pricing for job from 4 PM to 7 PM", () => {
+    const result = calculateJobPricing({
+      supplierHourlyRateCents: 10000, // $100/hr
+      durationMinutes: 180, // 3 hours
+      isOOH: true,
+      startHour: 16, // 4 PM
+      startMinute: 0,
+    });
+
+    // Regular hours (4-5 PM): $100 * 1 hour = $100 = 10000 cents
+    // OOH hours (5-7 PM): $100 * 2 hours = $200 = 20000 cents
+    // OOH premium (25% of OOH hours): 25% * 20000 = 5000 cents
+    // Supplier total: 10000 + 20000 + 5000 = 35000 cents
+    expect(result.supplierPayoutCents).toBe(35000);
+
+    // Customer regular base (with 15% fee): 10000 * 1.15 = 11500 cents
+    // Customer OOH base (with 15% fee): 20000 * 1.15 = 23000 cents
+    // Customer OOH surcharge (50% of OOH base): 50% * 20000 = 10000 cents
+    // Customer total: 11500 + 23000 + 10000 = 44500 cents
+    expect(result.customerPriceCents).toBe(44500);
+
+    // Platform fee: (11500 - 10000) + (23000 - 20000) = 1500 + 3000 = 4500 cents
+    // Platform OOH margin: 10000 - 5000 = 5000 cents
+    // Platform total: 4500 + 5000 = 9500 cents
+    expect(result.platformRevenueCents).toBe(9500);
+
+    // Verify accounting integrity
+    expect(result.supplierPayoutCents + result.platformRevenueCents).toBe(result.customerPriceCents);
+  });
+
+  it("should apply proportional OOH pricing for job from 3 PM to 6 PM", () => {
+    const result = calculateJobPricing({
+      supplierHourlyRateCents: 10000, // $100/hr
+      durationMinutes: 180, // 3 hours
+      isOOH: true,
+      startHour: 15, // 3 PM
+      startMinute: 0,
+    });
+
+    // Regular hours (3-5 PM): $100 * 2 hours = $200 = 20000 cents
+    // OOH hours (5-6 PM): $100 * 1 hour = $100 = 10000 cents
+    // OOH premium (25% of OOH hours): 25% * 10000 = 2500 cents
+    // Supplier total: 20000 + 10000 + 2500 = 32500 cents
+    expect(result.supplierPayoutCents).toBe(32500);
+
+    // Customer regular base (with 15% fee): 20000 * 1.15 = 23000 cents
+    // Customer OOH base (with 15% fee): 10000 * 1.15 = 11500 cents
+    // Customer OOH surcharge (50% of OOH base): 50% * 10000 = 5000 cents
+    // Customer total: 23000 + 11500 + 5000 = 39500 cents
+    expect(result.customerPriceCents).toBe(39500);
+
+    // Verify accounting integrity
+    expect(result.supplierPayoutCents + result.platformRevenueCents).toBe(result.customerPriceCents);
+  });
+
+  it("should handle job with minutes (4:30 PM to 7:30 PM)", () => {
+    
+    // 4:30 PM - 7:30 PM = 0.5 hours regular (4:30-5:00 PM) + 2.5 hours OOH (5:00-7:30 PM)
+    const result = calculateOOHHours(16, 30, 180); // 16:30, 180 minutes
+    
+    expect(result.regularHours).toBe(0.5);
+    expect(result.oohHours).toBe(2.5);
+  });
+
+  it("should fall back to legacy behavior when startHour is not provided", () => {
+    const result = calculateJobPricing({
+      supplierHourlyRateCents: 10000, // $100/hr
+      durationMinutes: 180, // 3 hours
+      isOOH: true,
+      // No startHour/startMinute provided
+    });
+
+    // Legacy behavior: entire job is OOH
+    // OOH hours: $100 * 3 hours = $300 = 30000 cents
+    // OOH premium (25%): 25% * 30000 = 7500 cents
+    // Supplier total: 30000 + 7500 = 37500 cents
+    expect(result.supplierPayoutCents).toBe(37500);
+  });
+
+  it("should maintain accounting integrity for proportional OOH jobs", () => {
+    const testCases = [
+      { startHour: 16, startMinute: 0, duration: 180 }, // 4 PM - 7 PM
+      { startHour: 15, startMinute: 0, duration: 180 }, // 3 PM - 6 PM
+      { startHour: 7, startMinute: 0, duration: 240 },  // 7 AM - 11 AM
+      { startHour: 16, startMinute: 30, duration: 180 }, // 4:30 PM - 7:30 PM
+    ];
+
+    testCases.forEach(({ startHour, startMinute, duration }) => {
+      const result = calculateJobPricing({
+        supplierHourlyRateCents: 10000,
+        durationMinutes: duration,
+        isOOH: true,
+        startHour,
+        startMinute,
+      });
+
+      const total = result.supplierPayoutCents + result.platformRevenueCents;
+      expect(total).toBe(result.customerPriceCents);
+    });
   });
 });

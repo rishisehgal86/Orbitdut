@@ -44,6 +44,9 @@ export interface PricingInput {
   supplierHourlyRateCents: number;
   durationMinutes: number;
   isOOH: boolean;
+  // Optional: for proportional OOH calculation
+  startHour?: number;  // 0-23 (e.g., 16 for 4 PM)
+  startMinute?: number; // 0-59
 }
 
 export interface PricingBreakdown {
@@ -108,28 +111,48 @@ export function calculateJobPricing(input: PricingInput): JobPricingResult {
   // STEP 1: Calculate supplier payout
   // ========================================
   
-  // Base amount supplier receives (rate × duration)
-  const supplierBaseCents = Math.round(supplierHourlyRateCents * durationHours);
+  // Determine how many hours are OOH vs regular
+  let regularHours = durationHours;
+  let oohHours = 0;
   
-  // OOH premium supplier receives (25% extra)
-  const supplierOOHPremiumCents = isOOH 
-    ? Math.round(supplierBaseCents * PRICING_RULES.OOH_SUPPLIER_PREMIUM_PERCENT / 100)
-    : 0;
+  if (isOOH && input.startHour !== undefined && input.startMinute !== undefined) {
+    // Proportional OOH calculation
+    const split = calculateOOHHours(input.startHour, input.startMinute, durationMinutes);
+    regularHours = split.regularHours;
+    oohHours = split.oohHours;
+  } else if (isOOH) {
+    // Legacy: entire job is OOH (backward compatibility)
+    oohHours = durationHours;
+    regularHours = 0;
+  }
   
-  // Total supplier payout
-  const supplierTotalCents = supplierBaseCents + supplierOOHPremiumCents;
+  // Base amount supplier receives (rate × regular hours)
+  const supplierBaseCents = Math.round(supplierHourlyRateCents * regularHours);
+  
+  // OOH base amount (rate × OOH hours)
+  const supplierOOHBaseCents = Math.round(supplierHourlyRateCents * oohHours);
+  
+  // OOH premium supplier receives (25% extra on OOH hours only)
+  const supplierOOHPremiumCents = Math.round(supplierOOHBaseCents * PRICING_RULES.OOH_SUPPLIER_PREMIUM_PERCENT / 100);
+  
+  // Total supplier payout (regular hours + OOH hours + OOH premium)
+  const supplierTotalCents = supplierBaseCents + supplierOOHBaseCents + supplierOOHPremiumCents;
   
   // ========================================
   // STEP 2: Calculate customer price
   // ========================================
   
-  // Customer base price (supplier base + 15% platform fee)
-  const customerBaseCents = Math.round(supplierBaseCents * (1 + PRICING_RULES.PLATFORM_FEE_PERCENT / 100));
+  // Customer base price for regular hours (supplier base + 15% platform fee)
+  const customerRegularBaseCents = Math.round(supplierBaseCents * (1 + PRICING_RULES.PLATFORM_FEE_PERCENT / 100));
   
-  // OOH surcharge customer pays (50% of base)
-  const customerOOHSurchargeCents = isOOH
-    ? Math.round(supplierBaseCents * PRICING_RULES.OOH_CUSTOMER_SURCHARGE_PERCENT / 100)
-    : 0;
+  // Customer base price for OOH hours (supplier OOH base + 15% platform fee)
+  const customerOOHBaseCents = Math.round(supplierOOHBaseCents * (1 + PRICING_RULES.PLATFORM_FEE_PERCENT / 100));
+  
+  // Total customer base (before OOH surcharge)
+  const customerBaseCents = customerRegularBaseCents + customerOOHBaseCents;
+  
+  // OOH surcharge customer pays (50% of OOH hours only)
+  const customerOOHSurchargeCents = Math.round(supplierOOHBaseCents * PRICING_RULES.OOH_CUSTOMER_SURCHARGE_PERCENT / 100);
   
   // Total customer pays
   const customerTotalCents = customerBaseCents + customerOOHSurchargeCents;
@@ -138,8 +161,8 @@ export function calculateJobPricing(input: PricingInput): JobPricingResult {
   // STEP 3: Calculate platform revenue
   // ========================================
   
-  // Platform fee (15% of supplier base)
-  const platformFeeCents = customerBaseCents - supplierBaseCents;
+  // Platform fee (15% of supplier base for both regular and OOH hours)
+  const platformFeeCents = customerBaseCents - (supplierBaseCents + supplierOOHBaseCents);
   
   // Platform OOH margin (difference between what customer pays and supplier receives)
   const platformOOHMarginCents = customerOOHSurchargeCents - supplierOOHPremiumCents;
@@ -237,10 +260,14 @@ export interface SupplierPayoutDisplay {
 export function getSupplierPayoutDisplay(input: PricingInput): SupplierPayoutDisplay {
   const result = calculateJobPricing(input);
   
+  // For supplier display, basePayoutCents = total before OOH premium
+  // This is supplierTotalCents - supplierOOHPremiumCents
+  const basePayoutCents = result.breakdown.supplierTotalCents - result.breakdown.supplierOOHPremiumCents;
+  
   return {
     totalPayoutCents: result.supplierPayoutCents,
     breakdown: {
-      basePayoutCents: result.breakdown.supplierBaseCents,
+      basePayoutCents,
       oohPremiumCents: result.breakdown.supplierOOHPremiumCents,
       durationHours: result.breakdown.durationHours,
       isOOH: result.breakdown.isOOH,
@@ -297,7 +324,9 @@ export interface PriceRangeEstimate {
 export function calculatePriceRange(
   supplierRatesCents: number[],
   durationMinutes: number,
-  isOOH: boolean
+  isOOH: boolean,
+  startHour?: number,
+  startMinute?: number
 ): PriceRangeEstimate {
   if (supplierRatesCents.length === 0) {
     throw new Error("At least one supplier rate is required");
@@ -309,6 +338,8 @@ export function calculatePriceRange(
       supplierHourlyRateCents: rate,
       durationMinutes,
       isOOH,
+      startHour,
+      startMinute,
     });
     return result.customerPriceCents;
   });
@@ -323,6 +354,55 @@ export function calculatePriceRange(
       isOOH,
       oohSurchargePercent: isOOH ? PRICING_RULES.OOH_CUSTOMER_SURCHARGE_PERCENT : 0,
     },
+  };
+}
+
+// ============================================================================
+// OOH HOURS CALCULATION
+// ============================================================================
+
+/**
+ * Calculate how many hours of a job fall outside business hours (9 AM - 5 PM).
+ * 
+ * @param startHour - Start hour in 24-hour format (0-23)
+ * @param startMinute - Start minute (0-59)
+ * @param durationMinutes - Total job duration in minutes
+ * @returns Object with regularHours and oohHours
+ */
+export function calculateOOHHours(
+  startHour: number,
+  startMinute: number,
+  durationMinutes: number
+): { regularHours: number; oohHours: number } {
+  const BUSINESS_START = PRICING_RULES.BUSINESS_HOURS_START; // 9 AM
+  const BUSINESS_END = PRICING_RULES.BUSINESS_HOURS_END;     // 5 PM
+  
+  // Convert start time to minutes since midnight
+  const startMinutesSinceMidnight = startHour * 60 + startMinute;
+  const endMinutesSinceMidnight = startMinutesSinceMidnight + durationMinutes;
+  
+  // Business hours in minutes since midnight
+  const businessStartMinutes = BUSINESS_START * 60;  // 9 AM = 540 minutes
+  const businessEndMinutes = BUSINESS_END * 60;      // 5 PM = 1020 minutes
+  
+  let regularMinutes = 0;
+  let oohMinutes = 0;
+  
+  // Calculate overlap with business hours
+  const overlapStart = Math.max(startMinutesSinceMidnight, businessStartMinutes);
+  const overlapEnd = Math.min(endMinutesSinceMidnight, businessEndMinutes);
+  
+  if (overlapStart < overlapEnd) {
+    // Some work falls within business hours
+    regularMinutes = overlapEnd - overlapStart;
+  }
+  
+  // Remaining time is OOH
+  oohMinutes = durationMinutes - regularMinutes;
+  
+  return {
+    regularHours: regularMinutes / 60,
+    oohHours: oohMinutes / 60,
   };
 }
 
