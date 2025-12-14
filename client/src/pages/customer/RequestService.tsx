@@ -160,6 +160,12 @@ export default function RequestService() {
       durationHours: number;
       isOOH: boolean;
       oohSurchargePercent: number;
+      minBaseCents: number;
+      maxBaseCents: number;
+      avgBaseCents: number;
+      minOOHSurchargeCents: number;
+      maxOOHSurchargeCents: number;
+      avgOOHSurchargeCents: number;
     };
     remoteSiteFee?: {
       customerFeeCents: number;
@@ -1148,48 +1154,45 @@ export default function RequestService() {
                       <div className="text-sm space-y-3">
                         <div className="space-y-2">
                           <div className="flex justify-between text-muted-foreground">
-                            <span>Total Duration:</span>
+                            <span>Duration:</span>
                             <span className="font-medium">{pricingEstimate.breakdown.durationHours} hours</span>
                           </div>
                           
-                          {pricingEstimate.breakdown.isOOH ? (
-                            <>
-                              <div className="pl-4 space-y-1.5 border-l-2 border-amber-200 dark:border-amber-800">
-                                <div className="flex justify-between text-xs">
-                                  <span className="text-muted-foreground">Base Hourly Rate:</span>
-                                  <span className="font-medium">${((pricingEstimate.estimatedPriceCents! / 100) / pricingEstimate.breakdown.durationHours / (1 + pricingEstimate.breakdown.oohSurchargePercent / 100)).toFixed(2)}/hour</span>
-                                </div>
-                                <div className="flex justify-between text-xs text-amber-600 dark:text-amber-400">
-                                  <span>OOH Hourly Rate (+{pricingEstimate.breakdown.oohSurchargePercent}%):</span>
-                                  <span className="font-medium">${((pricingEstimate.estimatedPriceCents! / 100) / pricingEstimate.breakdown.durationHours).toFixed(2)}/hour</span>
-                                </div>
-                                <div className="text-xs text-amber-600 dark:text-amber-400 pt-1">
-                                  <span>All {pricingEstimate.breakdown.durationHours} hours charged at OOH rate</span>
-                                </div>
-                              </div>
-                            </>
-                          ) : (
-                            <div className="flex justify-between text-muted-foreground">
-                              <span>Hourly Rate:</span>
-                              <span className="font-medium">${((pricingEstimate.estimatedPriceCents! / 100) / pricingEstimate.breakdown.durationHours).toFixed(2)}/hour</span>
+                          <div className="flex justify-between text-muted-foreground">
+                            <span>Base Service Cost:</span>
+                            <span className="font-medium">
+                              ${(pricingEstimate.breakdown.minBaseCents / 100).toFixed(2)} - ${(pricingEstimate.breakdown.maxBaseCents / 100).toFixed(2)}
+                            </span>
+                          </div>
+                          
+                          {pricingEstimate.breakdown.isOOH && pricingEstimate.breakdown.avgOOHSurchargeCents > 0 && (
+                            <div className="flex justify-between text-amber-600 dark:text-amber-400">
+                              <span>+ OOH Surcharge ({pricingEstimate.breakdown.oohSurchargePercent}%):</span>
+                              <span className="font-medium">
+                                ${(pricingEstimate.breakdown.minOOHSurchargeCents / 100).toFixed(2)} - ${(pricingEstimate.breakdown.maxOOHSurchargeCents / 100).toFixed(2)}
+                              </span>
                             </div>
                           )}
                           
                           {/* Remote Site Fee */}
-                          {pricingEstimate.remoteSiteFee && (
-                            <div className="flex justify-between text-muted-foreground pt-2 border-t">
+                          {pricingEstimate.remoteSiteFee && pricingEstimate.remoteSiteFee.customerFeeCents > 0 && (
+                            <div className="flex justify-between text-muted-foreground">
                               <div className="flex flex-col">
-                                <span>Remote Site Fee:</span>
+                                <span>+ Remote Site Fee:</span>
                                 <span className="text-xs text-muted-foreground">
                                   {pricingEstimate.remoteSiteFee.distanceKm?.toFixed(1)}km from {pricingEstimate.remoteSiteFee.nearestMajorCity}
                                 </span>
-                                 <span className="text-xs text-muted-foreground">
-                                   ({pricingEstimate.remoteSiteFee.billableDistanceKm.toFixed(1)}km beyond nearest city coverage zone)
-                                 </span>
                               </div>
                               <span className="font-medium">${(pricingEstimate.remoteSiteFee.customerFeeCents / 100).toFixed(2)}</span>
                             </div>
                           )}
+                          
+                          <div className="pt-2 border-t flex justify-between font-semibold">
+                            <span>= Total Estimate:</span>
+                            <span className="text-blue-600 dark:text-blue-400">
+                              ${(pricingEstimate.minPriceCents! / 100).toFixed(2)} - ${(pricingEstimate.maxPriceCents! / 100).toFixed(2)}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     )}

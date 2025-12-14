@@ -461,25 +461,27 @@ export default function RequestServicePricing() {
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Base hourly rate range</span>
                     <span>
-                      ${(pricingEstimate.minPriceCents / 100 / durationHours).toFixed(2)} - ${(pricingEstimate.maxPriceCents / 100 / durationHours).toFixed(2)}/hour
+                      ${(pricingEstimate.breakdown.minBaseCents / 100 / durationHours).toFixed(2)} - ${(pricingEstimate.breakdown.maxBaseCents / 100 / durationHours).toFixed(2)}/hour
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Base service cost</span>
                     <span>
-                      ${(pricingEstimate.minPriceCents / 100).toFixed(2)} - ${(pricingEstimate.maxPriceCents / 100).toFixed(2)}
+                      ${(pricingEstimate.breakdown.minBaseCents / 100).toFixed(2)} - ${(pricingEstimate.breakdown.maxBaseCents / 100).toFixed(2)}
                     </span>
                   </div>
                 </div>
 
                 {/* OOH Surcharge */}
-                {pricingEstimate.breakdown?.isOOH && (
+                {pricingEstimate.breakdown?.isOOH && pricingEstimate.breakdown.avgOOHSurchargeCents > 0 && (
                   <>
                     <Separator />
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Out-of-Hours Surcharge</span>
-                        <span className="text-amber-600">+{pricingEstimate.breakdown.oohSurchargePercent}%</span>
+                        <span className="text-amber-600">
+                          +${(pricingEstimate.breakdown.minOOHSurchargeCents / 100).toFixed(2)} - ${(pricingEstimate.breakdown.maxOOHSurchargeCents / 100).toFixed(2)}
+                        </span>
                       </div>
                       {formData.oohReason && (
                         <p className="text-xs text-muted-foreground">{formData.oohReason}</p>
@@ -521,6 +523,12 @@ export default function RequestServicePricing() {
                     )}
                     <p className="text-xs text-muted-foreground mt-1">Payment after service completion</p>
                   </div>
+                </div>
+                
+                {/* Pricing Transparency Note */}
+                <div className="bg-muted/50 rounded-lg p-3 text-xs text-muted-foreground">
+                  <p className="font-medium mb-1">💡 Transparent Pricing</p>
+                  <p>All fees shown above. No hidden charges. Final price confirmed after supplier assignment.</p>
                 </div>
               </>
             ) : (

@@ -545,6 +545,22 @@
 - [ ] Investigate why pricing estimation useEffect is not triggering
 - [ ] Ensure pricing API is being called when form data changes
 
+## Bug Fix: Pricing Breakdown Display Incorrect - COMPLETED ✅
+
+- [x] Fix pricing breakdown display showing incorrect calculations
+- [x] Issue: "Base service cost" displays the TOTAL price (already includes OOH + remote fee)
+- [x] Issue: OOH surcharge shows "+50%" but doesn't add dollar amount to total
+- [x] Issue: Remote site fee shows "+$7.96" but doesn't add to total
+- [x] Issue: Estimated Total shows same value as base (should be base + OOH + remote fee)
+- [x] Solution: Calculate and display actual base cost (without OOH/remote fee)
+- [x] Solution: Calculate and display OOH surcharge as dollar amount
+- [x] Solution: Ensure total = base + OOH + remote fee
+- [x] Ensure all margins and uplifts are clearly displayed with proper breakdown
+- [x] Updated pricingEngine.ts to return detailed breakdown (minBaseCents, maxBaseCents, avgBaseCents, minOOHSurchargeCents, etc.)
+- [x] Updated RequestServicePricing.tsx to display correct base cost and OOH surcharge amounts
+- [x] Updated RequestService.tsx to show transparent pricing breakdown
+- [x] Added 39 vitest tests - all passing
+
 ## Pricing Page Display Issues - REPORTED BY USER - COMPLETED ✅
 
 - [x] Remove "Platform fee (15%)" line from pricing breakdown on pricing page

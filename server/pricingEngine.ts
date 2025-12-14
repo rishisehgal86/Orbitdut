@@ -362,6 +362,13 @@ export interface PriceRangeEstimate {
     durationHours: number;
     isOOH: boolean;
     oohSurchargePercent: number;
+    // Detailed breakdown for display
+    minBaseCents: number;  // Min base cost (without OOH/remote fee)
+    maxBaseCents: number;  // Max base cost (without OOH/remote fee)
+    avgBaseCents: number;  // Avg base cost (without OOH/remote fee)
+    minOOHSurchargeCents: number;  // Min OOH surcharge amount
+    maxOOHSurchargeCents: number;  // Max OOH surcharge amount
+    avgOOHSurchargeCents: number;  // Avg OOH surcharge amount
   };
 }
 
@@ -384,8 +391,8 @@ export function calculatePriceRange(
     throw new Error("At least one supplier rate is required");
   }
   
-  // Calculate customer price for each supplier
-  const customerPrices = supplierRatesCents.map(rate => {
+  // Calculate customer price for each supplier with detailed breakdown
+  const pricingResults = supplierRatesCents.map(rate => {
     const result = calculateJobPricing({
       supplierHourlyRateCents: rate,
       durationMinutes,
@@ -394,8 +401,16 @@ export function calculatePriceRange(
       startMinute,
       remoteSiteFee: remoteSiteFee || undefined,
     });
-    return result.customerPriceCents;
+    return {
+      totalCents: result.customerPriceCents,
+      baseCents: result.breakdown.customerBaseCents,
+      oohSurchargeCents: result.breakdown.customerOOHSurchargeCents,
+    };
   });
+  
+  const customerPrices = pricingResults.map(r => r.totalCents);
+  const basePrices = pricingResults.map(r => r.baseCents);
+  const oohSurcharges = pricingResults.map(r => r.oohSurchargeCents);
   
   return {
     minPriceCents: Math.min(...customerPrices),
@@ -406,6 +421,12 @@ export function calculatePriceRange(
       durationHours: durationMinutes / 60,
       isOOH,
       oohSurchargePercent: isOOH ? PRICING_RULES.OOH_CUSTOMER_SURCHARGE_PERCENT : 0,
+      minBaseCents: Math.min(...basePrices),
+      maxBaseCents: Math.max(...basePrices),
+      avgBaseCents: Math.round(basePrices.reduce((a, b) => a + b, 0) / basePrices.length),
+      minOOHSurchargeCents: Math.min(...oohSurcharges),
+      maxOOHSurchargeCents: Math.max(...oohSurcharges),
+      avgOOHSurchargeCents: Math.round(oohSurcharges.reduce((a, b) => a + b, 0) / oohSurcharges.length),
     },
   };
 }

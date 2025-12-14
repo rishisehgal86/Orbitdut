@@ -504,3 +504,111 @@ describe("Pricing Engine - Proportional OOH Calculation", () => {
     });
   });
 });
+
+
+describe('Pricing Engine - Detailed Breakdown for Display', () => {
+  it('should return detailed breakdown fields in calculatePriceRange', () => {
+    const result = calculatePriceRange(
+      [6493], // Single supplier at $64.93/hour
+      300, // 5 hours
+      true, // OOH
+      undefined,
+      undefined,
+      {
+        customerFeeCents: 796,
+        supplierFeeCents: 637,
+        platformFeeCents: 159,
+        nearestMajorCity: 'Sydney',
+        distanceKm: 150,
+        billableDistanceKm: 50,
+      }
+    );
+
+    // Verify all detailed breakdown fields exist
+    expect(result.breakdown).toHaveProperty('minBaseCents');
+    expect(result.breakdown).toHaveProperty('maxBaseCents');
+    expect(result.breakdown).toHaveProperty('avgBaseCents');
+    expect(result.breakdown).toHaveProperty('minOOHSurchargeCents');
+    expect(result.breakdown).toHaveProperty('maxOOHSurchargeCents');
+    expect(result.breakdown).toHaveProperty('avgOOHSurchargeCents');
+
+    // Verify exact values for single supplier case
+    expect(result.breakdown.avgBaseCents).toBe(37335); // $373.35
+    expect(result.breakdown.avgOOHSurchargeCents).toBe(16233); // $162.33
+    expect(result.avgPriceCents).toBe(54364); // $543.64
+  });
+
+  it('should calculate correct breakdown range for multiple suppliers with OOH', () => {
+    const result = calculatePriceRange(
+      [6000, 6500, 7000], // $60, $65, $70 per hour
+      300, // 5 hours
+      true, // OOH
+    );
+
+    // Verify min < avg < max for base costs
+    expect(result.breakdown.minBaseCents).toBeLessThan(result.breakdown.avgBaseCents);
+    expect(result.breakdown.avgBaseCents).toBeLessThan(result.breakdown.maxBaseCents);
+
+    // Verify min < avg < max for OOH surcharges
+    expect(result.breakdown.minOOHSurchargeCents).toBeLessThan(result.breakdown.avgOOHSurchargeCents);
+    expect(result.breakdown.avgOOHSurchargeCents).toBeLessThan(result.breakdown.maxOOHSurchargeCents);
+
+    // Verify total = base + OOH (no remote fee in this case)
+    const calculatedMin = result.breakdown.minBaseCents + result.breakdown.minOOHSurchargeCents;
+    const calculatedMax = result.breakdown.maxBaseCents + result.breakdown.maxOOHSurchargeCents;
+    
+    expect(result.minPriceCents).toBe(calculatedMin);
+    expect(result.maxPriceCents).toBe(calculatedMax);
+  });
+
+  it('should show zero OOH surcharge for regular hours', () => {
+    const result = calculatePriceRange(
+      [5000, 6000],
+      120, // 2 hours
+      false, // Not OOH
+    );
+
+    expect(result.breakdown.isOOH).toBe(false);
+    expect(result.breakdown.minOOHSurchargeCents).toBe(0);
+    expect(result.breakdown.maxOOHSurchargeCents).toBe(0);
+    expect(result.breakdown.avgOOHSurchargeCents).toBe(0);
+
+    // Total should equal base for regular hours
+    expect(result.minPriceCents).toBe(result.breakdown.minBaseCents);
+    expect(result.maxPriceCents).toBe(result.breakdown.maxBaseCents);
+  });
+
+  it('should provide transparent pricing breakdown matching screenshot scenario', () => {
+    // Scenario from user's screenshot: 5 hours @ $64.93/hour, OOH, $7.96 remote fee
+    const result = calculatePriceRange(
+      [6493],
+      300,
+      true,
+      undefined,
+      undefined,
+      {
+        customerFeeCents: 796,
+        supplierFeeCents: 637,
+        platformFeeCents: 159,
+        nearestMajorCity: 'Sydney',
+        distanceKm: 150,
+        billableDistanceKm: 50,
+      }
+    );
+
+    // What customer should see:
+    // Base service cost: $373.35
+    expect(result.breakdown.avgBaseCents).toBe(37335);
+    
+    // + OOH Surcharge (50%): $162.33
+    expect(result.breakdown.avgOOHSurchargeCents).toBe(16233);
+    
+    // + Remote Site Fee: $7.96 (passed separately, not in breakdown)
+    // = Estimated Total: $543.64
+    expect(result.avgPriceCents).toBe(54364);
+
+    // Verify the math: base + OOH + remote = total
+    const calculatedTotal = result.breakdown.avgBaseCents + result.breakdown.avgOOHSurchargeCents + 796;
+    expect(calculatedTotal).toBe(result.avgPriceCents);
+  });
+});
