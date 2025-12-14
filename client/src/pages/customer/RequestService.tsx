@@ -464,8 +464,13 @@ export default function RequestService() {
       return;
     }
 
-    // Store form data in session storage
+    // Store form data and pricing estimate in session storage
     sessionStorage.setItem("jobRequest", JSON.stringify(formData));
+    
+    // Store pricing estimate if available
+    if (pricingEstimate) {
+      sessionStorage.setItem("jobPricing", JSON.stringify(pricingEstimate));
+    }
     
     // Navigate to pricing page
     setLocation("/customer/request-service/pricing");

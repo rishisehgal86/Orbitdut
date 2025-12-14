@@ -177,15 +177,15 @@ export default function RequestServicePricing() {
             <div className="grid gap-4 md:grid-cols-3">
               <div>
                 <p className="text-sm text-muted-foreground">Name</p>
-                <p className="font-medium">{formData.customerName}</p>
+                <p>{formData.customerName}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Email</p>
-                <p className="font-medium">{formData.customerEmail}</p>
+                <p>{formData.customerEmail}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Phone</p>
-                <p className="font-medium">{formData.customerPhone}</p>
+                <p>{formData.customerPhone}</p>
               </div>
             </div>
           </CardContent>
@@ -203,12 +203,12 @@ export default function RequestServicePricing() {
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <p className="text-sm text-muted-foreground">Service Type</p>
-                <p className="font-medium">{formData.serviceType}</p>
+                <p>{formData.serviceType}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Service Level</p>
                 <div className="flex items-center gap-2">
-                  <p className="font-medium">{serviceLevelLabels[formData.serviceLevel as keyof typeof serviceLevelLabels] || formData.serviceLevel}</p>
+                  <p>{serviceLevelLabels[formData.serviceLevel as keyof typeof serviceLevelLabels] || formData.serviceLevel}</p>
                   {formData.serviceLevel === "same_day" && (
                     <Badge variant="destructive" className="text-xs">Urgent</Badge>
                   )}
@@ -219,11 +219,11 @@ export default function RequestServicePricing() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Duration</p>
-                <p className="font-medium">{durationHours} hours ({formData.estimatedDuration} minutes)</p>
+                <p>{durationHours} hours ({formData.estimatedDuration} minutes)</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Booking Type</p>
-                <p className="font-medium capitalize">{formData.bookingType || "hourly"}</p>
+                <p className="capitalize">{formData.bookingType || "hourly"}</p>
               </div>
             </div>
             {formData.downTime && (
@@ -259,7 +259,7 @@ export default function RequestServicePricing() {
               {formData.siteName && (
                 <div>
                   <p className="text-sm text-muted-foreground">Site Name</p>
-                  <p className="font-medium">{formData.siteName}</p>
+                  <p>{formData.siteName}</p>
                 </div>
               )}
               <div>
@@ -280,7 +280,7 @@ export default function RequestServicePricing() {
               {(formData.siteContactName || formData.siteContactNumber) && (
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">On-Site Contact</p>
-                  {formData.siteContactName && <p className="text-sm font-medium">{formData.siteContactName}</p>}
+                  {formData.siteContactName && <p className="text-sm">{formData.siteContactName}</p>}
                   {formData.siteContactNumber && (
                     <p className="text-sm flex items-center gap-1">
                       <Phone className="h-3 w-3" />
@@ -302,7 +302,7 @@ export default function RequestServicePricing() {
             <CardContent className="space-y-3">
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Date</p>
-                <p className="font-medium">
+                <p>
                   {scheduledDateTime.toLocaleDateString(undefined, {
                     weekday: "long",
                     month: "long",
@@ -313,7 +313,7 @@ export default function RequestServicePricing() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Time</p>
-                <p className="font-medium flex items-center gap-2">
+                <p className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
                   {scheduledDateTime.toLocaleTimeString(undefined, {
                     hour: "2-digit",
@@ -382,19 +382,19 @@ export default function RequestServicePricing() {
                 {formData.projectName && (
                   <div>
                     <p className="text-sm text-muted-foreground">Project Name</p>
-                    <p className="font-medium">{formData.projectName}</p>
+                    <p>{formData.projectName}</p>
                   </div>
                 )}
                 {formData.changeNumber && (
                   <div>
                     <p className="text-sm text-muted-foreground">Change Number</p>
-                    <p className="font-medium">{formData.changeNumber}</p>
+                    <p>{formData.changeNumber}</p>
                   </div>
                 )}
                 {formData.incidentNumber && (
                   <div>
                     <p className="text-sm text-muted-foreground">Incident Number</p>
-                    <p className="font-medium">{formData.incidentNumber}</p>
+                    <p>{formData.incidentNumber}</p>
                   </div>
                 )}
               </div>
@@ -466,7 +466,7 @@ export default function RequestServicePricing() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Base service cost</span>
-                    <span className="font-medium">
+                    <span>
                       ${(pricingEstimate.minPriceCents / 100).toFixed(2)} - ${(pricingEstimate.maxPriceCents / 100).toFixed(2)}
                     </span>
                   </div>
@@ -479,7 +479,7 @@ export default function RequestServicePricing() {
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Out-of-Hours Surcharge</span>
-                        <span className="font-medium text-amber-600">+{pricingEstimate.breakdown.oohSurchargePercent}%</span>
+                        <span className="text-amber-600">+{pricingEstimate.breakdown.oohSurchargePercent}%</span>
                       </div>
                       {formData.oohReason && (
                         <p className="text-xs text-muted-foreground">{formData.oohReason}</p>
@@ -495,7 +495,7 @@ export default function RequestServicePricing() {
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Remote Site Fee</span>
-                        <span className="font-medium">+${(pricingEstimate.remoteSiteFee.customerFeeCents / 100).toFixed(2)}</span>
+                        <span>+${(pricingEstimate.remoteSiteFee.customerFeeCents / 100).toFixed(2)}</span>
                       </div>
                       {pricingEstimate.remoteSiteFee.nearestMajorCity && (
                         <p className="text-xs text-muted-foreground">

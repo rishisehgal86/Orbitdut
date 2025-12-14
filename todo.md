@@ -528,3 +528,9 @@
 - [x] Display detailed OOH hours breakdown when applicable
 - [x] Use actual pricing data when creating job (not hardcoded values)
 - [x] Test complete flow from request form → pricing page → job creation
+
+## Pricing Page Bugs (Reported by User)
+
+- [x] Fix pricing data not being passed from request form to pricing page (shows "unavailable" instead of actual pricing)
+- [x] Reduce excessive bold text formatting on pricing page (too many field values in bold)
+- [x] Review and match design patterns from request form and customer portal (card styles, spacing, typography, section headers)
