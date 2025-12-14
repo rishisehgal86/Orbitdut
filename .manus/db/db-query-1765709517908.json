@@ -1,0 +1,20 @@
+{
+  "query": "SELECT s.id, s.companyName, scc.countryCode \nFROM suppliers s \nJOIN supplierCoverageCountries scc ON s.id = scc.supplierId \nWHERE scc.countryCode = 'AU';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT s.id, s.companyName, scc.countryCode \nFROM suppliers s \nJOIN supplierCoverageCountries scc ON s.id = scc.supplierId \nWHERE scc.countryCode = 'AU';",
+  "rows": [
+    {
+      "id": "210001",
+      "companyName": "Test Engineering Co",
+      "countryCode": "AU"
+    },
+    {
+      "id": "240001",
+      "companyName": "test",
+      "countryCode": "AU"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcompanyName\tcountryCode\n210001\tTest Engineering Co\tAU\n240001\ttest\tAU\n",
+  "stderr": "",
+  "execution_time_ms": 104
+}

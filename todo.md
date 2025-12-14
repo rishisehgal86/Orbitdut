@@ -341,3 +341,11 @@
 - [x] Show fallback message when pricing fails: "Pricing will be shown in detail on next page"
 - [x] Ensure form remains functional even if pricing API fails
 - [x] Don't block user from proceeding if pricing estimate unavailable
+
+## Bug Fix: Service Type Mismatch in Pricing Engine (URGENT) - COMPLETED ✅
+
+- [x] Add service type mapping function to convert customer-facing labels to database enums
+- [x] Frontend sends: "L1 Network Engineer", "Level 1 End User Compute Engineer", "Smart Hands"
+- [x] Backend expects: "L1_NETWORK", "L1_EUC", "SMART_HANDS"
+- [x] Update getEstimatedPrice procedure to map service types before database query
+- [x] Test with Perth Australia NBD L1 Network request

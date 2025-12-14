@@ -1,0 +1,17 @@
+{
+  "query": "SELECT \n  'Priority Cities' as source,\n  pc.id, \n  pc.cityName, \n  pc.countryCode,\n  COUNT(DISTINCT sr.supplierId) as supplier_count\nFROM supplierPriorityCities pc\nLEFT JOIN supplierRates sr ON sr.cityId = pc.id AND sr.serviceType = 'L1_NETWORK' AND sr.serviceLevel = 'next_business_day'\nWHERE LOWER(pc.cityName) = 'perth' AND pc.countryCode = 'AU'\nGROUP BY pc.id, pc.cityName, pc.countryCode\n\nUNION ALL\n\nSELECT \n  'Country Rates' as source,\n  NULL as id,\n  'N/A' as cityName,\n  sr.countryCode,\n  COUNT(DISTINCT sr.supplierId) as supplier_count\nFROM supplierRates sr\nWHERE sr.countryCode = 'AU' \n  AND sr.serviceType = 'L1_NETWORK' \n  AND sr.serviceLevel = 'next_business_day'\n  AND sr.cityId IS NULL\nGROUP BY sr.countryCode;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT \n  'Priority Cities' as source,\n  pc.id, \n  pc.cityName, \n  pc.countryCode,\n  COUNT(DISTINCT sr.supplierId) as supplier_count\nFROM supplierPriorityCities pc\nLEFT JOIN supplierRates sr ON sr.cityId = pc.id AND sr.serviceType = 'L1_NETWORK' AND sr.serviceLevel = 'next_business_day'\nWHERE LOWER(pc.cityName) = 'perth' AND pc.countryCode = 'AU'\nGROUP BY pc.id, pc.cityName, pc.countryCode\n\nUNION ALL\n\nSELECT \n  'Country Rates' as source,\n  NULL as id,\n  'N/A' as cityName,\n  sr.countryCode,\n  COUNT(DISTINCT sr.supplierId) as supplier_count\nFROM supplierRates sr\nWHERE sr.countryCode = 'AU' \n  AND sr.serviceType = 'L1_NETWORK' \n  AND sr.serviceLevel = 'next_business_day'\n  AND sr.cityId IS NULL\nGROUP BY sr.countryCode;",
+  "rows": [
+    {
+      "source": "Country Rates",
+      "id": "NULL",
+      "cityName": "N/A",
+      "countryCode": "AU",
+      "supplier_count": "2"
+    }
+  ],
+  "messages": [],
+  "stdout": "source\tid\tcityName\tcountryCode\tsupplier_count\nCountry Rates\tNULL\tN/A\tAU\t2\n",
+  "stderr": "",
+  "execution_time_ms": 68
+}

@@ -1189,6 +1189,14 @@ export const appRouter = router({
         const { and, or, eq, isNull, sql } = await import("drizzle-orm");
         const { detectOOH } = await import("../shared/oohDetection");
 
+        // Map customer-facing service type labels to database enums
+        const serviceTypeMap: Record<string, string> = {
+          "Level 1 End User Compute Engineer": "L1_EUC",
+          "L1 Network Engineer": "L1_NETWORK",
+          "Smart Hands": "SMART_HANDS",
+        };
+        const dbServiceType = serviceTypeMap[input.serviceType] || input.serviceType;
+
         // Map frontend service level to database enum
         const serviceLevelMap: Record<string, string> = {
           same_day: "same_business_day",
@@ -1255,7 +1263,7 @@ export const appRouter = router({
           .where(
             and(
               sql`${supplierRates.supplierId} IN (${sql.join(supplierIdsWithCoverage.map(id => sql`${id}`), sql`, `)})`,
-              eq(supplierRates.serviceType, input.serviceType),
+              eq(supplierRates.serviceType, dbServiceType),
               sql`${supplierRates.serviceLevel} = ${dbServiceLevel}`,
               eq(supplierRates.isServiceable, 1),
               sql`LOWER(${supplierPriorityCities.cityName}) = LOWER(${input.city})`
@@ -1274,7 +1282,7 @@ export const appRouter = router({
               sql`${supplierRates.supplierId} IN (${sql.join(supplierIdsWithCoverage.map(id => sql`${id}`), sql`, `)})`,
               eq(supplierRates.countryCode, input.country),
               isNull(supplierRates.cityId),
-              eq(supplierRates.serviceType, input.serviceType),
+              eq(supplierRates.serviceType, dbServiceType),
               sql`${supplierRates.serviceLevel} = ${dbServiceLevel}`,
               eq(supplierRates.isServiceable, 1)
             )

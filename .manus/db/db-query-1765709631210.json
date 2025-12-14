@@ -1,0 +1,26 @@
+{
+  "query": "SELECT s.companyName, sr.serviceType, sr.serviceLevel, sr.rateUsdCents, sr.countryCode, sr.cityId\nFROM suppliers s \nJOIN supplierRates sr ON s.id = sr.supplierId \nWHERE sr.countryCode = 'AU' \n  AND sr.serviceType = 'L1_NETWORK' \n  AND sr.serviceLevel = 'next_business_day'\n  AND sr.cityId IS NULL\nORDER BY s.companyName;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT s.companyName, sr.serviceType, sr.serviceLevel, sr.rateUsdCents, sr.countryCode, sr.cityId\nFROM suppliers s \nJOIN supplierRates sr ON s.id = sr.supplierId \nWHERE sr.countryCode = 'AU' \n  AND sr.serviceType = 'L1_NETWORK' \n  AND sr.serviceLevel = 'next_business_day'\n  AND sr.cityId IS NULL\nORDER BY s.companyName;",
+  "rows": [
+    {
+      "companyName": "test",
+      "serviceType": "L1_NETWORK",
+      "serviceLevel": "next_business_day",
+      "rateUsdCents": "6864",
+      "countryCode": "AU",
+      "cityId": "NULL"
+    },
+    {
+      "companyName": "Test Engineering Co",
+      "serviceType": "L1_NETWORK",
+      "serviceLevel": "next_business_day",
+      "rateUsdCents": "14000",
+      "countryCode": "AU",
+      "cityId": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "companyName\tserviceType\tserviceLevel\trateUsdCents\tcountryCode\tcityId\ntest\tL1_NETWORK\tnext_business_day\t6864\tAU\tNULL\nTest Engineering Co\tL1_NETWORK\tnext_business_day\t14000\tAU\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 66
+}
