@@ -534,3 +534,7 @@
 - [x] Fix pricing data not being passed from request form to pricing page (shows "unavailable" instead of actual pricing)
 - [x] Reduce excessive bold text formatting on pricing page (too many field values in bold)
 - [x] Review and match design patterns from request form and customer portal (card styles, spacing, typography, section headers)
+
+## Bug Fix: Address Validation Error Persists After Selection - COMPLETED ✅
+
+- [x] Fix "Please select an address from the dropdown" error that persists after selecting an address from Google Places autocomplete on request service page

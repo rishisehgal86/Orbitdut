@@ -405,6 +405,13 @@ export default function RequestService() {
           longitude: lng.toString(),
         }));
 
+        // Clear address validation error since we now have coordinates
+        setErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors.address;
+          return newErrors;
+        });
+
         // Fetch timezone from Google Maps API
         fetchTimezoneForLocation(lat, lng);
 
