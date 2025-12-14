@@ -85,7 +85,9 @@
 
 - [x] Update rate management interface to clearly show rates are hourly with 2-hour minimum job requirement
 
-## Bug Fixes
+## Bugs
+
+- [x] Update remote site fee logic: mark locations beyond 300km from major cities as unserviceable
 
 - [x] Fix OOH warning not displaying in customer request service page - COMPLETED
 - [x] Remove irrelevant /request-service page (was working on wrong file) - COMPLETED
@@ -513,3 +515,5 @@
 - [ ] Verify API key setup instructions work
 - [ ] Test that free tier limits (20,000 requests/day) are sufficient
 - [ ] Document any API rate limiting or quota issues encountered
+
+- [x] Refine unserviceable location messaging to remove misleading "next page" text

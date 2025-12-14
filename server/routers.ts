@@ -1371,6 +1371,20 @@ export const appRouter = router({
               siteLongitude: input.siteLongitude,
             });
             
+            // Check if location is serviceable
+            if (!feeResult.isServiceable) {
+              return {
+                available: false,
+                message: "This location is too remote to service. We currently only service locations within 300km of major cities (250k+ population).",
+                estimatedPriceCents: null,
+                minPriceCents: null,
+                maxPriceCents: null,
+                supplierCount: 0,
+                breakdown: undefined,
+                remoteSiteFee: null,
+              };
+            }
+            
             if (feeResult.isRemoteSite) {
               remoteSiteFee = {
                 customerFeeCents: feeResult.customerFeeCents,

@@ -23,7 +23,7 @@ export const REMOTE_SITE_FEE_RULES = {
   CUSTOMER_RATE_PER_KM_USD: 1.00,      // Customer pays $1/km
   SUPPLIER_RATE_PER_KM_USD: 0.50,      // Supplier receives $0.50/km
   PLATFORM_RATE_PER_KM_USD: 0.50,      // Platform keeps $0.50/km
-  SEARCH_RADIUS_KM: 200,               // Search for major cities within 200km
+  SEARCH_RADIUS_KM: 300,               // Search for major cities within 300km (GeoNames free tier max)
 } as const;
 
 // ============================================================================
@@ -49,6 +49,7 @@ export interface RemoteSiteFeeResult {
   // Flags
   isRemoteSite: boolean; // true if beyond free zone
   hasNearbyMajorCity: boolean; // false if no major city found within search radius
+  isServiceable: boolean; // false if location is too remote (>300km from major city)
 }
 
 // ============================================================================
@@ -73,8 +74,7 @@ export async function calculateRemoteSiteFee(
     REMOTE_SITE_FEE_RULES.SEARCH_RADIUS_KM
   );
   
-  // If no major city found within search radius, no fee applies
-  // (This is a business decision - we could charge max fee instead)
+  // If no major city found within 300km, location is unserviceable
   if (!nearestCity) {
     return {
       nearestMajorCity: null,
@@ -85,6 +85,7 @@ export async function calculateRemoteSiteFee(
       platformFeeCents: 0,
       isRemoteSite: false,
       hasNearbyMajorCity: false,
+      isServiceable: false, // Too remote to service
     };
   }
   
@@ -104,6 +105,7 @@ export async function calculateRemoteSiteFee(
       platformFeeCents: 0,
       isRemoteSite: false,
       hasNearbyMajorCity: true,
+      isServiceable: true,
     };
   }
   
@@ -138,6 +140,7 @@ export async function calculateRemoteSiteFee(
     platformFeeCents,
     isRemoteSite: true,
     hasNearbyMajorCity: true,
+    isServiceable: true,
   };
 }
 

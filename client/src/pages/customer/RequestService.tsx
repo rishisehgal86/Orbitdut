@@ -1123,9 +1123,17 @@ export default function RequestService() {
                         <p className="font-medium text-amber-900 dark:text-amber-100 mb-1">
                           {pricingEstimate.message}
                         </p>
-                        <p className="text-amber-700 dark:text-amber-300">
-                          Detailed pricing will be shown on the next page after we match you with available suppliers.
-                        </p>
+                        {/* Only show "next page" message if it's a temporary coverage issue, not if location is unserviceable */}
+                        {!pricingEstimate.message.includes('too remote') && (
+                          <p className="text-amber-700 dark:text-amber-300">
+                            Detailed pricing will be shown on the next page after we match you with available suppliers.
+                          </p>
+                        )}
+                        {pricingEstimate.message.includes('too remote') && (
+                          <p className="text-amber-700 dark:text-amber-300">
+                            Please select a different location within 300km of a major city to proceed.
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>

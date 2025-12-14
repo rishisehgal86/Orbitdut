@@ -31,7 +31,7 @@ interface GeonamesResponse {
 export async function findNearestMajorCity(
   latitude: number,
   longitude: number,
-  radiusKm: number = 200
+  radiusKm: number = 300
 ): Promise<{
   cityName: string;
   distanceKm: number;
@@ -72,7 +72,7 @@ export async function findNearestMajorCity(
     const majorCities = data.geonames.filter(city => city.population >= 250000);
     
     if (majorCities.length === 0) {
-      console.log('No cities with 250k+ population found within radius');
+      console.log('No cities with 250k+ population found within 300km radius - location unserviceable');
       return null;
     }
     

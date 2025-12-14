@@ -40,6 +40,7 @@ describe("Remote Site Fee Calculator", () => {
 
       expect(result.isRemoteSite).toBe(false);
       expect(result.hasNearbyMajorCity).toBe(true);
+      expect(result.isServiceable).toBe(true);
       expect(result.nearestMajorCity).toBe("New York");
       expect(result.distanceToMajorCityKm).toBe(30);
       expect(result.billableDistanceKm).toBe(0);
@@ -62,6 +63,7 @@ describe("Remote Site Fee Calculator", () => {
       });
 
       expect(result.isRemoteSite).toBe(false);
+      expect(result.isServiceable).toBe(true);
       expect(result.billableDistanceKm).toBe(0);
       expect(result.customerFeeCents).toBe(0);
     });
@@ -83,6 +85,7 @@ describe("Remote Site Fee Calculator", () => {
 
       expect(result.isRemoteSite).toBe(true);
       expect(result.hasNearbyMajorCity).toBe(true);
+      expect(result.isServiceable).toBe(true);
       expect(result.nearestMajorCity).toBe("Sydney");
       expect(result.distanceToMajorCityKm).toBe(75);
       expect(result.billableDistanceKm).toBe(25); // 75 - 50 = 25km
@@ -137,7 +140,7 @@ describe("Remote Site Fee Calculator", () => {
   });
 
   describe("Sites with no nearby major city", () => {
-    it("should return zero fee when no major city found within search radius", async () => {
+    it("should mark location as unserviceable when no major city found within 300km", async () => {
       vi.mocked(findNearestMajorCity).mockResolvedValue(null);
 
       const result = await calculateRemoteSiteFee({
@@ -147,6 +150,7 @@ describe("Remote Site Fee Calculator", () => {
 
       expect(result.isRemoteSite).toBe(false);
       expect(result.hasNearbyMajorCity).toBe(false);
+      expect(result.isServiceable).toBe(false); // NEW: Location is unserviceable
       expect(result.nearestMajorCity).toBe(null);
       expect(result.distanceToMajorCityKm).toBe(null);
       expect(result.billableDistanceKm).toBe(0);
@@ -241,7 +245,7 @@ describe("Remote Site Fee Calculator", () => {
       expect(REMOTE_SITE_FEE_RULES.CUSTOMER_RATE_PER_KM_USD).toBe(1.00);
       expect(REMOTE_SITE_FEE_RULES.SUPPLIER_RATE_PER_KM_USD).toBe(0.50);
       expect(REMOTE_SITE_FEE_RULES.PLATFORM_RATE_PER_KM_USD).toBe(0.50);
-      expect(REMOTE_SITE_FEE_RULES.SEARCH_RADIUS_KM).toBe(200);
+      expect(REMOTE_SITE_FEE_RULES.SEARCH_RADIUS_KM).toBe(300);
     });
 
     it("should maintain 50/50 revenue split in constants", () => {
