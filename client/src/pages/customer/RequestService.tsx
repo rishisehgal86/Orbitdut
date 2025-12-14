@@ -1049,17 +1049,36 @@ export default function RequestService() {
 
                     {/* Breakdown */}
                     {pricingEstimate.breakdown && (
-                      <div className="text-sm space-y-2">
-                        <div className="flex justify-between text-muted-foreground">
-                          <span>Duration:</span>
-                          <span>{pricingEstimate.breakdown.durationHours} hours</span>
-                        </div>
-                        {pricingEstimate.breakdown.isOOH && (
-                          <div className="flex justify-between text-amber-600 dark:text-amber-400">
-                            <span>Out-of-Hours Surcharge:</span>
-                            <span>+{pricingEstimate.breakdown.oohSurchargePercent}%</span>
+                      <div className="text-sm space-y-3">
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-muted-foreground">
+                            <span>Total Duration:</span>
+                            <span className="font-medium">{pricingEstimate.breakdown.durationHours} hours</span>
                           </div>
-                        )}
+                          
+                          {pricingEstimate.breakdown.isOOH ? (
+                            <>
+                              <div className="pl-4 space-y-1.5 border-l-2 border-amber-200 dark:border-amber-800">
+                                <div className="flex justify-between text-xs">
+                                  <span className="text-muted-foreground">Base Hourly Rate:</span>
+                                  <span className="font-medium">${((pricingEstimate.estimatedPriceCents! / 100) / pricingEstimate.breakdown.durationHours / (1 + pricingEstimate.breakdown.oohSurchargePercent / 100)).toFixed(2)}/hour</span>
+                                </div>
+                                <div className="flex justify-between text-xs text-amber-600 dark:text-amber-400">
+                                  <span>OOH Hourly Rate (+{pricingEstimate.breakdown.oohSurchargePercent}%):</span>
+                                  <span className="font-medium">${((pricingEstimate.estimatedPriceCents! / 100) / pricingEstimate.breakdown.durationHours).toFixed(2)}/hour</span>
+                                </div>
+                                <div className="text-xs text-amber-600 dark:text-amber-400 pt-1">
+                                  <span>All {pricingEstimate.breakdown.durationHours} hours charged at OOH rate</span>
+                                </div>
+                              </div>
+                            </>
+                          ) : (
+                            <div className="flex justify-between text-muted-foreground">
+                              <span>Hourly Rate:</span>
+                              <span className="font-medium">${((pricingEstimate.estimatedPriceCents! / 100) / pricingEstimate.breakdown.durationHours).toFixed(2)}/hour</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
 

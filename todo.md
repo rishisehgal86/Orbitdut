@@ -360,3 +360,8 @@
 - [x] Test edge cases: jobs starting before 9 AM, ending after 5 PM, spanning midnight
 - [x] Update backend getPricingEstimate to pass start time to pricing engine
 - [x] Verify pricing calculations work correctly in browser
+
+- [x] Add per-hour cost display to customer pricing breakdown with full OOH transparency:
+  - Show normal hourly rate vs OOH hourly rate
+  - Display how many hours are normal vs OOH
+  - Clear calculation showing surcharge applied
