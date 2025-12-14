@@ -497,22 +497,14 @@ export default function RequestServicePricing() {
                         <span className="text-muted-foreground">Remote Site Fee</span>
                         <span>+${(pricingEstimate.remoteSiteFee.customerFeeCents / 100).toFixed(2)}</span>
                       </div>
-                      {pricingEstimate.remoteSiteFee.nearestMajorCity && (
-                        <p className="text-xs text-muted-foreground">
-                          {pricingEstimate.remoteSiteFee.distanceKm?.toFixed(0)}km from {pricingEstimate.remoteSiteFee.nearestMajorCity}
-                          {' '}({pricingEstimate.remoteSiteFee.billableDistanceKm}km billable)
-                        </p>
-                      )}
+                      <p className="text-xs text-muted-foreground">
+                        Outside of metropolitan coverage area
+                      </p>
                     </div>
                   </>
                 )}
 
-                {/* Platform Fee */}
-                <Separator />
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Platform fee (15%)</span>
-                  <span>Included</span>
-                </div>
+
 
                 {/* Total */}
                 <Separator className="my-4" />

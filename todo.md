@@ -538,3 +538,18 @@
 ## Bug Fix: Address Validation Error Persists After Selection - COMPLETED ✅
 
 - [x] Fix "Please select an address from the dropdown" error that persists after selecting an address from Google Places autocomplete on request service page
+
+## Bug Fix: Coverage & Pricing Not Calculating
+
+- [ ] Fix coverage and pricing estimation not displaying despite all required information being entered (service type, location, schedule)
+- [ ] Investigate why pricing estimation useEffect is not triggering
+- [ ] Ensure pricing API is being called when form data changes
+
+## Pricing Page Display Issues - REPORTED BY USER - COMPLETED ✅
+
+- [x] Remove "Platform fee (15%)" line from pricing breakdown on pricing page
+- [x] Change remote fee description from showing distance to "Outside of metropolitan coverage area"
+
+## Form State Persistence Issue - REPORTED BY USER - COMPLETED ✅
+
+- [x] Preserve form field values when navigating back from pricing page to request form using "Back to Edit" button

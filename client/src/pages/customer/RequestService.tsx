@@ -15,7 +15,7 @@ import CustomerLayout from "@/components/CustomerLayout";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { AlertCircle, Calendar, Clock, Info, MapPin } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { detectOOH, type OOHDetectionResult } from "@/../../shared/oohDetection";
@@ -31,7 +31,67 @@ export default function RequestService() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const utils = trpc.useUtils();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState(() => {
+    // Try to load existing form data from sessionStorage
+    const stored = sessionStorage.getItem("jobRequest");
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        // Merge with defaults to ensure all fields exist
+        return {
+          // Contact Information
+          customerName: parsed.customerName || user?.name || "",
+          customerEmail: parsed.customerEmail || user?.email || "",
+          customerPhone: parsed.customerPhone || "",
+          
+          // Service Details
+          serviceType: parsed.serviceType || "",
+          serviceLevel: parsed.serviceLevel || "" as "same_day" | "next_day" | "scheduled" | "",
+          description: parsed.description || "",
+          estimatedDuration: parsed.estimatedDuration || "120",
+          downTime: parsed.downTime || false,
+          outOfHours: parsed.outOfHours || false,
+          
+          // Site Location
+          siteName: parsed.siteName || "",
+          address: parsed.address || "",
+          city: parsed.city || "",
+          siteState: parsed.siteState || "",
+          country: parsed.country || "US",
+          postalCode: parsed.postalCode || "",
+          latitude: parsed.latitude || "",
+          longitude: parsed.longitude || "",
+          timezone: parsed.timezone || "",
+          
+          // Site Contact
+          siteContactName: parsed.siteContactName || "",
+          siteContactNumber: parsed.siteContactNumber || "",
+          
+          // Site Access & Requirements
+          accessInstructions: parsed.accessInstructions || "",
+          specialRequirements: parsed.specialRequirements || "",
+          equipmentNeeded: parsed.equipmentNeeded || "",
+          
+          // Scheduling
+          scheduledDate: parsed.scheduledDate || "",
+          scheduledTime: parsed.scheduledTime || "",
+          
+          // Project/Ticket Information
+          projectName: parsed.projectName || "",
+          changeNumber: parsed.changeNumber || "",
+          incidentNumber: parsed.incidentNumber || "",
+          
+          // Communication
+          videoConferenceLink: parsed.videoConferenceLink || "",
+          notes: parsed.notes || "",
+        };
+      } catch (e) {
+        console.error("Failed to parse stored form data", e);
+      }
+    }
+    
+    // Return default values if no stored data
+    return {
     // Contact Information
     customerName: user?.name || "",
     customerEmail: user?.email || "",
@@ -77,6 +137,7 @@ export default function RequestService() {
     // Communication
     videoConferenceLink: "",
     notes: "",
+    };
   });
 
   const [mapReady, setMapReady] = useState(false);
@@ -354,7 +415,7 @@ export default function RequestService() {
     }
   }, [formData.scheduledDate, formData.scheduledTime, formData.timezone]);
 
-  const handleMapReady = (map: google.maps.Map) => {
+  const handleMapReady = useCallback((map: google.maps.Map) => {
     setMapReady(true);
     
     // Initialize Places Autocomplete
@@ -365,8 +426,13 @@ export default function RequestService() {
       });
 
       ac.addListener("place_changed", () => {
+        console.log('🎯 place_changed event fired!');
         const place = ac.getPlace();
-        if (!place.geometry?.location) return;
+        console.log('📍 Place object:', place);
+        if (!place.geometry?.location) {
+          console.log('❌ No geometry/location in place object');
+          return;
+        }
 
         const lat = place.geometry.location.lat();
         const lng = place.geometry.location.lng();
@@ -379,7 +445,12 @@ export default function RequestService() {
 
         place.address_components?.forEach((component) => {
           const types = component.types;
+          // Try multiple types for city (locality, postal_town, administrative_area_level_2)
           if (types.includes("locality")) {
+            city = component.long_name;
+          } else if (!city && types.includes("postal_town")) {
+            city = component.long_name;
+          } else if (!city && types.includes("administrative_area_level_2")) {
             city = component.long_name;
           }
           if (types.includes("administrative_area_level_1")) {
@@ -392,6 +463,8 @@ export default function RequestService() {
             postalCode = component.long_name;
           }
         });
+
+        console.log('Extracted address components:', { city, siteState, country, postalCode });
 
         // Update form data first
         setFormData((prev) => ({
@@ -428,7 +501,7 @@ export default function RequestService() {
 
       setAutocomplete(ac);
     }
-  };
+  }, []);
 
   // Fetch timezone from Google Maps Timezone API
   const fetchTimezoneForLocation = async (lat: number, lng: number) => {
