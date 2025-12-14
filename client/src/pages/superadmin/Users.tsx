@@ -176,13 +176,17 @@ export default function SuperadminUsers() {
                       <TableCell className="font-medium">{user.name || "N/A"}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>
-                        <Badge variant={user.accountType === "supplier" ? "default" : "secondary"}>
+                        <Badge 
+                          variant="outline"
+                          className={user.accountType === "supplier" ? "border-indigo-300 bg-indigo-50 text-indigo-700" : "border-blue-300 bg-blue-50 text-blue-700"}
+                        >
                           {user.accountType}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge
-                          variant={user.role === "superadmin" ? "destructive" : user.role === "admin" ? "default" : "outline"}
+                          variant="outline"
+                          className={user.role === "superadmin" ? "border-purple-300 bg-purple-50 text-purple-700" : user.role === "admin" ? "border-green-300 bg-green-50 text-green-700" : "border-gray-300 bg-gray-50 text-gray-600"}
                         >
                           {user.role}
                         </Badge>

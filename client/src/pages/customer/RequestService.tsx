@@ -88,6 +88,83 @@ export default function RequestService() {
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [slaWarning, setSlaWarning] = useState<string | null>(null);
   const [oohDetection, setOohDetection] = useState<OOHDetectionResult | null>(null);
+  const [pricingEstimate, setPricingEstimate] = useState<{
+    available: boolean;
+    message: string;
+    estimatedPriceCents: number | null;
+    minPriceCents: number | null;
+    maxPriceCents: number | null;
+    supplierCount: number;
+    breakdown?: {
+      durationHours: number;
+      isOOH: boolean;
+      oohPremiumPercent: number;
+      platformFeePercent: number;
+    };
+  } | null>(null);
+  const [loadingPricing, setLoadingPricing] = useState(false);
+  const [pricingError, setPricingError] = useState(false);
+
+  // Fetch pricing estimate when relevant form data changes
+  useEffect(() => {
+    const fetchPricing = async () => {
+      // Check if we have all required fields
+      if (
+        !formData.serviceType ||
+        !formData.serviceLevel ||
+        !formData.estimatedDuration ||
+        !formData.city ||
+        !formData.country ||
+        !formData.scheduledDate ||
+        !formData.scheduledTime ||
+        !formData.timezone
+      ) {
+        setPricingEstimate(null);
+        return;
+      }
+
+      setLoadingPricing(true);
+      setPricingError(false);
+      
+      try {
+        // Construct ISO datetime string
+        const scheduledDateTime = `${formData.scheduledDate}T${formData.scheduledTime}`;
+        
+        const result = await utils.client.jobs.getEstimatedPrice.query({
+          serviceType: formData.serviceType,
+          serviceLevel: formData.serviceLevel as "same_day" | "next_day" | "scheduled",
+          durationMinutes: parseInt(formData.estimatedDuration),
+          city: formData.city,
+          country: formData.country,
+          scheduledDateTime,
+          timezone: formData.timezone,
+        });
+        
+        setPricingEstimate(result);
+        setPricingError(false);
+      } catch (error) {
+        console.error("Failed to fetch pricing estimate:", error);
+        setPricingEstimate(null);
+        setPricingError(true);
+      } finally {
+        setLoadingPricing(false);
+      }
+    };
+
+    // Debounce the API call
+    const timeoutId = setTimeout(fetchPricing, 500);
+    return () => clearTimeout(timeoutId);
+  }, [
+    formData.serviceType,
+    formData.serviceLevel,
+    formData.estimatedDuration,
+    formData.city,
+    formData.country,
+    formData.scheduledDate,
+    formData.scheduledTime,
+    formData.timezone,
+    utils,
+  ]);
 
   // Update form when user logs in or changes
   useEffect(() => {
@@ -894,22 +971,98 @@ export default function RequestService() {
               <div className="rounded-lg border p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <h4 className="font-medium">Pricing Estimate</h4>
-                  {formData.serviceLevel && formData.estimatedDuration ? (
+                  {loadingPricing ? (
                     <span className="text-sm text-blue-600 dark:text-blue-400">Calculating...</span>
+                  ) : pricingEstimate ? (
+                    pricingEstimate.available ? (
+                      <span className="text-sm text-green-600 dark:text-green-400 flex items-center gap-1">
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        {pricingEstimate.supplierCount} supplier{pricingEstimate.supplierCount > 1 ? 's' : ''} available
+                      </span>
+                    ) : (
+                      <span className="text-sm text-red-600 dark:text-red-400">Not available</span>
+                    )
                   ) : (
                     <span className="text-sm text-muted-foreground">Complete service details first</span>
                   )}
                 </div>
-                <div className="text-sm text-muted-foreground space-y-1">
-                  <p>• Base rate: Based on service level and duration</p>
-                  {formData.downTime && <p>• Downtime surcharge: Applied</p>}
-                  {formData.outOfHours && <p>• Out-of-hours surcharge: Applied</p>}
-                </div>
-                <div className="pt-2 border-t">
-                  <p className="text-xs text-muted-foreground">
-                    Final pricing will be confirmed after supplier matching. The estimate helps you budget for this service.
-                  </p>
-                </div>
+
+                {pricingError ? (
+                  <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-4">
+                    <div className="flex items-start gap-2">
+                      <Info className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                      <div className="text-sm">
+                        <p className="font-medium text-amber-900 dark:text-amber-100 mb-1">
+                          Pricing estimate unavailable
+                        </p>
+                        <p className="text-amber-700 dark:text-amber-300">
+                          Don't worry! Detailed pricing will be shown on the next page after we match you with available suppliers.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : pricingEstimate && pricingEstimate.available ? (
+                  <>
+                    {/* Price Range */}
+                    <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-4">
+                      <div className="text-center">
+                        <p className="text-sm text-muted-foreground mb-1">Estimated Price Range</p>
+                        <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                          ${(pricingEstimate.minPriceCents! / 100).toFixed(2)} - ${(pricingEstimate.maxPriceCents! / 100).toFixed(2)}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Average: ${(pricingEstimate.estimatedPriceCents! / 100).toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Breakdown */}
+                    {pricingEstimate.breakdown && (
+                      <div className="text-sm space-y-2">
+                        <div className="flex justify-between text-muted-foreground">
+                          <span>Duration:</span>
+                          <span>{pricingEstimate.breakdown.durationHours} hours</span>
+                        </div>
+                        {pricingEstimate.breakdown.isOOH && (
+                          <div className="flex justify-between text-amber-600 dark:text-amber-400">
+                            <span>Out-of-Hours Surcharge:</span>
+                            <span>+{pricingEstimate.breakdown.oohPremiumPercent}%</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between text-muted-foreground">
+                          <span>Platform Fee:</span>
+                          <span>+{pricingEstimate.breakdown.platformFeePercent}%</span>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="pt-2 border-t">
+                      <p className="text-xs text-muted-foreground">
+                        Final pricing will be confirmed after supplier matching. The estimate is based on available suppliers in your area.
+                      </p>
+                    </div>
+                  </>
+                ) : pricingEstimate && !pricingEstimate.available ? (
+                  <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-4">
+                    <div className="flex items-start gap-2">
+                      <Info className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                      <div className="text-sm">
+                        <p className="font-medium text-amber-900 dark:text-amber-100 mb-1">
+                          {pricingEstimate.message}
+                        </p>
+                        <p className="text-amber-700 dark:text-amber-300">
+                          Detailed pricing will be shown on the next page after we match you with available suppliers.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    <p>Enter service details, location, and schedule to see pricing estimate</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

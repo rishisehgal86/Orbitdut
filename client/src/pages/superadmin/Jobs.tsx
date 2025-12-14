@@ -70,21 +70,21 @@ export default function SuperadminJobs() {
   );
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; className?: string }> = {
-      pending_supplier_acceptance: { variant: "secondary" },
-      supplier_accepted: { variant: "default", className: "bg-blue-500" },
-      sent_to_engineer: { variant: "default", className: "bg-indigo-500" },
-      engineer_accepted: { variant: "default", className: "bg-purple-500" },
-      en_route: { variant: "default", className: "bg-orange-500" },
-      on_site: { variant: "default", className: "bg-yellow-500" },
-      completed: { variant: "default", className: "bg-green-500" },
-      cancelled: { variant: "destructive" },
+    const variants: Record<string, string> = {
+      pending_supplier_acceptance: "border-blue-300 bg-blue-50 text-blue-700",
+      supplier_accepted: "border-indigo-300 bg-indigo-50 text-indigo-700",
+      sent_to_engineer: "border-purple-300 bg-purple-50 text-purple-700",
+      engineer_accepted: "border-violet-300 bg-violet-50 text-violet-700",
+      en_route: "border-orange-300 bg-orange-50 text-orange-700",
+      on_site: "border-amber-300 bg-amber-50 text-amber-700",
+      completed: "border-green-300 bg-green-50 text-green-700",
+      cancelled: "border-gray-300 bg-gray-50 text-gray-600",
     };
 
-    const config = variants[status] || { variant: "outline" as const };
+    const className = variants[status] || "border-gray-300 bg-gray-50 text-gray-600";
 
     return (
-      <Badge variant={config.variant} className={config.className}>
+      <Badge variant="outline" className={className}>
         {status.replace(/_/g, " ")}
       </Badge>
     );

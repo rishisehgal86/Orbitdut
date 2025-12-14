@@ -163,17 +163,16 @@ export default function SuperadminSuppliers() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="font-mono">
-                          <Star className="h-3 w-3 mr-1 fill-yellow-400 text-yellow-400" />
+                        <Badge variant="outline" className="font-mono border-amber-300 bg-amber-50 text-amber-700">
+                          <Star className="h-3 w-3 mr-1 fill-amber-500 text-amber-500" />
                           {((supplier.rating || 200) / 100).toFixed(1)}
-                        </Badge>
-                      </TableCell>
+                        </Badge>                     </TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center gap-1">
                             <Badge
-                              variant={supplier.isVerified === 1 ? "default" : "secondary"}
-                              className={supplier.isVerified === 1 ? "bg-green-500" : ""}
+                              variant="outline"
+                              className={supplier.isVerified === 1 ? "border-green-300 bg-green-50 text-green-700" : "border-gray-300 bg-gray-50 text-gray-600"}
                             >
                               {supplier.isVerified === 1 ? "Verified" : supplier.verificationStatus || "Unverified"}
                             </Badge>
@@ -181,7 +180,7 @@ export default function SuperadminSuppliers() {
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger>
-                                    <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300">
+                                    <Badge variant="outline" className="border-purple-300 bg-purple-50 text-purple-700">
                                       <ShieldCheck className="h-3 w-3 mr-1" />
                                       Manual
                                     </Badge>
@@ -205,7 +204,7 @@ export default function SuperadminSuppliers() {
                             )}
                           </div>
                           {supplier.isActive === 0 && (
-                            <Badge variant="destructive">Inactive</Badge>
+                            <Badge variant="outline" className="border-red-300 bg-red-50 text-red-700">Inactive</Badge>
                           )}
                         </div>
                       </TableCell>

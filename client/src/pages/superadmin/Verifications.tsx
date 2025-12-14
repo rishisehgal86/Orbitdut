@@ -132,23 +132,23 @@ export default function SuperadminVerifications() {
 
   const getStatusBadge = (status: string | null) => {
     if (!status || status === "not_started") {
-      return <Badge variant="secondary" className="gap-1"><Clock className="w-3 h-3" /> Not Started</Badge>;
+      return <Badge variant="outline" className="gap-1 border-gray-300 bg-gray-50 text-gray-600"><Clock className="w-3 h-3" /> Not Started</Badge>;
     }
     switch (status) {
       case "in_progress":
-        return <Badge variant="outline" className="gap-1 border-yellow-500 text-yellow-600"><TrendingUp className="w-3 h-3" /> In Progress</Badge>;
+        return <Badge variant="outline" className="gap-1 border-yellow-300 bg-yellow-50 text-yellow-700"><TrendingUp className="w-3 h-3" /> In Progress</Badge>;
       case "pending_review":
-        return <Badge variant="outline" className="gap-1 border-orange-500 text-orange-600"><AlertCircle className="w-3 h-3" /> Pending Review</Badge>;
+        return <Badge variant="outline" className="gap-1 border-orange-300 bg-orange-50 text-orange-700"><AlertCircle className="w-3 h-3" /> Pending Review</Badge>;
       case "under_review":
-        return <Badge variant="outline" className="gap-1 border-blue-500 text-blue-600"><FileText className="w-3 h-3" /> Under Review</Badge>;
+        return <Badge variant="outline" className="gap-1 border-blue-300 bg-blue-50 text-blue-700"><FileText className="w-3 h-3" /> Under Review</Badge>;
       case "approved":
-        return <Badge variant="outline" className="gap-1 border-green-500 text-green-600"><CheckCircle className="w-3 h-3" /> Approved</Badge>;
+        return <Badge variant="outline" className="gap-1 border-green-300 bg-green-50 text-green-700"><CheckCircle className="w-3 h-3" /> Approved</Badge>;
       case "rejected":
-        return <Badge variant="destructive" className="gap-1"><XCircle className="w-3 h-3" /> Rejected</Badge>;
+        return <Badge variant="outline" className="gap-1 border-red-300 bg-red-50 text-red-700"><XCircle className="w-3 h-3" /> Rejected</Badge>;
       case "resubmission_required":
-        return <Badge variant="outline" className="gap-1 border-purple-500 text-purple-600"><AlertCircle className="w-3 h-3" /> Resubmission Required</Badge>;
+        return <Badge variant="outline" className="gap-1 border-purple-300 bg-purple-50 text-purple-700"><AlertCircle className="w-3 h-3" /> Resubmission Required</Badge>;
       default:
-        return <Badge variant="secondary">{status}</Badge>;
+        return <Badge variant="outline" className="border-gray-300 bg-gray-50 text-gray-600">{status}</Badge>;
     }
   };
 

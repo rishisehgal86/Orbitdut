@@ -1166,41 +1166,210 @@ export const appRouter = router({
         };
       }),
 
-    // Calculate pricing estimate
-    calculatePricing: publicProcedure
+    // Get estimated price for a job request
+    getEstimatedPrice: publicProcedure
       .input(
         z.object({
           serviceType: z.string(),
           serviceLevel: z.enum(["same_day", "next_day", "scheduled"]),
-          estimatedDuration: z.number(),
-          downTime: z.boolean().optional(),
-          outOfHours: z.boolean().optional(),
-          latitude: z.string().optional(),
-          longitude: z.string().optional(),
+          durationMinutes: z.number().min(120).max(960), // 2-16 hours
+          city: z.string(),
+          country: z.string().length(2),
+          scheduledDateTime: z.string().optional(), // ISO datetime string for OOH detection
+          timezone: z.string().optional(), // Timezone for OOH detection
         })
       )
       .query(async ({ input }) => {
-        // TODO: Implement actual pricing calculation logic
-        // - Base rate by service level (same_day: 4hrs, next_day: 24hrs, scheduled: 48hrs+)
-        // - Duration multiplier
-        // - Downtime surcharge
-        // - Out-of-hours surcharge
-        // - Location-based pricing adjustments
-        // - Supplier rate variations
+        const db = await getDb();
+        if (!db) {
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+        }
+
+        const { suppliers, supplierRates, supplierPriorityCities, supplierCoverageCountries } = await import("../drizzle/schema");
+        const { and, or, eq, isNull, sql } = await import("drizzle-orm");
+        const { detectOOH } = await import("../shared/oohDetection");
+
+        // Map frontend service level to database enum
+        const serviceLevelMap: Record<string, string> = {
+          same_day: "same_business_day",
+          next_day: "next_business_day",
+          scheduled: "scheduled",
+        };
+        const dbServiceLevel = serviceLevelMap[input.serviceLevel];
+
+        // Find qualified suppliers for this location and service
+        // Step 1: Get suppliers with country coverage
+        const suppliersWithCountryCoverage = await db
+          .select({ supplierId: supplierCoverageCountries.supplierId })
+          .from(supplierCoverageCountries)
+          .where(eq(supplierCoverageCountries.countryCode, input.country));
+
+        const supplierIdsWithCoverage = suppliersWithCountryCoverage.map(s => s.supplierId);
+
+        if (supplierIdsWithCoverage.length === 0) {
+          return {
+            available: false,
+            message: "No suppliers available in this location",
+            estimatedPriceCents: null,
+            minPriceCents: null,
+            maxPriceCents: null,
+            supplierCount: 0,
+          };
+        }
+
+        // Detect OOH conditions if datetime provided
+        let isOOH = false;
+        let oohPremiumPercent = 0;
+        if (input.scheduledDateTime) {
+          // Split ISO datetime into date and time parts
+          const [dateStr, timeStr] = input.scheduledDateTime.split('T');
+          
+          // Map service level to match detectOOH signature
+          const serviceLevelMap: Record<string, "same_business_day" | "next_business_day" | "scheduled"> = {
+            same_day: "same_business_day",
+            next_day: "next_business_day",
+            scheduled: "scheduled",
+          };
+          
+          const oohResult = detectOOH(
+            dateStr,
+            timeStr,
+            input.durationMinutes,
+            serviceLevelMap[input.serviceLevel]
+          );
+          isOOH = oohResult.isOOH;
+          oohPremiumPercent = oohResult.premiumPercent || 0;
+        }
+
+        // Step 2: Find rates for these suppliers
+        // Priority: city-specific rates > country-wide rates
+        const cityRates = await db
+          .select({
+            supplierId: supplierRates.supplierId,
+            rateUsdCents: supplierRates.rateUsdCents,
+            isServiceable: supplierRates.isServiceable,
+            cityId: supplierRates.cityId,
+          })
+          .from(supplierRates)
+          .innerJoin(supplierPriorityCities, eq(supplierRates.cityId, supplierPriorityCities.id))
+          .where(
+            and(
+              sql`${supplierRates.supplierId} IN (${sql.join(supplierIdsWithCoverage.map(id => sql`${id}`), sql`, `)})`,
+              eq(supplierRates.serviceType, input.serviceType),
+              sql`${supplierRates.serviceLevel} = ${dbServiceLevel}`,
+              eq(supplierRates.isServiceable, 1),
+              sql`LOWER(${supplierPriorityCities.cityName}) = LOWER(${input.city})`
+            )
+          );
+
+        const countryRates = await db
+          .select({
+            supplierId: supplierRates.supplierId,
+            rateUsdCents: supplierRates.rateUsdCents,
+            isServiceable: supplierRates.isServiceable,
+          })
+          .from(supplierRates)
+          .where(
+            and(
+              sql`${supplierRates.supplierId} IN (${sql.join(supplierIdsWithCoverage.map(id => sql`${id}`), sql`, `)})`,
+              eq(supplierRates.countryCode, input.country),
+              isNull(supplierRates.cityId),
+              eq(supplierRates.serviceType, input.serviceType),
+              sql`${supplierRates.serviceLevel} = ${dbServiceLevel}`,
+              eq(supplierRates.isServiceable, 1)
+            )
+          );
+
+        // Combine rates, prioritizing city-specific rates
+        const supplierRatesMap = new Map<number, number>();
         
-        // Placeholder response
+        // Add country rates first
+        for (const rate of countryRates) {
+          if (rate.rateUsdCents) {
+            supplierRatesMap.set(rate.supplierId, rate.rateUsdCents);
+          }
+        }
+        
+        // Override with city rates (higher priority)
+        for (const rate of cityRates) {
+          if (rate.rateUsdCents) {
+            supplierRatesMap.set(rate.supplierId, rate.rateUsdCents);
+          }
+        }
+
+        // Filter out suppliers that don't offer OOH if job is OOH
+        if (isOOH) {
+          const suppliersWithOOH = await db
+            .select({ id: suppliers.id })
+            .from(suppliers)
+            .where(
+              and(
+                sql`${suppliers.id} IN (${sql.join(Array.from(supplierRatesMap.keys()).map(id => sql`${id}`), sql`, `)})`,
+                eq(suppliers.offersOutOfHours, 1),
+                eq(suppliers.isVerified, 1),
+                eq(suppliers.isActive, 1)
+              )
+            );
+
+          const oohSupplierIds = new Set(suppliersWithOOH.map(s => s.id));
+          
+          // Remove suppliers that don't offer OOH
+          for (const supplierId of supplierRatesMap.keys()) {
+            if (!oohSupplierIds.has(supplierId)) {
+              supplierRatesMap.delete(supplierId);
+            }
+          }
+        }
+
+        if (supplierRatesMap.size === 0) {
+          return {
+            available: false,
+            message: isOOH 
+              ? "No suppliers available for out-of-hours service in this location"
+              : "No suppliers have configured rates for this service level in this location",
+            estimatedPriceCents: null,
+            minPriceCents: null,
+            maxPriceCents: null,
+            supplierCount: 0,
+          };
+        }
+
+        // Calculate pricing
+        const hourlyRates = Array.from(supplierRatesMap.values());
+        const durationHours = input.durationMinutes / 60;
+        
+        // Calculate base costs (rate per hour * duration)
+        const baseCosts = hourlyRates.map(rate => rate * durationHours);
+        
+        // Apply OOH surcharge if applicable
+        const totalCosts = baseCosts.map(baseCost => {
+          if (isOOH) {
+            return Math.round(baseCost * (1 + oohPremiumPercent / 100));
+          }
+          return Math.round(baseCost);
+        });
+
+        // Apply platform fee (15%)
+        const finalCosts = totalCosts.map(cost => Math.round(cost * 1.15));
+
+        // Calculate statistics
+        const minPrice = Math.min(...finalCosts);
+        const maxPrice = Math.max(...finalCosts);
+        const avgPrice = Math.round(finalCosts.reduce((a, b) => a + b, 0) / finalCosts.length);
+
         return {
-          baseRate: 0,
-          durationCharge: 0,
-          downtimeSurcharge: 0,
-          outOfHoursSurcharge: 0,
-          totalEstimate: 0,
-          currency: "USD",
-          breakdown: [
-            { item: "Base rate", amount: 0 },
-            { item: "Duration", amount: 0 },
-          ],
-          message: "Pricing calculation coming soon",
+          available: true,
+          message: `${supplierRatesMap.size} supplier${supplierRatesMap.size > 1 ? 's' : ''} available`,
+          estimatedPriceCents: avgPrice,
+          minPriceCents: minPrice,
+          maxPriceCents: maxPrice,
+          supplierCount: supplierRatesMap.size,
+          breakdown: {
+            durationHours,
+            isOOH,
+            oohPremiumPercent,
+            platformFeePercent: 15,
+          },
         };
       }),
 

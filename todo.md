@@ -298,3 +298,46 @@
 - [x] Make Manual Verification appear as a subsection under Verifications
 - [x] Add visual indentation (ml-6) and smaller text/icon to show hierarchy
 - [x] Ensure both menu items navigate correctly
+
+## UI Improvement: Status Badge Styling
+
+- [x] Analyze current badge styling (bright blue, bold appearance)
+- [x] Design more subtle badge styles with softer colors and borders
+- [x] Update verification status badges (Verified, Unverified)
+- [x] Update job status badges (completed, pending supplier acceptance)
+- [x] Apply consistent badge styling across all superadmin pages
+- [x] Test visual improvements on Dashboard, Suppliers, Jobs pages
+
+## Phase 1: Live Price Estimation on Request Form - COMPLETED ✅
+
+### Backend - Pricing Estimation API
+- [x] Create `getEstimatedPrice()` tRPC procedure in server/routers.ts
+- [x] Find qualified suppliers for location + service type + service level
+- [x] Calculate average rate from qualified suppliers
+- [x] Apply service level multiplier (same_day, next_day, scheduled)
+- [x] Apply OOH surcharge if applicable based on detectOOH result
+- [x] Return price breakdown: base rate, duration, service level, OOH, subtotal, platform fee (15%), total
+- [x] Handle edge cases: no suppliers found, no rates configured
+- [x] Return price range (min-max) from qualified suppliers
+
+### Frontend - Live Price Display in Coverage & Pricing Section
+- [x] Update RequestService.tsx Coverage & Pricing section
+- [x] Add useEffect to call getEstimatedPrice when form data changes
+- [x] Show loading state while calculating
+- [x] Display estimated price range (min-max) or average
+- [x] Show detailed breakdown: base rate, duration, surcharges, total
+- [x] Handle no coverage scenario with helpful message
+- [x] Add debouncing to avoid excessive API calls (500ms)
+
+### Testing
+- [x] Write vitest tests for getEstimatedPrice procedure (11 tests, all passing)
+- [x] Test with various scenarios: same day, next day, scheduled, OOH, no coverage
+- [x] Verify price calculations are accurate
+- [x] Test edge cases: no suppliers, no rates, invalid inputs
+
+## Phase 1: Live Price Estimation - Error Handling Improvement - COMPLETED ✅
+
+- [x] Add graceful error handling to pricing estimation
+- [x] Show fallback message when pricing fails: "Pricing will be shown in detail on next page"
+- [x] Ensure form remains functional even if pricing API fails
+- [x] Don't block user from proceeding if pricing estimate unavailable

@@ -92,23 +92,23 @@ export default function VerificationDetail() {
 
   const getStatusBadge = (status: string | null | undefined) => {
     if (!status || status === "not_started") {
-      return <Badge variant="secondary" className="gap-1">Not Started</Badge>;
+      return <Badge variant="outline" className="gap-1 border-gray-300 bg-gray-50 text-gray-600">Not Started</Badge>;
     }
     switch (status) {
       case "in_progress":
-        return <Badge variant="outline" className="gap-1 border-yellow-500 text-yellow-600">In Progress</Badge>;
+        return <Badge variant="outline" className="gap-1 border-yellow-300 bg-yellow-50 text-yellow-700">In Progress</Badge>;
       case "pending_review":
-        return <Badge variant="outline" className="gap-1 border-orange-500 text-orange-600">Pending Review</Badge>;
+        return <Badge variant="outline" className="gap-1 border-orange-300 bg-orange-50 text-orange-700">Pending Review</Badge>;
       case "under_review":
-        return <Badge variant="outline" className="gap-1 border-blue-500 text-blue-600">Under Review</Badge>;
+        return <Badge variant="outline" className="gap-1 border-blue-300 bg-blue-50 text-blue-700">Under Review</Badge>;
       case "approved":
-        return <Badge variant="outline" className="gap-1 border-green-500 text-green-600">Approved</Badge>;
+        return <Badge variant="outline" className="gap-1 border-green-300 bg-green-50 text-green-700">Approved</Badge>;
       case "rejected":
-        return <Badge variant="destructive" className="gap-1">Rejected</Badge>;
+        return <Badge variant="outline" className="gap-1 border-red-300 bg-red-50 text-red-700">Rejected</Badge>;
       case "resubmission_required":
-        return <Badge variant="outline" className="gap-1 border-purple-500 text-purple-600">Resubmission Required</Badge>;
+        return <Badge variant="outline" className="gap-1 border-purple-300 bg-purple-50 text-purple-700">Resubmission Required</Badge>;
       default:
-        return <Badge variant="secondary">{status}</Badge>;
+        return <Badge variant="outline" className="border-gray-300 bg-gray-50 text-gray-600">{status}</Badge>;
     }
   };
 
@@ -412,7 +412,11 @@ export default function VerificationDetail() {
                       <p className="text-sm font-medium text-muted-foreground mb-2">Countries</p>
                       <div className="flex flex-wrap gap-2">
                         {coverageCountries.map((cc) => (
-                          <Badge key={cc.id} variant={cc.isExcluded ? "destructive" : "secondary"}>
+                          <Badge 
+                            key={cc.id} 
+                            variant="outline"
+                            className={cc.isExcluded ? "border-red-300 bg-red-50 text-red-700" : "border-blue-300 bg-blue-50 text-blue-700"}
+                          >
                             {cc.countryCode} {cc.isExcluded && "(Excluded)"}
                           </Badge>
                         ))}
@@ -570,12 +574,12 @@ export default function VerificationDetail() {
                     <p className="text-sm font-medium text-muted-foreground">Account Active</p>
                     <div className="flex items-center gap-2 mt-1">
                       {supplier.isActive ? (
-                        <Badge variant="default" className="gap-1">
+                        <Badge variant="outline" className="gap-1 border-green-300 bg-green-50 text-green-700">
                           <CheckCircle className="w-3 h-3" />
                           Active
                         </Badge>
                       ) : (
-                        <Badge variant="destructive" className="gap-1">
+                        <Badge variant="outline" className="gap-1 border-red-300 bg-red-50 text-red-700">
                           <XCircle className="w-3 h-3" />
                           Inactive
                         </Badge>

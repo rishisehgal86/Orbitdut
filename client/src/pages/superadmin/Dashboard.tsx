@@ -6,6 +6,21 @@ import { trpc } from "@/lib/trpc";
 import { Loader2, Users, Building2, Briefcase, Shield, TrendingUp, AlertCircle } from "lucide-react";
 import { Link } from "wouter";
 
+// Helper functions for badge styling
+function getJobStatusBadgeClass(status: string): string {
+  const statusClasses: Record<string, string> = {
+    completed: "border-green-300 bg-green-50 text-green-700",
+    pending_supplier_acceptance: "border-blue-300 bg-blue-50 text-blue-700",
+    in_progress: "border-yellow-300 bg-yellow-50 text-yellow-700",
+    cancelled: "border-gray-300 bg-gray-50 text-gray-600",
+  };
+  return statusClasses[status] || "border-gray-300 bg-gray-50 text-gray-600";
+}
+
+function formatJobStatus(status: string): string {
+  return status.replace(/_/g, " ");
+}
+
 export default function SuperadminDashboard() {
   const { data: suppliers, isLoading: loadingSuppliers } = trpc.admin.getAllSuppliers.useQuery();
   const { data: users, isLoading: loadingUsers } = trpc.admin.getAllUsers.useQuery();
@@ -141,7 +156,10 @@ export default function SuperadminDashboard() {
                           {new Date(supplier.createdAt).toLocaleDateString()}
                         </p>
                       </div>
-                      <Badge variant={supplier.isVerified === 1 ? "default" : "secondary"}>
+                      <Badge 
+                        variant="outline" 
+                        className={supplier.isVerified === 1 ? "border-green-300 bg-green-50 text-green-700" : "border-gray-300 bg-gray-50 text-gray-600"}
+                      >
                         {supplier.isVerified === 1 ? "Verified" : "Unverified"}
                       </Badge>
                     </div>
@@ -171,7 +189,12 @@ export default function SuperadminDashboard() {
                           {new Date(job.createdAt).toLocaleDateString()}
                         </p>
                       </div>
-                      <Badge>{job.status.replace(/_/g, " ")}</Badge>
+                      <Badge 
+                        variant="outline"
+                        className={getJobStatusBadgeClass(job.status)}
+                      >
+                        {formatJobStatus(job.status)}
+                      </Badge>
                     </div>
                   ))}
               </div>

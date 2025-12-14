@@ -359,7 +359,7 @@ export default function SuperadminCoverage() {
                             {row.coverage.map((covered, colIdx) => (
                               <TableCell key={colIdx} className="text-center">
                                 {covered ? (
-                                  <Badge className="bg-green-500">✓</Badge>
+                                  <Badge variant="outline" className="border-green-300 bg-green-50 text-green-700">✓</Badge>
                                 ) : (
                                   <span className="text-gray-300">-</span>
                                 )}
@@ -418,7 +418,7 @@ export default function SuperadminCoverage() {
                               )}
                               <span className="font-medium">{getCountryName(country)}</span>
                             </div>
-                            <Badge>{data.supplierIds.size} suppliers</Badge>
+                            <Badge variant="outline" className="border-blue-300 bg-blue-50 text-blue-700">{data.supplierIds.size} suppliers</Badge>
                           </div>
                         </CollapsibleTrigger>
                         <CollapsibleContent>
@@ -473,7 +473,7 @@ export default function SuperadminCoverage() {
                               )}
                               <span className="font-medium truncate max-w-[200px]">{supplier}</span>
                             </div>
-                            <Badge>{data.countries.size} countries</Badge>
+                            <Badge variant="outline" className="border-indigo-300 bg-indigo-50 text-indigo-700">{data.countries.size} countries</Badge>
                           </div>
                         </CollapsibleTrigger>
                         <CollapsibleContent>
