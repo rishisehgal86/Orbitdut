@@ -1098,9 +1098,9 @@ export default function RequestService() {
                                 <span className="text-xs text-muted-foreground">
                                   {pricingEstimate.remoteSiteFee.distanceKm?.toFixed(1)}km from {pricingEstimate.remoteSiteFee.nearestMajorCity}
                                 </span>
-                                <span className="text-xs text-muted-foreground">
-                                  ({pricingEstimate.remoteSiteFee.billableDistanceKm.toFixed(1)}km beyond 50km free zone)
-                                </span>
+                                 <span className="text-xs text-muted-foreground">
+                                   ({pricingEstimate.remoteSiteFee.billableDistanceKm.toFixed(1)}km beyond nearest city coverage zone)
+                                 </span>
                               </div>
                               <span className="font-medium">${(pricingEstimate.remoteSiteFee.customerFeeCents / 100).toFixed(2)}</span>
                             </div>

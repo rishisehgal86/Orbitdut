@@ -1,9 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import CustomerLayout from "@/components/CustomerLayout";
 import { trpc } from "@/lib/trpc";
-import { Calendar, Clock, DollarSign, Loader2, MapPin } from "lucide-react";
+import { AlertCircle, Calendar, Clock, DollarSign, Info, Loader2, MapPin, Phone, User, FileText, Video, Wrench } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
@@ -11,35 +13,60 @@ import { toast } from "sonner";
 export default function RequestServicePricing() {
   const [, setLocation] = useLocation();
   const [formData, setFormData] = useState<any>(null);
+  const [pricingEstimate, setPricingEstimate] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const createJob = trpc.jobs.create.useMutation();
 
   useEffect(() => {
-    // Retrieve form data from session storage
-    const stored = sessionStorage.getItem("jobRequest");
-    if (!stored) {
+    // Retrieve form data and pricing from session storage
+    const storedForm = sessionStorage.getItem("jobRequest");
+    const storedPricing = sessionStorage.getItem("jobPricing");
+    
+    if (!storedForm) {
       toast.error("No job request data found");
       setLocation("/customer/request-service");
       return;
     }
-    setFormData(JSON.parse(stored));
+    
+    const parsedForm = JSON.parse(storedForm);
+    setFormData(parsedForm);
+    
+    if (storedPricing) {
+      setPricingEstimate(JSON.parse(storedPricing));
+    }
   }, [setLocation]);
 
-  const handleSubmit = async () => {
+  const handleProceedToPayment = async () => {
     if (!formData) return;
 
+    // For now, create the job directly (payment integration will come next)
     setIsSubmitting(true);
     try {
       // Generate unique job token
       const jobToken = `JOB-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`;
 
-      // Calculate price (this should match your pricing logic)
-      const baseRate = 100; // $100/hour base rate
-      const durationHours = parseInt(formData.estimatedDuration) / 60;
-      const isOutOfHours = false; // You can add logic to detect this
-      const outOfHoursMultiplier = isOutOfHours ? 1.5 : 1;
-      const calculatedPrice = Math.round(baseRate * durationHours * outOfHoursMultiplier * 100); // In cents
+      // Use pricing estimate if available, otherwise calculate basic price
+      let calculatedPriceCents = 0;
+      let isOutOfHours = formData.isOutOfHours || false;
+      let oohPremiumPercent = formData.oohPremiumPercent || 0;
+      let remoteSiteFeeCents = 0;
+
+      if (pricingEstimate?.estimatedPriceCents) {
+        calculatedPriceCents = pricingEstimate.estimatedPriceCents;
+        if (pricingEstimate.breakdown?.isOOH) {
+          isOutOfHours = true;
+          oohPremiumPercent = pricingEstimate.breakdown.oohSurchargePercent;
+        }
+        if (pricingEstimate.remoteSiteFee?.customerFeeCents) {
+          remoteSiteFeeCents = pricingEstimate.remoteSiteFee.customerFeeCents;
+        }
+      } else {
+        // Fallback calculation (should rarely happen)
+        const baseRate = 100; // $100/hour
+        const durationHours = parseInt(formData.estimatedDuration) / 60;
+        calculatedPriceCents = Math.round(baseRate * durationHours * 100);
+      }
 
       const result = await createJob.mutateAsync({
         // Basic job info
@@ -88,13 +115,14 @@ export default function RequestServicePricing() {
         notes: formData.notes || undefined,
 
         // Pricing
-        calculatedPrice,
+        calculatedPrice: calculatedPriceCents,
         currency: "USD",
         isOutOfHours,
       });
 
       // Clear session storage
       sessionStorage.removeItem("jobRequest");
+      sessionStorage.removeItem("jobPricing");
 
       toast.success("Job request submitted successfully!");
       setLocation(`/customer/jobs`);
@@ -116,26 +144,60 @@ export default function RequestServicePricing() {
     );
   }
 
+  // Calculate display values
   const durationHours = parseInt(formData.estimatedDuration) / 60;
-  const baseRate = 100;
-  const isOutOfHours = false;
-  const outOfHoursMultiplier = isOutOfHours ? 1.5 : 1;
-  const totalPrice = baseRate * durationHours * outOfHoursMultiplier;
+  const scheduledDateTime = new Date(`${formData.scheduledDate}T${formData.scheduledTime}`);
+  
+  // Service level display
+  const serviceLevelLabels = {
+    same_day: "Same Business Day",
+    next_day: "Next Business Day",
+    scheduled: "Scheduled"
+  };
 
   return (
     <CustomerLayout>
-      <div className="space-y-6 max-w-4xl mx-auto">
+      <div className="space-y-6 max-w-5xl mx-auto">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Review & Confirm</h1>
           <p className="text-muted-foreground">
-            Review your service request details and pricing
+            Please review all details carefully before proceeding to payment
           </p>
         </div>
 
-        {/* Service Summary */}
+        {/* Contact Information */}
         <Card>
           <CardHeader>
-            <CardTitle>Service Summary</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Contact Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid gap-4 md:grid-cols-3">
+              <div>
+                <p className="text-sm text-muted-foreground">Name</p>
+                <p className="font-medium">{formData.customerName}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Email</p>
+                <p className="font-medium">{formData.customerEmail}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Phone</p>
+                <p className="font-medium">{formData.customerPhone}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Service Details */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Wrench className="h-5 w-5" />
+              Service Details
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
@@ -144,26 +206,40 @@ export default function RequestServicePricing() {
                 <p className="font-medium">{formData.serviceType}</p>
               </div>
               <div>
+                <p className="text-sm text-muted-foreground">Service Level</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium">{serviceLevelLabels[formData.serviceLevel as keyof typeof serviceLevelLabels] || formData.serviceLevel}</p>
+                  {formData.serviceLevel === "same_day" && (
+                    <Badge variant="destructive" className="text-xs">Urgent</Badge>
+                  )}
+                  {formData.serviceLevel === "next_day" && (
+                    <Badge variant="default" className="text-xs">Priority</Badge>
+                  )}
+                </div>
+              </div>
+              <div>
                 <p className="text-sm text-muted-foreground">Duration</p>
-                <p className="font-medium">{durationHours} hours</p>
+                <p className="font-medium">{durationHours} hours ({formData.estimatedDuration} minutes)</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Booking Type</p>
                 <p className="font-medium capitalize">{formData.bookingType || "hourly"}</p>
               </div>
-              {formData.downTime && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Priority</p>
-                  <p className="font-medium text-destructive">🚨 Urgent - Causing Downtime</p>
-                </div>
-              )}
             </div>
+            {formData.downTime && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Urgent - Causing Downtime</strong>
+                </AlertDescription>
+              </Alert>
+            )}
             {formData.description && (
               <>
                 <Separator />
                 <div>
                   <p className="text-sm text-muted-foreground mb-2">Description</p>
-                  <p className="text-sm">{formData.description}</p>
+                  <p className="text-sm whitespace-pre-wrap">{formData.description}</p>
                 </div>
               </>
             )}
@@ -174,162 +250,300 @@ export default function RequestServicePricing() {
         <div className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Location</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="h-5 w-5" />
+                Site Location
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {formData.siteName && (
-                <div className="flex items-start gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="font-medium">{formData.siteName}</p>
-                  </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Site Name</p>
+                  <p className="font-medium">{formData.siteName}</p>
                 </div>
               )}
-              <div className="flex items-start gap-2">
-                <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="text-sm">{formData.address}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {formData.city}, {formData.siteState && `${formData.siteState}, `}{formData.country}
-                  </p>
-                </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Address</p>
+                <p className="text-sm">{formData.address}</p>
+                <p className="text-sm">
+                  {formData.city}{formData.siteState && `, ${formData.siteState}`}
+                </p>
+                <p className="text-sm">{formData.country} {formData.postalCode}</p>
               </div>
+              {formData.timezone && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Timezone</p>
+                  <p className="text-sm">{formData.timezone}</p>
+                </div>
+              )}
+              <Separator />
               {(formData.siteContactName || formData.siteContactNumber) && (
-                <>
-                  <Separator />
-                  <div>
-                    <p className="text-sm text-muted-foreground">On-Site Contact</p>
-                    {formData.siteContactName && <p className="text-sm">{formData.siteContactName}</p>}
-                    {formData.siteContactNumber && <p className="text-sm">{formData.siteContactNumber}</p>}
-                  </div>
-                </>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">On-Site Contact</p>
+                  {formData.siteContactName && <p className="text-sm font-medium">{formData.siteContactName}</p>}
+                  {formData.siteContactNumber && (
+                    <p className="text-sm flex items-center gap-1">
+                      <Phone className="h-3 w-3" />
+                      {formData.siteContactNumber}
+                    </p>
+                  )}
+                </div>
               )}
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Schedule</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Schedule
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex items-start gap-2">
-                <Calendar className="h-4 w-4 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="font-medium">
-                    {new Date(`${formData.scheduledDate}T${formData.scheduledTime}`).toLocaleDateString(undefined, {
-                      weekday: "long",
-                      month: "long",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  </p>
-                </div>
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Date</p>
+                <p className="font-medium">
+                  {scheduledDateTime.toLocaleDateString(undefined, {
+                    weekday: "long",
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </p>
               </div>
-              <div className="flex items-start gap-2">
-                <Clock className="h-4 w-4 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="text-sm">
-                    {new Date(`${formData.scheduledDate}T${formData.scheduledTime}`).toLocaleTimeString(undefined, {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
-                  {formData.timezone && (
-                    <p className="text-xs text-muted-foreground">{formData.timezone}</p>
-                  )}
-                </div>
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Time</p>
+                <p className="font-medium flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  {scheduledDateTime.toLocaleTimeString(undefined, {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
               </div>
+              {formData.isOutOfHours && (
+                <Alert className="border-amber-500/50 bg-amber-500/10">
+                  <AlertCircle className="h-4 w-4 text-amber-600" />
+                  <AlertDescription className="text-amber-800 dark:text-amber-200">
+                    <strong>Out-of-Hours Service</strong>
+                    {formData.oohReason && (
+                      <p className="text-xs mt-1">{formData.oohReason}</p>
+                    )}
+                  </AlertDescription>
+                </Alert>
+              )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Additional Details */}
-        {(formData.accessInstructions || formData.specialRequirements || formData.equipmentNeeded || formData.projectName || formData.notes) && (
+        {/* Site Access & Requirements */}
+        {(formData.accessInstructions || formData.specialRequirements || formData.equipmentNeeded) && (
           <Card>
             <CardHeader>
-              <CardTitle>Additional Details</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Info className="h-5 w-5" />
+                Site Access & Requirements
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {formData.accessInstructions && (
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Access Instructions</p>
-                  <p className="text-sm mt-1">{formData.accessInstructions}</p>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">Access Instructions</p>
+                  <p className="text-sm whitespace-pre-wrap">{formData.accessInstructions}</p>
                 </div>
               )}
               {formData.specialRequirements && (
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Special Requirements</p>
-                  <p className="text-sm mt-1">{formData.specialRequirements}</p>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">Special Requirements</p>
+                  <p className="text-sm whitespace-pre-wrap">{formData.specialRequirements}</p>
                 </div>
               )}
               {formData.equipmentNeeded && (
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Equipment Needed</p>
-                  <p className="text-sm mt-1">{formData.equipmentNeeded}</p>
-                </div>
-              )}
-              {(formData.projectName || formData.changeNumber || formData.incidentNumber) && (
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Project/Ticket Info</p>
-                  <div className="text-sm mt-1 space-y-1">
-                    {formData.projectName && <p>Project: {formData.projectName}</p>}
-                    {formData.changeNumber && <p>Change: {formData.changeNumber}</p>}
-                    {formData.incidentNumber && <p>Incident: {formData.incidentNumber}</p>}
-                  </div>
-                </div>
-              )}
-              {formData.videoConferenceLink && (
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Video Conference</p>
-                  <a href={formData.videoConferenceLink} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline mt-1 block">
-                    {formData.videoConferenceLink}
-                  </a>
-                </div>
-              )}
-              {formData.notes && (
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Additional Notes</p>
-                  <p className="text-sm mt-1">{formData.notes}</p>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">Equipment Needed</p>
+                  <p className="text-sm whitespace-pre-wrap">{formData.equipmentNeeded}</p>
                 </div>
               )}
             </CardContent>
           </Card>
         )}
 
-        {/* Pricing */}
-        <Card>
+        {/* Project/Ticket Information */}
+        {(formData.projectName || formData.changeNumber || formData.incidentNumber) && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Project & Ticket Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid gap-4 md:grid-cols-3">
+                {formData.projectName && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Project Name</p>
+                    <p className="font-medium">{formData.projectName}</p>
+                  </div>
+                )}
+                {formData.changeNumber && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Change Number</p>
+                    <p className="font-medium">{formData.changeNumber}</p>
+                  </div>
+                )}
+                {formData.incidentNumber && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Incident Number</p>
+                    <p className="font-medium">{formData.incidentNumber}</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Communication & Notes */}
+        {(formData.videoConferenceLink || formData.notes) && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Video className="h-5 w-5" />
+                Communication & Notes
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {formData.videoConferenceLink && (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">Video Conference Link</p>
+                  <a 
+                    href={formData.videoConferenceLink} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:underline break-all"
+                  >
+                    {formData.videoConferenceLink}
+                  </a>
+                </div>
+              )}
+              {formData.notes && (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">Additional Notes</p>
+                  <p className="text-sm whitespace-pre-wrap">{formData.notes}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Pricing Breakdown */}
+        <Card className="border-primary/20">
           <CardHeader>
-            <CardTitle>Pricing</CardTitle>
-            <CardDescription>Estimated cost for this service</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5" />
+              Pricing Breakdown
+            </CardTitle>
+            <CardDescription>
+              {pricingEstimate?.available 
+                ? `Based on ${pricingEstimate.supplierCount} available supplier${pricingEstimate.supplierCount !== 1 ? 's' : ''}`
+                : "Estimated pricing"
+              }
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Base Rate</span>
-              <span>${baseRate}/hour</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Duration</span>
-              <span>{durationHours} hours</span>
-            </div>
-            {isOutOfHours && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Out of Hours Multiplier</span>
-                <span>×{outOfHoursMultiplier}</span>
-              </div>
+            {pricingEstimate?.available ? (
+              <>
+                {/* Base Service Cost */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Duration</span>
+                    <span>{durationHours} hours</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Base hourly rate range</span>
+                    <span>
+                      ${(pricingEstimate.minPriceCents / 100 / durationHours).toFixed(2)} - ${(pricingEstimate.maxPriceCents / 100 / durationHours).toFixed(2)}/hour
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Base service cost</span>
+                    <span className="font-medium">
+                      ${(pricingEstimate.minPriceCents / 100).toFixed(2)} - ${(pricingEstimate.maxPriceCents / 100).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* OOH Surcharge */}
+                {pricingEstimate.breakdown?.isOOH && (
+                  <>
+                    <Separator />
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Out-of-Hours Surcharge</span>
+                        <span className="font-medium text-amber-600">+{pricingEstimate.breakdown.oohSurchargePercent}%</span>
+                      </div>
+                      {formData.oohReason && (
+                        <p className="text-xs text-muted-foreground">{formData.oohReason}</p>
+                      )}
+                    </div>
+                  </>
+                )}
+
+                {/* Remote Site Fee */}
+                {pricingEstimate.remoteSiteFee && pricingEstimate.remoteSiteFee.customerFeeCents > 0 && (
+                  <>
+                    <Separator />
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Remote Site Fee</span>
+                        <span className="font-medium">+${(pricingEstimate.remoteSiteFee.customerFeeCents / 100).toFixed(2)}</span>
+                      </div>
+                      {pricingEstimate.remoteSiteFee.nearestMajorCity && (
+                        <p className="text-xs text-muted-foreground">
+                          {pricingEstimate.remoteSiteFee.distanceKm?.toFixed(0)}km from {pricingEstimate.remoteSiteFee.nearestMajorCity}
+                          {' '}({pricingEstimate.remoteSiteFee.billableDistanceKm}km billable)
+                        </p>
+                      )}
+                    </div>
+                  </>
+                )}
+
+                {/* Platform Fee */}
+                <Separator />
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Platform fee (15%)</span>
+                  <span>Included</span>
+                </div>
+
+                {/* Total */}
+                <Separator className="my-4" />
+                <div className="flex justify-between items-center">
+                  <span className="text-lg font-semibold">Estimated Total</span>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-primary">
+                      ${(pricingEstimate.estimatedPriceCents / 100).toFixed(2)}
+                    </div>
+                    {pricingEstimate.minPriceCents !== pricingEstimate.maxPriceCents && (
+                      <p className="text-xs text-muted-foreground">
+                        Range: ${(pricingEstimate.minPriceCents / 100).toFixed(2)} - ${(pricingEstimate.maxPriceCents / 100).toFixed(2)}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-1">Payment after service completion</p>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  {pricingEstimate?.message || "Pricing information unavailable. Our team will contact you with a quote."}
+                </AlertDescription>
+              </Alert>
             )}
-            <Separator />
-            <div className="flex justify-between items-center">
-              <span className="text-lg font-semibold">Total</span>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-primary">${totalPrice.toFixed(2)}</div>
-                <p className="text-xs text-muted-foreground">Payment after completion</p>
-              </div>
-            </div>
           </CardContent>
         </Card>
 
         {/* Actions */}
-        <div className="flex justify-between">
+        <div className="flex justify-between pb-8">
           <Button
             variant="outline"
             onClick={() => setLocation("/customer/request-service")}
@@ -338,19 +552,19 @@ export default function RequestServicePricing() {
             Back to Edit
           </Button>
           <Button
-            onClick={handleSubmit}
+            onClick={handleProceedToPayment}
             disabled={isSubmitting}
             size="lg"
+            className="min-w-[200px]"
           >
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Submitting...
+                Processing...
               </>
             ) : (
               <>
-                <DollarSign className="mr-2 h-4 w-4" />
-                Confirm & Submit Request
+                Proceed to Payment
               </>
             )}
           </Button>

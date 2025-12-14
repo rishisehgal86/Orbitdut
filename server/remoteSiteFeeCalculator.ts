@@ -4,7 +4,7 @@
  * Calculates distance-based travel surcharges for sites beyond 50km from major cities.
  * 
  * BUSINESS RULES:
- * - Free zone: 0-50km from nearest major city (250k+ population)
+ * - Nearest city coverage zone: 0-50km from nearest major city (250k+ population)
  * - Remote site fee: $1.00 USD per km for distance beyond 50km
  * - Customer pays: $1.00/km
  * - Supplier receives: $0.50/km
@@ -39,7 +39,7 @@ export interface RemoteSiteFeeResult {
   // Distance information
   nearestMajorCity: string | null;
   distanceToMajorCityKm: number | null;
-  billableDistanceKm: number; // Distance beyond free zone (0 if within free zone)
+  billableDistanceKm: number; // Distance beyond nearest city coverage zone (0 if within zone)
   
   // Fee breakdown (all in cents)
   customerFeeCents: number;
@@ -47,7 +47,7 @@ export interface RemoteSiteFeeResult {
   platformFeeCents: number;
   
   // Flags
-  isRemoteSite: boolean; // true if beyond free zone
+  isRemoteSite: boolean; // true if beyond nearest city coverage zone
   hasNearbyMajorCity: boolean; // false if no major city found within search radius
   isServiceable: boolean; // false if location is too remote (>300km from major city)
 }
@@ -91,10 +91,10 @@ export async function calculateRemoteSiteFee(
   
   const distanceKm = nearestCity.distanceKm;
   
-  // Calculate billable distance (only distance beyond free zone)
+    // Calculate billable distance (only distance beyond nearest city coverage zone)
   const billableDistanceKm = Math.max(0, distanceKm - REMOTE_SITE_FEE_RULES.FREE_ZONE_KM);
   
-  // If within free zone, no fee applies
+  // If within nearest city coverage zone, no fee applies
   if (billableDistanceKm === 0) {
     return {
       nearestMajorCity: nearestCity.cityName,
@@ -160,7 +160,7 @@ export function formatRemoteSiteFeeForCustomer(result: RemoteSiteFeeResult): str
   }
   
   const feeUSD = (result.customerFeeCents / 100).toFixed(2);
-  return `Remote Site Fee: $${feeUSD} (${result.billableDistanceKm.toFixed(1)}km beyond ${REMOTE_SITE_FEE_RULES.FREE_ZONE_KM}km free zone)`;
+  return `Remote Site Fee: $${feeUSD} (${result.billableDistanceKm.toFixed(1)}km beyond nearest city coverage zone)`;
 }
 
 /**

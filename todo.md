@@ -518,3 +518,13 @@
 
 - [x] Refine unserviceable location messaging to remove misleading "next page" text
 - [x] Update "no suppliers available" messaging to provide helpful guidance instead of misleading "next page" text
+
+## Pricing Page Integration with New Pricing Engine
+
+- [x] Update RequestServicePricing.tsx to retrieve pricing estimate from sessionStorage
+- [x] Display comprehensive pricing breakdown (base rate, OOH surcharge, remote site fee, platform fee)
+- [x] Show service level information (Same Day/Next Day/Scheduled)
+- [x] Show nearest major city and distance for remote site fee context
+- [x] Display detailed OOH hours breakdown when applicable
+- [x] Use actual pricing data when creating job (not hardcoded values)
+- [x] Test complete flow from request form → pricing page → job creation
