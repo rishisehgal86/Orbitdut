@@ -452,3 +452,64 @@
 - [ ] Add remote site fee explanation to customer help section
 - [ ] Update pricing documentation
 - [ ] Add remote site fee to platform fee breakdown
+
+## Remote Site Fee System - Testing Required
+
+### Backend Testing (Completed ✅)
+- [x] GeoNames API integration test (22 vitest tests passing)
+- [x] Remote site fee calculator unit tests
+- [x] Pricing engine integration tests with remote site fees
+- [x] Distance calculation accuracy tests
+- [x] Free zone boundary tests (49km, 50km, 51km)
+- [x] Accounting integrity tests (customer = supplier + platform)
+
+### Frontend Integration Testing (Required)
+- [ ] Test address autocomplete with Google Places API
+- [ ] Verify remote site fee displays in pricing breakdown on request form
+- [ ] Test with location within 50km of major city (should show $0 fee)
+- [ ] Test with location 100km from major city (should show ~$50 fee)
+- [ ] Test with very remote location (should show appropriate fee)
+- [ ] Verify fee breakdown shows on pricing/confirmation page
+- [ ] Test that fee persists through job creation workflow
+- [ ] Verify fee displays correctly in job detail pages (customer & supplier views)
+
+### Edge Case Testing (Required)
+- [ ] Test with location where no major city found within 200km radius
+- [ ] Test GeoNames API failure handling (graceful degradation)
+- [ ] Test with international locations (Sydney, London, Tokyo, etc.)
+- [ ] Test with locations near country borders
+- [ ] Test timezone detection still works with coordinates
+- [ ] Verify supplier receives correct payout amount (50% of fee)
+- [ ] Verify platform revenue calculation is correct (50% of fee)
+
+### UI/UX Testing (Required)
+- [ ] Verify distance and nearest city display correctly
+- [ ] Test that "X km from [City Name]" shows in UI
+- [ ] Verify fee explanation is clear to customers
+- [ ] Test mobile responsiveness of fee display
+- [ ] Verify fee appears in all relevant pricing breakdowns
+- [ ] Test that suppliers can see fee breakdown in their job view
+
+### Database Testing (Required)
+- [ ] Verify all remote site fee fields save correctly to jobs table
+- [ ] Test that distanceToNearestCityKm stores accurate values
+- [ ] Verify remoteSiteFeeCustomerCents calculation is correct
+- [ ] Verify remoteSiteFeeSupplierCents is exactly 50% of customer fee
+- [ ] Verify remoteSiteFeePlatformCents is exactly 50% of customer fee
+- [ ] Test that nearestMajorCity name stores correctly
+
+### End-to-End Workflow Testing (Required)
+- [ ] Create test job with remote location (e.g., 150km from city)
+- [ ] Verify fee calculates during request form
+- [ ] Verify fee shows on pricing/confirmation page
+- [ ] Submit job and verify fee saves to database
+- [ ] Check supplier view shows correct payout amount
+- [ ] Verify customer confirmation shows correct total including fee
+- [ ] Test complete job workflow with remote site fee included
+
+### Documentation Testing (Required)
+- [ ] Verify GEONAMES_SETUP.md instructions are accurate
+- [ ] Test GeoNames account creation process
+- [ ] Verify API key setup instructions work
+- [ ] Test that free tier limits (20,000 requests/day) are sufficient
+- [ ] Document any API rate limiting or quota issues encountered
