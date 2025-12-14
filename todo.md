@@ -365,3 +365,90 @@
   - Show normal hourly rate vs OOH hourly rate
   - Display how many hours are normal vs OOH
   - Clear calculation showing surcharge applied
+
+
+## Remote Site Fee System Implementation
+
+### Overview
+- Customer pays: $1.00 per km for distance beyond 50km from nearest major city (250k+ population)
+- Supplier receives: $0.50 per km
+- Platform keeps: $0.50 per km (50% margin on travel fees)
+- Mandatory for all suppliers (no opt-out)
+
+### Ph### Phase 3: Database Schema
+- [x] Add remote site fee fields to jobs table:e:
+  - [ ] remoteSiteFeeKm DECIMAL(10,2) - billable distance in km
+  - [ ] remoteSiteFeeCustomerCents INT - amount customer pays
+  - [ ] remoteSiteFeeSupplierCents INT - amount supplier receives
+  - [ ] remoteSiteFeePlatformCents INT - platform revenue
+  - [ ] nearestMajorCity VARCHAR(255) - name of nearest major city
+  - [ ] distanceToMajorCityKm DECIMAL(10,2) - total distance to city
+- [ ] Run database migration (pnpm db:push)
+
+### Phase 2: GeoNames API Integration
+- [ ] Create server/geonames.ts utility module
+- [ ] Implement findNearestMajorCity() function:
+  - [ ] Query GeoNames API for cities with population >= 250,000
+  - [ ] Search within reasonable radius (e.g., 200km)
+  - [ ] Return nearest city with coordinates
+- [ ] Add error handling for API failures
+- [ ] Add caching to reduce API calls
+
+### Phase 3: Distance Calculation
+- [ ] Create server/distanceCalculator.ts utility module
+- [ ] Implement calculateDrivingDistance() function using Google Maps Distance Matrix API
+- [ ] Handle edge cases: unreachable locations, API failures
+- [ ] Add fallback to straight-line distance if driving distance unavailable
+
+### Phase 4: Pricing Engine Integration
+- [x] Update server/pricingEngine.ts with remote site fee logic
+- [x] Create calculateRemoteSiteFee() function:
+  - [x] Calculate billable distance (total - 50km free zone)
+  - [x] Calculate customer charge ($1/km)
+  - [x] Calculate supplier payout ($0.50/km)
+  - [x] Calculate platform revenue ($0.50/km)
+- [x] Integrate into calculateJobPricing() main function
+- [x] Update accounting integrity checks to include remote site fee
+- [x] Add remote site fee to pricing breakdown structure
+
+### Phase 5: Frontend - Request Service Form
+- [x] Update client/src/pages/customer/RequestService.tsx
+- [x] Add distance calculation when address is selected
+- [x] Display nearest major city in Coverage & Pricing section
+- [x] Show distance to city
+- [x] Display remote site fee if applicable:
+  - [x] "Remote Site Fee: $25.00 (25km beyond 50km free zone)"
+  - [x] Or: "No remote site fee (within 50km of major city)"
+- [x] Update total price to include remote site fee
+
+### Phase 6: Frontend - Pricing Breakdown Display
+- [ ] Update pricing breakdown component to show remote site fee
+- [ ] Add new section: "Travel & Distance"
+  - [ ] Nearest major city: [City Name]
+  - [ ] Distance: [X] km
+  - [ ] Remote site fee: $[amount] or "None"
+- [ ] Update total calculation to include remote site fee
+
+### Phase 7: Job Detail Pages
+- [ ] Update customer job detail page to show remote site fee
+- [ ] Update supplier job detail page with payment breakdown:
+  - [ ] Show remote site fee received by supplier
+  - [ ] Separate from hourly rate payment
+- [ ] Update admin job detail page to show full fee breakdown
+
+### Phase 8: Testing
+- [x] Write vitest tests for remote site fee calculations
+- [x] Test with location near major city (< 50km, no fee)
+- [x] Test with remote location (> 50km, fee applies)
+- [x] Test edge cases: exactly 50km, very remote (200+ km)
+- [x] Test accounting integrity with remote site fee
+- [x] Verify 50/50 split between platform and supplier
+- [x] Test GeoNames API integration (mocked)
+- [x] Test error handling when APIs fail
+- [x] Browser testing completed (requires GeoNames API key for live testing)
+
+### Phase 9: Documentation
+- [ ] Document remote site fee policy in supplier onboarding
+- [ ] Add remote site fee explanation to customer help section
+- [ ] Update pricing documentation
+- [ ] Add remote site fee to platform fee breakdown

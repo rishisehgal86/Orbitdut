@@ -47,27 +47,44 @@ export interface PricingInput {
   // Optional: for proportional OOH calculation
   startHour?: number;  // 0-23 (e.g., 16 for 4 PM)
   startMinute?: number; // 0-59
+  // Optional: remote site fee (pre-calculated)
+  remoteSiteFee?: {
+    customerFeeCents: number;
+    supplierFeeCents: number;
+    platformFeeCents: number;
+    nearestMajorCity: string | null;
+    distanceKm: number | null;
+    billableDistanceKm: number;
+  };
 }
 
 export interface PricingBreakdown {
   // Supplier receives
   supplierBaseCents: number;
   supplierOOHPremiumCents: number;
+  supplierRemoteSiteFeeCents: number;
   supplierTotalCents: number;
   
   // Platform receives
   platformFeeCents: number;
   platformOOHMarginCents: number;
+  platformRemoteSiteFeeCents: number;
   platformTotalCents: number;
   
   // Customer pays
   customerBaseCents: number;
   customerOOHSurchargeCents: number;
+  customerRemoteSiteFeeCents: number;
   customerTotalCents: number;
   
   // Metadata
   durationHours: number;
   isOOH: boolean;
+  remoteSiteInfo?: {
+    nearestMajorCity: string | null;
+    distanceKm: number | null;
+    billableDistanceKm: number;
+  };
 }
 
 export interface JobPricingResult {
@@ -135,8 +152,11 @@ export function calculateJobPricing(input: PricingInput): JobPricingResult {
   // OOH premium supplier receives (25% extra on OOH hours only)
   const supplierOOHPremiumCents = Math.round(supplierOOHBaseCents * PRICING_RULES.OOH_SUPPLIER_PREMIUM_PERCENT / 100);
   
-  // Total supplier payout (regular hours + OOH hours + OOH premium)
-  const supplierTotalCents = supplierBaseCents + supplierOOHBaseCents + supplierOOHPremiumCents;
+  // Remote site fee supplier receives
+  const supplierRemoteSiteFeeCents = input.remoteSiteFee?.supplierFeeCents || 0;
+  
+  // Total supplier payout (regular hours + OOH hours + OOH premium + remote site fee)
+  const supplierTotalCents = supplierBaseCents + supplierOOHBaseCents + supplierOOHPremiumCents + supplierRemoteSiteFeeCents;
   
   // ========================================
   // STEP 2: Calculate customer price
@@ -154,8 +174,11 @@ export function calculateJobPricing(input: PricingInput): JobPricingResult {
   // OOH surcharge customer pays (50% of OOH hours only)
   const customerOOHSurchargeCents = Math.round(supplierOOHBaseCents * PRICING_RULES.OOH_CUSTOMER_SURCHARGE_PERCENT / 100);
   
+  // Remote site fee customer pays
+  const customerRemoteSiteFeeCents = input.remoteSiteFee?.customerFeeCents || 0;
+  
   // Total customer pays
-  const customerTotalCents = customerBaseCents + customerOOHSurchargeCents;
+  const customerTotalCents = customerBaseCents + customerOOHSurchargeCents + customerRemoteSiteFeeCents;
   
   // ========================================
   // STEP 3: Calculate platform revenue
@@ -167,8 +190,11 @@ export function calculateJobPricing(input: PricingInput): JobPricingResult {
   // Platform OOH margin (difference between what customer pays and supplier receives)
   const platformOOHMarginCents = customerOOHSurchargeCents - supplierOOHPremiumCents;
   
+  // Platform remote site fee revenue
+  const platformRemoteSiteFeeCents = input.remoteSiteFee?.platformFeeCents || 0;
+  
   // Total platform revenue
-  const platformTotalCents = platformFeeCents + platformOOHMarginCents;
+  const platformTotalCents = platformFeeCents + platformOOHMarginCents + platformRemoteSiteFeeCents;
   
   // ========================================
   // STEP 4: Verify accounting integrity
@@ -194,15 +220,23 @@ export function calculateJobPricing(input: PricingInput): JobPricingResult {
     breakdown: {
       supplierBaseCents,
       supplierOOHPremiumCents,
+      supplierRemoteSiteFeeCents,
       supplierTotalCents,
       platformFeeCents,
       platformOOHMarginCents,
+      platformRemoteSiteFeeCents,
       platformTotalCents,
       customerBaseCents,
       customerOOHSurchargeCents,
+      customerRemoteSiteFeeCents,
       customerTotalCents,
       durationHours,
       isOOH,
+      remoteSiteInfo: input.remoteSiteFee ? {
+        nearestMajorCity: input.remoteSiteFee.nearestMajorCity,
+        distanceKm: input.remoteSiteFee.distanceKm,
+        billableDistanceKm: input.remoteSiteFee.billableDistanceKm,
+      } : undefined,
     },
   };
 }
@@ -220,8 +254,14 @@ export interface CustomerPricingDisplay {
   breakdown: {
     basePriceCents: number;
     oohSurchargeCents: number;
+    remoteSiteFeeCents: number;
     durationHours: number;
     isOOH: boolean;
+    remoteSiteInfo?: {
+      nearestMajorCity: string | null;
+      distanceKm: number | null;
+      billableDistanceKm: number;
+    };
   };
 }
 
@@ -233,8 +273,10 @@ export function getCustomerPricingDisplay(input: PricingInput): CustomerPricingD
     breakdown: {
       basePriceCents: result.breakdown.customerBaseCents,
       oohSurchargeCents: result.breakdown.customerOOHSurchargeCents,
+      remoteSiteFeeCents: result.breakdown.customerRemoteSiteFeeCents,
       durationHours: result.breakdown.durationHours,
       isOOH: result.breakdown.isOOH,
+      remoteSiteInfo: result.breakdown.remoteSiteInfo,
     },
   };
 }
@@ -252,6 +294,7 @@ export interface SupplierPayoutDisplay {
   breakdown: {
     basePayoutCents: number;
     oohPremiumCents: number;
+    remoteSiteFeeCents: number;
     durationHours: number;
     isOOH: boolean;
   };
@@ -260,15 +303,16 @@ export interface SupplierPayoutDisplay {
 export function getSupplierPayoutDisplay(input: PricingInput): SupplierPayoutDisplay {
   const result = calculateJobPricing(input);
   
-  // For supplier display, basePayoutCents = total before OOH premium
-  // This is supplierTotalCents - supplierOOHPremiumCents
-  const basePayoutCents = result.breakdown.supplierTotalCents - result.breakdown.supplierOOHPremiumCents;
+  // For supplier display, basePayoutCents = total before OOH premium and remote site fee
+  // This is supplierTotalCents - supplierOOHPremiumCents - supplierRemoteSiteFeeCents
+  const basePayoutCents = result.breakdown.supplierTotalCents - result.breakdown.supplierOOHPremiumCents - result.breakdown.supplierRemoteSiteFeeCents;
   
   return {
     totalPayoutCents: result.supplierPayoutCents,
     breakdown: {
       basePayoutCents,
       oohPremiumCents: result.breakdown.supplierOOHPremiumCents,
+      remoteSiteFeeCents: result.breakdown.supplierRemoteSiteFeeCents,
       durationHours: result.breakdown.durationHours,
       isOOH: result.breakdown.isOOH,
     },
@@ -326,7 +370,15 @@ export function calculatePriceRange(
   durationMinutes: number,
   isOOH: boolean,
   startHour?: number,
-  startMinute?: number
+  startMinute?: number,
+  remoteSiteFee?: {
+    customerFeeCents: number;
+    supplierFeeCents: number;
+    platformFeeCents: number;
+    nearestMajorCity: string | null;
+    distanceKm: number | null;
+    billableDistanceKm: number;
+  } | null
 ): PriceRangeEstimate {
   if (supplierRatesCents.length === 0) {
     throw new Error("At least one supplier rate is required");
@@ -340,6 +392,7 @@ export function calculatePriceRange(
       isOOH,
       startHour,
       startMinute,
+      remoteSiteFee: remoteSiteFee || undefined,
     });
     return result.customerPriceCents;
   });

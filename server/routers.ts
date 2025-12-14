@@ -1177,6 +1177,9 @@ export const appRouter = router({
           country: z.string().length(2),
           scheduledDateTime: z.string().optional(), // ISO datetime string for OOH detection
           timezone: z.string().optional(), // Timezone for OOH detection
+          // Site coordinates for remote site fee calculation
+          siteLatitude: z.number().optional(),
+          siteLongitude: z.number().optional(),
         })
       )
       .query(async ({ input }) => {
@@ -1358,12 +1361,39 @@ export const appRouter = router({
           }
         }
         
+        // Calculate remote site fee if coordinates provided
+        let remoteSiteFee = null;
+        if (input.siteLatitude && input.siteLongitude) {
+          try {
+            const { calculateRemoteSiteFee } = await import("./remoteSiteFeeCalculator");
+            const feeResult = await calculateRemoteSiteFee({
+              siteLatitude: input.siteLatitude,
+              siteLongitude: input.siteLongitude,
+            });
+            
+            if (feeResult.isRemoteSite) {
+              remoteSiteFee = {
+                customerFeeCents: feeResult.customerFeeCents,
+                supplierFeeCents: feeResult.supplierFeeCents,
+                platformFeeCents: feeResult.platformFeeCents,
+                nearestMajorCity: feeResult.nearestMajorCity,
+                distanceKm: feeResult.distanceToMajorCityKm,
+                billableDistanceKm: feeResult.billableDistanceKm,
+              };
+            }
+          } catch (error) {
+            console.error('Error calculating remote site fee:', error);
+            // Don't fail the entire request if remote site fee calculation fails
+          }
+        }
+        
         const priceRange = calculatePriceRange(
           hourlyRates,
           input.durationMinutes,
           isOOH,
           startHour,
-          startMinute
+          startMinute,
+          remoteSiteFee
         );
 
         return {
@@ -1374,6 +1404,7 @@ export const appRouter = router({
           maxPriceCents: priceRange.maxPriceCents,
           supplierCount: priceRange.supplierCount,
           breakdown: priceRange.breakdown,
+          remoteSiteFee: remoteSiteFee,
         };
       }),
 

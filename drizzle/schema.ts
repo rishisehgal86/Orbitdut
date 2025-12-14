@@ -291,6 +291,14 @@ export const jobs = mysqlTable("jobs", {
   calculatedPrice: int("calculatedPrice"), // In cents
   currency: varchar("currency", { length: 3 }).default("USD"),
   
+  // Remote Site Fee (distance-based travel surcharge)
+  remoteSiteFeeKm: varchar("remoteSiteFeeKm", { length: 20 }), // Billable distance in km (beyond 50km free zone)
+  remoteSiteFeeCustomerCents: int("remoteSiteFeeCustomerCents"), // Amount customer pays ($1/km)
+  remoteSiteFeeSupplierCents: int("remoteSiteFeeSupplierCents"), // Amount supplier receives ($0.50/km)
+  remoteSiteFeePlatformCents: int("remoteSiteFeePlatformCents"), // Platform revenue ($0.50/km)
+  nearestMajorCity: varchar("nearestMajorCity", { length: 255 }), // Name of nearest major city (250k+ population)
+  distanceToMajorCityKm: varchar("distanceToMajorCityKm", { length: 20 }), // Total driving distance to nearest major city
+  
   // Additional Information
   notes: text("notes"),
   videoConferenceLink: varchar("videoConferenceLink", { length: 500 }),

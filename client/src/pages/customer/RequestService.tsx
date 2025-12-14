@@ -100,6 +100,14 @@ export default function RequestService() {
       isOOH: boolean;
       oohSurchargePercent: number;
     };
+    remoteSiteFee?: {
+      customerFeeCents: number;
+      supplierFeeCents: number;
+      platformFeeCents: number;
+      nearestMajorCity: string | null;
+      distanceKm: number | null;
+      billableDistanceKm: number;
+    } | null;
   } | null>(null);
   const [loadingPricing, setLoadingPricing] = useState(false);
   const [pricingError, setPricingError] = useState(false);
@@ -137,6 +145,9 @@ export default function RequestService() {
           country: formData.country,
           scheduledDateTime,
           timezone: formData.timezone,
+          // Pass coordinates for remote site fee calculation
+          siteLatitude: formData.latitude ? parseFloat(formData.latitude) : undefined,
+          siteLongitude: formData.longitude ? parseFloat(formData.longitude) : undefined,
         });
         
         setPricingEstimate(result);
@@ -1076,6 +1087,22 @@ export default function RequestService() {
                             <div className="flex justify-between text-muted-foreground">
                               <span>Hourly Rate:</span>
                               <span className="font-medium">${((pricingEstimate.estimatedPriceCents! / 100) / pricingEstimate.breakdown.durationHours).toFixed(2)}/hour</span>
+                            </div>
+                          )}
+                          
+                          {/* Remote Site Fee */}
+                          {pricingEstimate.remoteSiteFee && (
+                            <div className="flex justify-between text-muted-foreground pt-2 border-t">
+                              <div className="flex flex-col">
+                                <span>Remote Site Fee:</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {pricingEstimate.remoteSiteFee.distanceKm?.toFixed(1)}km from {pricingEstimate.remoteSiteFee.nearestMajorCity}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  ({pricingEstimate.remoteSiteFee.billableDistanceKm.toFixed(1)}km beyond 50km free zone)
+                                </span>
+                              </div>
+                              <span className="font-medium">${(pricingEstimate.remoteSiteFee.customerFeeCents / 100).toFixed(2)}</span>
                             </div>
                           )}
                         </div>
