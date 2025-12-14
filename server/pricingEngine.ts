@@ -257,6 +257,8 @@ export interface CustomerPricingDisplay {
     remoteSiteFeeCents: number;
     durationHours: number;
     isOOH: boolean;
+    oohHours?: number;
+    regularHours?: number;
     remoteSiteInfo?: {
       nearestMajorCity: string | null;
       distanceKm: number | null;
@@ -268,6 +270,20 @@ export interface CustomerPricingDisplay {
 export function getCustomerPricingDisplay(input: PricingInput): CustomerPricingDisplay {
   const result = calculateJobPricing(input);
   
+  // Calculate OOH hours breakdown if applicable
+  let oohHours: number | undefined;
+  let regularHours: number | undefined;
+  
+  if (result.breakdown.isOOH && input.startHour !== undefined && input.startMinute !== undefined) {
+    const split = calculateOOHHours(input.startHour, input.startMinute, input.durationMinutes);
+    oohHours = split.oohHours;
+    regularHours = split.regularHours;
+  } else if (result.breakdown.isOOH) {
+    // Legacy: entire job is OOH
+    oohHours = result.breakdown.durationHours;
+    regularHours = 0;
+  }
+  
   return {
     totalPriceCents: result.customerPriceCents,
     breakdown: {
@@ -276,6 +292,8 @@ export function getCustomerPricingDisplay(input: PricingInput): CustomerPricingD
       remoteSiteFeeCents: result.breakdown.customerRemoteSiteFeeCents,
       durationHours: result.breakdown.durationHours,
       isOOH: result.breakdown.isOOH,
+      oohHours,
+      regularHours,
       remoteSiteInfo: result.breakdown.remoteSiteInfo,
     },
   };

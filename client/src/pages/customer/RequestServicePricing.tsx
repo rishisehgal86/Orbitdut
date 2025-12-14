@@ -478,7 +478,14 @@ export default function RequestServicePricing() {
                     <Separator />
                     <div className="space-y-2">
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Out-of-Hours Surcharge</span>
+                        <div className="flex flex-col">
+                          <span className="text-muted-foreground">Out-of-Hours Surcharge ({pricingEstimate.breakdown.oohSurchargePercent}%)</span>
+                          {pricingEstimate.breakdown.oohHours !== undefined && (
+                            <span className="text-xs text-muted-foreground">
+                              {pricingEstimate.breakdown.oohHours} of {pricingEstimate.breakdown.durationHours} hours
+                            </span>
+                          )}
+                        </div>
                         <span className="text-amber-600">
                           +${(pricingEstimate.breakdown.minOOHSurchargeCents / 100).toFixed(2)} - ${(pricingEstimate.breakdown.maxOOHSurchargeCents / 100).toFixed(2)}
                         </span>
@@ -499,9 +506,11 @@ export default function RequestServicePricing() {
                         <span className="text-muted-foreground">Remote Site Fee</span>
                         <span>+${(pricingEstimate.remoteSiteFee.customerFeeCents / 100).toFixed(2)}</span>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        Outside of metropolitan coverage area
-                      </p>
+                      {pricingEstimate.remoteSiteFee.distanceKm && (
+                        <p className="text-xs text-muted-foreground">
+                          {pricingEstimate.remoteSiteFee.distanceKm.toFixed(1)} km from metropolitan coverage area
+                        </p>
+                      )}
                     </div>
                   </>
                 )}

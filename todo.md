@@ -344,6 +344,15 @@
 - [x] Ensure form remains functional even if pricing API fails
 - [x] Don't block user from proceeding if pricing estimate unavailable
 
+## Enhancement: Show OOH Hours Breakdown in Pricing Display - COMPLETED ✅
+
+- [x] Update pricing engine to calculate and return OOH hours breakdown
+- [x] Show how many hours are charged at OOH rate (e.g., "OOH Surcharge (50%): 2 of 5 hours")
+- [x] Update RequestService.tsx pricing estimate section
+- [x] Update RequestServicePricing.tsx pricing breakdown
+- [x] Test with various scenarios (partial OOH, full OOH, weekend) - 11 vitest tests passing
+- [x] Standardize remote site fee messaging to 'X km from metropolitan coverage area' on both pages
+
 ## Bug Fix: Service Type Mismatch in Pricing Engine (URGENT) - COMPLETED ✅
 
 - [x] Add service type mapping function to convert customer-facing labels to database enums

@@ -1,0 +1,85 @@
+{
+  "query": "SHOW TABLES",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SHOW TABLES",
+  "rows": [
+    {
+      "Tables_in_2cukUCNz2S5THQpLSDbdYn": "__drizzle_migrations"
+    },
+    {
+      "Tables_in_2cukUCNz2S5THQpLSDbdYn": "adminOrganization"
+    },
+    {
+      "Tables_in_2cukUCNz2S5THQpLSDbdYn": "adminUsers"
+    },
+    {
+      "Tables_in_2cukUCNz2S5THQpLSDbdYn": "jobLocations"
+    },
+    {
+      "Tables_in_2cukUCNz2S5THQpLSDbdYn": "jobStatusHistory"
+    },
+    {
+      "Tables_in_2cukUCNz2S5THQpLSDbdYn": "jobTimePauses"
+    },
+    {
+      "Tables_in_2cukUCNz2S5THQpLSDbdYn": "jobs"
+    },
+    {
+      "Tables_in_2cukUCNz2S5THQpLSDbdYn": "passwordResetTokens"
+    },
+    {
+      "Tables_in_2cukUCNz2S5THQpLSDbdYn": "payments"
+    },
+    {
+      "Tables_in_2cukUCNz2S5THQpLSDbdYn": "reviews"
+    },
+    {
+      "Tables_in_2cukUCNz2S5THQpLSDbdYn": "siteVisitReports"
+    },
+    {
+      "Tables_in_2cukUCNz2S5THQpLSDbdYn": "supplierCompanyProfile"
+    },
+    {
+      "Tables_in_2cukUCNz2S5THQpLSDbdYn": "supplierCoverageCountries"
+    },
+    {
+      "Tables_in_2cukUCNz2S5THQpLSDbdYn": "supplierPriorityCities"
+    },
+    {
+      "Tables_in_2cukUCNz2S5THQpLSDbdYn": "supplierRates"
+    },
+    {
+      "Tables_in_2cukUCNz2S5THQpLSDbdYn": "supplierResponseTimeExclusions"
+    },
+    {
+      "Tables_in_2cukUCNz2S5THQpLSDbdYn": "supplierResponseTimes"
+    },
+    {
+      "Tables_in_2cukUCNz2S5THQpLSDbdYn": "supplierServiceExclusions"
+    },
+    {
+      "Tables_in_2cukUCNz2S5THQpLSDbdYn": "supplierUsers"
+    },
+    {
+      "Tables_in_2cukUCNz2S5THQpLSDbdYn": "supplierVerification"
+    },
+    {
+      "Tables_in_2cukUCNz2S5THQpLSDbdYn": "suppliers"
+    },
+    {
+      "Tables_in_2cukUCNz2S5THQpLSDbdYn": "svrMediaFiles"
+    },
+    {
+      "Tables_in_2cukUCNz2S5THQpLSDbdYn": "userPreferences"
+    },
+    {
+      "Tables_in_2cukUCNz2S5THQpLSDbdYn": "users"
+    },
+    {
+      "Tables_in_2cukUCNz2S5THQpLSDbdYn": "verificationDocuments"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_2cukUCNz2S5THQpLSDbdYn\n__drizzle_migrations\nadminOrganization\nadminUsers\njobLocations\njobStatusHistory\njobTimePauses\njobs\npasswordResetTokens\npayments\nreviews\nsiteVisitReports\nsupplierCompanyProfile\nsupplierCoverageCountries\nsupplierPriorityCities\nsupplierRates\nsupplierResponseTimeExclusions\nsupplierResponseTimes\nsupplierServiceExclusions\nsupplierUsers\nsupplierVerification\nsuppliers\nsvrMediaFiles\nuserPreferences\nusers\nverificationDocuments\n",
+  "stderr": "",
+  "execution_time_ms": 47
+}

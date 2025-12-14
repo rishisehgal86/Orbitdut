@@ -166,6 +166,8 @@ export default function RequestService() {
       minOOHSurchargeCents: number;
       maxOOHSurchargeCents: number;
       avgOOHSurchargeCents: number;
+      oohHours?: number;
+      regularHours?: number;
     };
     remoteSiteFee?: {
       customerFeeCents: number;
@@ -1167,7 +1169,14 @@ export default function RequestService() {
                           
                           {pricingEstimate.breakdown.isOOH && pricingEstimate.breakdown.avgOOHSurchargeCents > 0 && (
                             <div className="flex justify-between text-amber-600 dark:text-amber-400">
-                              <span>+ OOH Surcharge ({pricingEstimate.breakdown.oohSurchargePercent}%):</span>
+                              <div className="flex flex-col">
+                                <span>+ OOH Surcharge ({pricingEstimate.breakdown.oohSurchargePercent}%):</span>
+                                {pricingEstimate.breakdown.oohHours !== undefined && (
+                                  <span className="text-xs text-amber-600/70 dark:text-amber-400/70">
+                                    {pricingEstimate.breakdown.oohHours} of {pricingEstimate.breakdown.durationHours} hours
+                                  </span>
+                                )}
+                              </div>
                               <span className="font-medium">
                                 ${(pricingEstimate.breakdown.minOOHSurchargeCents / 100).toFixed(2)} - ${(pricingEstimate.breakdown.maxOOHSurchargeCents / 100).toFixed(2)}
                               </span>
@@ -1180,7 +1189,7 @@ export default function RequestService() {
                               <div className="flex flex-col">
                                 <span>+ Remote Site Fee:</span>
                                 <span className="text-xs text-muted-foreground">
-                                  {pricingEstimate.remoteSiteFee.distanceKm?.toFixed(1)}km from {pricingEstimate.remoteSiteFee.nearestMajorCity}
+                                  {pricingEstimate.remoteSiteFee.distanceKm?.toFixed(1)} km from metropolitan coverage area
                                 </span>
                               </div>
                               <span className="font-medium">${(pricingEstimate.remoteSiteFee.customerFeeCents / 100).toFixed(2)}</span>

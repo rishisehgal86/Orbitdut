@@ -1,0 +1,8 @@
+{
+  "query": "SELECT sc.supplier_id, s.company_name, s.offers_out_of_hours, sc.city, sc.country \nFROM coverage sc \nJOIN suppliers s ON s.id = sc.supplier_id \nWHERE sc.city = 'Mountain View' AND sc.country = 'US'\nLIMIT 3",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT sc.supplier_id, s.company_name, s.offers_out_of_hours, sc.city, sc.country \nFROM coverage sc \nJOIN suppliers s ON s.id = sc.supplier_id \nWHERE sc.city = 'Mountain View' AND sc.country = 'US'\nLIMIT 3",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1146 (42S02) at line 1: Table '2cukucnz2s5thqplsdbdyn.coverage' doesn't exist"
+  ]
+}
