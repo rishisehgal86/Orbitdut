@@ -1,0 +1,17 @@
+{
+  "query": "-- Check coverage\nSELECT 'Coverage' as type, countryCode, NULL as serviceType, NULL as serviceLevel, NULL as rate\nFROM supplierCoverageCountries \nWHERE supplierId = 240001 AND countryCode = 'AU'\n\nUNION ALL\n\n-- Check rates\nSELECT 'Rate' as type, countryCode, serviceType, serviceLevel, rateUsdCents as rate\nFROM supplierRates \nWHERE supplierId = 240001 \n  AND countryCode = 'AU'\n  AND isServiceable = 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute -- Check coverage\nSELECT 'Coverage' as type, countryCode, NULL as serviceType, NULL as serviceLevel, NULL as rate\nFROM supplierCoverageCountries \nWHERE supplierId = 240001 AND countryCode = 'AU'\n\nUNION ALL\n\n-- Check rates\nSELECT 'Rate' as type, countryCode, serviceType, serviceLevel, rateUsdCents as rate\nFROM supplierRates \nWHERE supplierId = 240001 \n  AND countryCode = 'AU'\n  AND isServiceable = 1;",
+  "rows": [
+    {
+      "type": "Coverage",
+      "countryCode": "AU",
+      "serviceType": "NULL",
+      "serviceLevel": "NULL",
+      "rate": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "type\tcountryCode\tserviceType\tserviceLevel\trate\nCoverage\tAU\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 65
+}

@@ -98,8 +98,7 @@ export default function RequestService() {
     breakdown?: {
       durationHours: number;
       isOOH: boolean;
-      oohPremiumPercent: number;
-      platformFeePercent: number;
+      oohSurchargePercent: number;
     };
   } | null>(null);
   const [loadingPricing, setLoadingPricing] = useState(false);
@@ -1028,13 +1027,9 @@ export default function RequestService() {
                         {pricingEstimate.breakdown.isOOH && (
                           <div className="flex justify-between text-amber-600 dark:text-amber-400">
                             <span>Out-of-Hours Surcharge:</span>
-                            <span>+{pricingEstimate.breakdown.oohPremiumPercent}%</span>
+                            <span>+{pricingEstimate.breakdown.oohSurchargePercent}%</span>
                           </div>
                         )}
-                        <div className="flex justify-between text-muted-foreground">
-                          <span>Platform Fee:</span>
-                          <span>+{pricingEstimate.breakdown.platformFeePercent}%</span>
-                        </div>
                       </div>
                     )}
 

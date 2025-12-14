@@ -1,0 +1,65 @@
+{
+  "query": "SELECT \n  sr.id,\n  sr.supplierId,\n  sr.serviceType,\n  sr.serviceLevel,\n  sr.countryCode,\n  sr.cityId,\n  sr.rateUsdCents,\n  sr.isServiceable,\n  CASE \n    WHEN sr.cityId IS NOT NULL THEN CONCAT('City: ', pc.cityName)\n    ELSE 'Country-wide'\n  END as rate_scope\nFROM supplierRates sr\nLEFT JOIN supplierPriorityCities pc ON pc.id = sr.cityId\nWHERE sr.supplierId = 240001\n  AND (sr.countryCode = 'AU' OR sr.countryCode IS NULL)\nORDER BY sr.serviceType, sr.serviceLevel, sr.countryCode\nLIMIT 30;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT \n  sr.id,\n  sr.supplierId,\n  sr.serviceType,\n  sr.serviceLevel,\n  sr.countryCode,\n  sr.cityId,\n  sr.rateUsdCents,\n  sr.isServiceable,\n  CASE \n    WHEN sr.cityId IS NOT NULL THEN CONCAT('City: ', pc.cityName)\n    ELSE 'Country-wide'\n  END as rate_scope\nFROM supplierRates sr\nLEFT JOIN supplierPriorityCities pc ON pc.id = sr.cityId\nWHERE sr.supplierId = 240001\n  AND (sr.countryCode = 'AU' OR sr.countryCode IS NULL)\nORDER BY sr.serviceType, sr.serviceLevel, sr.countryCode\nLIMIT 30;",
+  "rows": [
+    {
+      "id": "600001",
+      "supplierId": "240001",
+      "serviceType": "L1_EUC",
+      "serviceLevel": "same_business_day",
+      "countryCode": "AU",
+      "cityId": "NULL",
+      "rateUsdCents": "4368",
+      "isServiceable": "NULL",
+      "rate_scope": "Country-wide"
+    },
+    {
+      "id": "600006",
+      "supplierId": "240001",
+      "serviceType": "L1_EUC",
+      "serviceLevel": "scheduled",
+      "countryCode": "AU",
+      "cityId": "NULL",
+      "rateUsdCents": "10296",
+      "isServiceable": "NULL",
+      "rate_scope": "Country-wide"
+    },
+    {
+      "id": "600002",
+      "supplierId": "240001",
+      "serviceType": "L1_NETWORK",
+      "serviceLevel": "same_business_day",
+      "countryCode": "AU",
+      "cityId": "NULL",
+      "rateUsdCents": "3432",
+      "isServiceable": "NULL",
+      "rate_scope": "Country-wide"
+    },
+    {
+      "id": "570005",
+      "supplierId": "240001",
+      "serviceType": "L1_NETWORK",
+      "serviceLevel": "next_business_day",
+      "countryCode": "AU",
+      "cityId": "NULL",
+      "rateUsdCents": "6864",
+      "isServiceable": "NULL",
+      "rate_scope": "Country-wide"
+    },
+    {
+      "id": "600003",
+      "supplierId": "240001",
+      "serviceType": "SMART_HANDS",
+      "serviceLevel": "same_business_day",
+      "countryCode": "AU",
+      "cityId": "NULL",
+      "rateUsdCents": "208",
+      "isServiceable": "NULL",
+      "rate_scope": "Country-wide"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tsupplierId\tserviceType\tserviceLevel\tcountryCode\tcityId\trateUsdCents\tisServiceable\trate_scope\n600001\t240001\tL1_EUC\tsame_business_day\tAU\tNULL\t4368\tNULL\tCountry-wide\n600006\t240001\tL1_EUC\tscheduled\tAU\tNULL\t10296\tNULL\tCountry-wide\n600002\t240001\tL1_NETWORK\tsame_business_day\tAU\tNULL\t3432\tNULL\tCountry-wide\n570005\t240001\tL1_NETWORK\tnext_business_day\tAU\tNULL\t6864\tNULL\tCountry-wide\n600003\t240001\tSMART_HANDS\tsame_business_day\tAU\tNULL\t208\tNULL\tCountry-wide\n",
+  "stderr": "",
+  "execution_time_ms": 66
+}

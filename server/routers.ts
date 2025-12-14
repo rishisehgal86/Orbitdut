@@ -1265,7 +1265,7 @@ export const appRouter = router({
               sql`${supplierRates.supplierId} IN (${sql.join(supplierIdsWithCoverage.map(id => sql`${id}`), sql`, `)})`,
               eq(supplierRates.serviceType, dbServiceType),
               sql`${supplierRates.serviceLevel} = ${dbServiceLevel}`,
-              eq(supplierRates.isServiceable, 1),
+              or(eq(supplierRates.isServiceable, 1), isNull(supplierRates.isServiceable)),
               sql`LOWER(${supplierPriorityCities.cityName}) = LOWER(${input.city})`
             )
           );
@@ -1284,7 +1284,7 @@ export const appRouter = router({
               isNull(supplierRates.cityId),
               eq(supplierRates.serviceType, dbServiceType),
               sql`${supplierRates.serviceLevel} = ${dbServiceLevel}`,
-              eq(supplierRates.isServiceable, 1)
+              or(eq(supplierRates.isServiceable, 1), isNull(supplierRates.isServiceable))
             )
           );
 
@@ -1342,42 +1342,24 @@ export const appRouter = router({
           };
         }
 
-        // Calculate pricing
+        // Use centralized pricing engine
+        const { calculatePriceRange } = await import("./pricingEngine");
         const hourlyRates = Array.from(supplierRatesMap.values());
-        const durationHours = input.durationMinutes / 60;
         
-        // Calculate base costs (rate per hour * duration)
-        const baseCosts = hourlyRates.map(rate => rate * durationHours);
-        
-        // Apply OOH surcharge if applicable
-        const totalCosts = baseCosts.map(baseCost => {
-          if (isOOH) {
-            return Math.round(baseCost * (1 + oohPremiumPercent / 100));
-          }
-          return Math.round(baseCost);
-        });
-
-        // Apply platform fee (15%)
-        const finalCosts = totalCosts.map(cost => Math.round(cost * 1.15));
-
-        // Calculate statistics
-        const minPrice = Math.min(...finalCosts);
-        const maxPrice = Math.max(...finalCosts);
-        const avgPrice = Math.round(finalCosts.reduce((a, b) => a + b, 0) / finalCosts.length);
+        const priceRange = calculatePriceRange(
+          hourlyRates,
+          input.durationMinutes,
+          isOOH
+        );
 
         return {
           available: true,
           message: `${supplierRatesMap.size} supplier${supplierRatesMap.size > 1 ? 's' : ''} available`,
-          estimatedPriceCents: avgPrice,
-          minPriceCents: minPrice,
-          maxPriceCents: maxPrice,
-          supplierCount: supplierRatesMap.size,
-          breakdown: {
-            durationHours,
-            isOOH,
-            oohPremiumPercent,
-            platformFeePercent: 15,
-          },
+          estimatedPriceCents: priceRange.avgPriceCents,
+          minPriceCents: priceRange.minPriceCents,
+          maxPriceCents: priceRange.maxPriceCents,
+          supplierCount: priceRange.supplierCount,
+          breakdown: priceRange.breakdown,
         };
       }),
 

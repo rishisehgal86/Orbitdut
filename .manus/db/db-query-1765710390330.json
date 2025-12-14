@@ -1,0 +1,190 @@
+{
+  "query": "SELECT \n  sr.id,\n  sr.supplierId,\n  sr.serviceType,\n  sr.serviceLevel,\n  sr.countryCode,\n  sr.cityId,\n  sr.rateUsdCents,\n  sr.isServiceable\nFROM supplierRates sr\nWHERE sr.supplierId = 240001\nORDER BY sr.countryCode, sr.serviceType, sr.serviceLevel\nLIMIT 50;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4PejtppQzUdF9US.e7bec8248b17 --database 2cukUCNz2S5THQpLSDbdYn --execute SELECT \n  sr.id,\n  sr.supplierId,\n  sr.serviceType,\n  sr.serviceLevel,\n  sr.countryCode,\n  sr.cityId,\n  sr.rateUsdCents,\n  sr.isServiceable\nFROM supplierRates sr\nWHERE sr.supplierId = 240001\nORDER BY sr.countryCode, sr.serviceType, sr.serviceLevel\nLIMIT 50;",
+  "rows": [
+    {
+      "id": "600001",
+      "supplierId": "240001",
+      "serviceType": "L1_EUC",
+      "serviceLevel": "same_business_day",
+      "countryCode": "AU",
+      "cityId": "NULL",
+      "rateUsdCents": "4368",
+      "isServiceable": "NULL"
+    },
+    {
+      "id": "600006",
+      "supplierId": "240001",
+      "serviceType": "L1_EUC",
+      "serviceLevel": "scheduled",
+      "countryCode": "AU",
+      "cityId": "NULL",
+      "rateUsdCents": "10296",
+      "isServiceable": "NULL"
+    },
+    {
+      "id": "600002",
+      "supplierId": "240001",
+      "serviceType": "L1_NETWORK",
+      "serviceLevel": "same_business_day",
+      "countryCode": "AU",
+      "cityId": "NULL",
+      "rateUsdCents": "3432",
+      "isServiceable": "NULL"
+    },
+    {
+      "id": "570005",
+      "supplierId": "240001",
+      "serviceType": "L1_NETWORK",
+      "serviceLevel": "next_business_day",
+      "countryCode": "AU",
+      "cityId": "NULL",
+      "rateUsdCents": "6864",
+      "isServiceable": "NULL"
+    },
+    {
+      "id": "600003",
+      "supplierId": "240001",
+      "serviceType": "SMART_HANDS",
+      "serviceLevel": "same_business_day",
+      "countryCode": "AU",
+      "cityId": "NULL",
+      "rateUsdCents": "208",
+      "isServiceable": "NULL"
+    },
+    {
+      "id": "570001",
+      "supplierId": "240001",
+      "serviceType": "L1_EUC",
+      "serviceLevel": "same_business_day",
+      "countryCode": "AZ",
+      "cityId": "NULL",
+      "rateUsdCents": "6864",
+      "isServiceable": "NULL"
+    },
+    {
+      "id": "540003",
+      "supplierId": "240001",
+      "serviceType": "L1_EUC",
+      "serviceLevel": "next_business_day",
+      "countryCode": "AZ",
+      "cityId": "NULL",
+      "rateUsdCents": "6864",
+      "isServiceable": "NULL"
+    },
+    {
+      "id": "540004",
+      "supplierId": "240001",
+      "serviceType": "L1_EUC",
+      "serviceLevel": "scheduled",
+      "countryCode": "AZ",
+      "cityId": "NULL",
+      "rateUsdCents": "10296",
+      "isServiceable": "NULL"
+    },
+    {
+      "id": "540001",
+      "supplierId": "240001",
+      "serviceType": "L1_NETWORK",
+      "serviceLevel": "next_business_day",
+      "countryCode": "AZ",
+      "cityId": "NULL",
+      "rateUsdCents": "6864",
+      "isServiceable": "NULL"
+    },
+    {
+      "id": "540005",
+      "supplierId": "240001",
+      "serviceType": "L1_NETWORK",
+      "serviceLevel": "scheduled",
+      "countryCode": "AZ",
+      "cityId": "NULL",
+      "rateUsdCents": "9152",
+      "isServiceable": "NULL"
+    },
+    {
+      "id": "600004",
+      "supplierId": "240001",
+      "serviceType": "SMART_HANDS",
+      "serviceLevel": "same_business_day",
+      "countryCode": "AZ",
+      "cityId": "NULL",
+      "rateUsdCents": "1248",
+      "isServiceable": "NULL"
+    },
+    {
+      "id": "540002",
+      "supplierId": "240001",
+      "serviceType": "SMART_HANDS",
+      "serviceLevel": "next_business_day",
+      "countryCode": "AZ",
+      "cityId": "NULL",
+      "rateUsdCents": "9256",
+      "isServiceable": "NULL"
+    },
+    {
+      "id": "540006",
+      "supplierId": "240001",
+      "serviceType": "SMART_HANDS",
+      "serviceLevel": "scheduled",
+      "countryCode": "AZ",
+      "cityId": "NULL",
+      "rateUsdCents": "2288",
+      "isServiceable": "NULL"
+    },
+    {
+      "id": "570002",
+      "supplierId": "240001",
+      "serviceType": "L1_EUC",
+      "serviceLevel": "same_business_day",
+      "countryCode": "BH",
+      "cityId": "NULL",
+      "rateUsdCents": "6864",
+      "isServiceable": "NULL"
+    },
+    {
+      "id": "570003",
+      "supplierId": "240001",
+      "serviceType": "L1_EUC",
+      "serviceLevel": "next_business_day",
+      "countryCode": "BH",
+      "cityId": "NULL",
+      "rateUsdCents": "5720",
+      "isServiceable": "NULL"
+    },
+    {
+      "id": "570004",
+      "supplierId": "240001",
+      "serviceType": "L1_EUC",
+      "serviceLevel": "scheduled",
+      "countryCode": "BH",
+      "cityId": "NULL",
+      "rateUsdCents": "10296",
+      "isServiceable": "NULL"
+    },
+    {
+      "id": "600005",
+      "supplierId": "240001",
+      "serviceType": "SMART_HANDS",
+      "serviceLevel": "same_business_day",
+      "countryCode": "BH",
+      "cityId": "NULL",
+      "rateUsdCents": "1248",
+      "isServiceable": "NULL"
+    },
+    {
+      "id": "630001",
+      "supplierId": "240001",
+      "serviceType": "SMART_HANDS",
+      "serviceLevel": "scheduled",
+      "countryCode": "BH",
+      "cityId": "NULL",
+      "rateUsdCents": "1039896",
+      "isServiceable": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tsupplierId\tserviceType\tserviceLevel\tcountryCode\tcityId\trateUsdCents\tisServiceable\n600001\t240001\tL1_EUC\tsame_business_day\tAU\tNULL\t4368\tNULL\n600006\t240001\tL1_EUC\tscheduled\tAU\tNULL\t10296\tNULL\n600002\t240001\tL1_NETWORK\tsame_business_day\tAU\tNULL\t3432\tNULL\n570005\t240001\tL1_NETWORK\tnext_business_day\tAU\tNULL\t6864\tNULL\n600003\t240001\tSMART_HANDS\tsame_business_day\tAU\tNULL\t208\tNULL\n570001\t240001\tL1_EUC\tsame_business_day\tAZ\tNULL\t6864\tNULL\n540003\t240001\tL1_EUC\tnext_business_day\tAZ\tNULL\t6864\tNULL\n540004\t240001\tL1_EUC\tscheduled\tAZ\tNULL\t10296\tNULL\n540001\t240001\tL1_NETWORK\tnext_business_day\tAZ\tNULL\t6864\tNULL\n540005\t240001\tL1_NETWORK\tscheduled\tAZ\tNULL\t9152\tNULL\n600004\t240001\tSMART_HANDS\tsame_business_day\tAZ\tNULL\t1248\tNULL\n540002\t240001\tSMART_HANDS\tnext_business_day\tAZ\tNULL\t9256\tNULL\n540006\t240001\tSMART_HANDS\tscheduled\tAZ\tNULL\t2288\tNULL\n570002\t240001\tL1_EUC\tsame_business_day\tBH\tNULL\t6864\tNULL\n570003\t240001\tL1_EUC\tnext_business_day\tBH\tNULL\t5720\tNULL\n570004\t240001\tL1_EUC\tscheduled\tBH\tNULL\t10296\tNULL\n600005\t240001\tSMART_HANDS\tsame_business_day\tBH\tNULL\t1248\tNULL\n630001\t240001\tSMART_HANDS\tscheduled\tBH\tNULL\t1039896\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}
