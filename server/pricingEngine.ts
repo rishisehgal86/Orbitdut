@@ -380,6 +380,7 @@ export interface PriceRangeEstimate {
     durationHours: number;
     isOOH: boolean;
     oohSurchargePercent: number;
+    oohHours?: number;  // Number of hours charged at OOH rate
     // Detailed breakdown for display
     minBaseCents: number;  // Min base cost (without OOH/remote fee)
     maxBaseCents: number;  // Max base cost (without OOH/remote fee)
@@ -430,6 +431,13 @@ export function calculatePriceRange(
   const basePrices = pricingResults.map(r => r.baseCents);
   const oohSurcharges = pricingResults.map(r => r.oohSurchargeCents);
   
+  // Calculate OOH hours breakdown if OOH and start time provided
+  let oohHours: number | undefined;
+  if (isOOH && startHour !== undefined && startMinute !== undefined) {
+    const hoursBreakdown = calculateOOHHours(startHour, startMinute, durationMinutes);
+    oohHours = hoursBreakdown.oohHours;
+  }
+  
   return {
     minPriceCents: Math.min(...customerPrices),
     maxPriceCents: Math.max(...customerPrices),
@@ -439,6 +447,7 @@ export function calculatePriceRange(
       durationHours: durationMinutes / 60,
       isOOH,
       oohSurchargePercent: isOOH ? PRICING_RULES.OOH_CUSTOMER_SURCHARGE_PERCENT : 0,
+      oohHours,
       minBaseCents: Math.min(...basePrices),
       maxBaseCents: Math.max(...basePrices),
       avgBaseCents: Math.round(basePrices.reduce((a, b) => a + b, 0) / basePrices.length),

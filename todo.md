@@ -578,3 +578,10 @@
 ## Form State Persistence Issue - REPORTED BY USER - COMPLETED ✅
 
 - [x] Preserve form field values when navigating back from pricing page to request form using "Back to Edit" button
+
+## Bug Fix: OOH Display Issues (URGENT) - Dec 14, 2025
+
+- [x] Fix OOH warning showing 25% instead of 50% customer surcharge
+- [x] Fix missing OOH hours breakdown in pricing estimate section (should show "X of Y hours")
+- [x] Verify pricing estimate displays OOH hours breakdown beneath surcharge line
+- [x] Test with weekend booking to confirm both fixes work correctly
